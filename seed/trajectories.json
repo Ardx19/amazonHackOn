@@ -1,0 +1,95 @@
+[
+    {
+        "trajectory_id": "TRAJ_PRIYA",
+        "product_id": "PROD_001",
+        "returner_id": "USER_PRIYA",
+        "checkpoints": [
+            {
+                "hub_id": "MUM_H1",
+                "c_remaining_inr": 120.0,
+                "distance_to_warehouse_km": 48.0,
+                "hours_from_start": 0
+            },
+            {
+                "hub_id": "MUM_H2",
+                "c_remaining_inr": 75.0,
+                "distance_to_warehouse_km": 30.0,
+                "hours_from_start": 24
+            },
+            {
+                "hub_id": "MUM_H3",
+                "c_remaining_inr": 30.0,
+                "distance_to_warehouse_km": 12.0,
+                "hours_from_start": 48
+            },
+            {
+                "hub_id": "MUM_W",
+                "c_remaining_inr": 0.0,
+                "distance_to_warehouse_km": 0.0,
+                "hours_from_start": 72
+            }
+        ]
+    },
+    {
+        "trajectory_id": "TRAJ_RAHUL",
+        "product_id": "PROD_002",
+        "returner_id": "USER_RAHUL",
+        "checkpoints": [
+            {
+                "hub_id": "MUM_H1",
+                "c_remaining_inr": 134.4,
+                "distance_to_warehouse_km": 48.0,
+                "hours_from_start": 0
+            },
+            {
+                "hub_id": "MUM_H2",
+                "c_remaining_inr": 84.0,
+                "distance_to_warehouse_km": 30.0,
+                "hours_from_start": 24
+            },
+            {
+                "hub_id": "MUM_H3",
+                "c_remaining_inr": 33.6,
+                "distance_to_warehouse_km": 12.0,
+                "hours_from_start": 48
+            },
+            {
+                "hub_id": "MUM_W",
+                "c_remaining_inr": 0.0,
+                "distance_to_warehouse_km": 0.0,
+                "hours_from_start": 72
+            }
+        ]
+    },
+    {
+        "trajectory_id": "TRAJ_PHONECASE",
+        "product_id": "PROD_003",
+        "returner_id": "USER_RETURNER_3",
+        "checkpoints": [
+            {
+                "hub_id": "MUM_H1",
+                "c_remaining_inr": 168.0,
+                "distance_to_warehouse_km": 48.0,
+                "hours_from_start": 0
+            },
+            {
+                "hub_id": "MUM_H2",
+                "c_remaining_inr": 105.0,
+                "distance_to_warehouse_km": 30.0,
+                "hours_from_start": 24
+            },
+            {
+                "hub_id": "MUM_H3",
+                "c_remaining_inr": 42.0,
+                "distance_to_warehouse_km": 12.0,
+                "hours_from_start": 48
+            },
+            {
+                "hub_id": "MUM_W",
+                "c_remaining_inr": 0.0,
+                "distance_to_warehouse_km": 0.0,
+                "hours_from_start": 72
+            }
+        ]
+    }
+]

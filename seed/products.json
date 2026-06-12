@@ -1,0 +1,141 @@
+[
+    {
+        "product_id": "PROD_001",
+        "name": "Nike Revolution 6 Running Shoes",
+        "category": "footwear",
+        "brand": "Nike",
+        "original_price_inr": 599,
+        "image_filename": "prod_001.jpg",
+        "demo_condition_preset": "Good",
+        "demo_defects_preset": [
+            {"defect_type": "scuff", "severity": "minor", "location": "left toe cap"},
+            {"defect_type": "scuff", "severity": "minor", "location": "right heel"}
+        ],
+        "is_trajectory_product": true,
+        "trajectory_id": "TRAJ_PRIYA"
+    },
+    {
+        "product_id": "PROD_002",
+        "name": "Philips Avent Digital Baby Monitor",
+        "category": "baby_products",
+        "brand": "Philips Avent",
+        "original_price_inr": 2499,
+        "image_filename": "prod_002.jpg",
+        "demo_condition_preset": "Good",
+        "demo_defects_preset": [
+            {"defect_type": "scratch", "severity": "minor", "location": "screen bezel"}
+        ],
+        "is_trajectory_product": true,
+        "trajectory_id": "TRAJ_RAHUL"
+    },
+    {
+        "product_id": "PROD_003",
+        "name": "Spigen Rugged Armor Phone Case",
+        "category": "electronics",
+        "brand": "Spigen",
+        "original_price_inr": 349,
+        "image_filename": "prod_003.jpg",
+        "demo_condition_preset": "Fair",
+        "demo_defects_preset": [
+            {"defect_type": "scratch", "severity": "moderate", "location": "back panel"},
+            {"defect_type": "scuff", "severity": "minor", "location": "bottom edge"}
+        ],
+        "is_trajectory_product": true,
+        "trajectory_id": "TRAJ_PHONECASE"
+    },
+    {
+        "product_id": "PROD_004",
+        "name": "Peter England Slim Fit Formal Shirt",
+        "category": "clothing",
+        "brand": "Peter England",
+        "original_price_inr": 899,
+        "image_filename": "prod_004.jpg",
+        "demo_condition_preset": "Like New",
+        "demo_defects_preset": [],
+        "is_trajectory_product": false,
+        "trajectory_id": null
+    },
+    {
+        "product_id": "PROD_005",
+        "name": "Prestige Magnus 750W Mixer Grinder",
+        "category": "home_goods",
+        "brand": "Prestige",
+        "original_price_inr": 3499,
+        "image_filename": "prod_005.jpg",
+        "demo_condition_preset": "Good",
+        "demo_defects_preset": [
+            {"defect_type": "scratch", "severity": "minor", "location": "jar exterior"}
+        ],
+        "is_trajectory_product": false,
+        "trajectory_id": null
+    },
+    {
+        "product_id": "PROD_006",
+        "name": "Puma Unisex-Adult Smash V2 Sneakers",
+        "category": "footwear",
+        "brand": "Puma",
+        "original_price_inr": 2999,
+        "image_filename": "prod_006.jpg",
+        "demo_condition_preset": "Like New",
+        "demo_defects_preset": [],
+        "is_trajectory_product": false,
+        "trajectory_id": null
+    },
+    {
+        "product_id": "PROD_007",
+        "name": "boAt Airdopes 141 Bluetooth Earbuds",
+        "category": "electronics",
+        "brand": "boAt",
+        "original_price_inr": 1499,
+        "image_filename": "prod_007.jpg",
+        "demo_condition_preset": "Fair",
+        "demo_defects_preset": [
+            {"defect_type": "scuff", "severity": "moderate", "location": "charging case"},
+            {"defect_type": "scratch", "severity": "minor", "location": "left earbud"}
+        ],
+        "is_trajectory_product": false,
+        "trajectory_id": null
+    },
+    {
+        "product_id": "PROD_008",
+        "name": "Mamaearth Moisturizing Baby Lotion (400ml)",
+        "category": "baby_products",
+        "brand": "Mamaearth",
+        "original_price_inr": 499,
+        "image_filename": "prod_008.jpg",
+        "demo_condition_preset": "Good",
+        "demo_defects_preset": [
+            {"defect_type": "stain", "severity": "minor", "location": "label peeling at corner"}
+        ],
+        "is_trajectory_product": false,
+        "trajectory_id": null
+    },
+    {
+        "product_id": "PROD_009",
+        "name": "Ray-Ban Aviator Classic Sunglasses",
+        "category": "clothing",
+        "brand": "Ray-Ban",
+        "original_price_inr": 8999,
+        "image_filename": "prod_009.jpg",
+        "demo_condition_preset": "Good",
+        "demo_defects_preset": [
+            {"defect_type": "scratch", "severity": "minor", "location": "left lens edge"}
+        ],
+        "is_trajectory_product": false,
+        "trajectory_id": null
+    },
+    {
+        "product_id": "PROD_010",
+        "name": "FabIndia Hand Block Printed Cushion Cover",
+        "category": "home_goods",
+        "brand": "FabIndia",
+        "original_price_inr": 699,
+        "image_filename": "prod_010.jpg",
+        "demo_condition_preset": "Poor",
+        "demo_defects_preset": [
+            {"defect_type": "stain", "severity": "major", "location": "center fabric"}
+        ],
+        "is_trajectory_product": false,
+        "trajectory_id": null
+    }
+]

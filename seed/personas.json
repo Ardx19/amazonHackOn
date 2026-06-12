@@ -1,0 +1,32 @@
+[
+    {
+        "user_id": "USER_PRIYA",
+        "name": "Priya Sharma",
+        "role": "returner",
+        "city": "Mumbai",
+        "address_hash": "sha256:priya-sharma-andheri-east-mumbai",
+        "payment_instrument_hash": "sha256:priya-sharma-hdfc-4111",
+        "return_history": [
+            {"category": "footwear", "return_count": 2, "days": 90},
+            {"category": "clothing", "return_count": 1, "days": 90}
+        ]
+    },
+    {
+        "user_id": "USER_RAHUL",
+        "name": "Rahul Mehta",
+        "role": "seller",
+        "city": "Mumbai",
+        "address_hash": "sha256:rahul-mehta-thane-west-mumbai",
+        "payment_instrument_hash": "sha256:rahul-mehta-icici-5222",
+        "return_history": []
+    },
+    {
+        "user_id": "USER_BUYER",
+        "name": "Ananya Patel",
+        "role": "buyer",
+        "city": "Mumbai",
+        "address_hash": "sha256:ananya-patel-vile-parle-east-mumbai",
+        "payment_instrument_hash": "sha256:ananya-patel-sbi-6333",
+        "return_history": []
+    }
+]
