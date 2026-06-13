@@ -1,45 +1,34 @@
-"""
-ReRoute — grade_item Lambda
-Entry point of the grading pipeline.
-Stage 1: Rekognition DetectLabels → feature labels
-Stage 2: Bedrock Claude 3.5 Sonnet Vision → GradingReport JSON
-"""
+# backend/app/services/grade_service.py
+# Refactored from lambdas/grade_item/lambda_function.py
+# Stage 1: Rekognition DetectLabels → feature labels
+# Stage 2: Bedrock Nova Lite → GradingReport JSON
 
 import base64
 import json
 import logging
 import re
-import sys
+import time as _time
 from datetime import datetime
-from pathlib import Path
 from uuid import uuid4
 
 import boto3
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from shared.config import (
+from app.core.config import (
     AWS_REGION,
     BEDROCK_MODEL_GRADING,
     REKOGNITION_MAX_LABELS,
     REKOGNITION_MIN_CONFIDENCE,
     S3_BUCKET_IMAGES,
-    TABLE_GRADING_REPORTS,
     RENEWED_MIN_VALUE,
     CONDITION_GRADES,
 )
-from shared.models import GradingReport, Defect
-from shared.db import put_item
+from app.schemas.schemas import GradingReport, Defect
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 rekognition_client = boto3.client("rekognition", region_name=AWS_REGION)
 bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
 s3_client = boto3.client("s3", region_name=AWS_REGION)
-
-
-# ─── JSON Extraction Fallback ────────────────────────────────────────────────
 
 
 def extract_json_from_response(text: str) -> dict:
@@ -54,9 +43,6 @@ def extract_json_from_response(text: str) -> dict:
     if match:
         return json.loads(match.group(0))
     raise ValueError(f"Could not extract JSON from Bedrock response: {text[:500]}")
-
-
-# ─── Stage 1: Rekognition ────────────────────────────────────────────────────
 
 
 def run_rekognition(s3_key: str) -> list[str]:
@@ -76,17 +62,7 @@ def run_rekognition(s3_key: str) -> list[str]:
         return []
 
 
-# ─── Stage 2 Prompt Builder ──────────────────────────────────────────────────
-
-
 def build_grading_prompt(item_metadata: dict, rekognition_labels: list[str]) -> str:
-    lines = []
-
-    if rekognition_labels:
-        lines.append(
-            f"Rekognition pre-detected these features: {', '.join(rekognition_labels)}"
-        )
-
     prompt = (
         "You are a product condition assessor for an e-commerce returns platform. "
         "Analyze the attached product photo and estimate its condition and resale value.\n\n"
@@ -119,9 +95,6 @@ def build_grading_prompt(item_metadata: dict, rekognition_labels: list[str]) -> 
     )
 
     return prompt
-
-
-# ─── Stage 2: Bedrock Claude Vision ─────────────────────────────────────────
 
 
 def call_bedrock_vision(s3_key: str, prompt: str) -> dict:
@@ -168,9 +141,7 @@ def call_bedrock_vision(s3_key: str, prompt: str) -> dict:
         )
     except bedrock_client.exceptions.ThrottlingException:
         logger.warning("Bedrock throttled — retrying in 2s")
-        import time
-
-        time.sleep(2)
+        _time.sleep(2)
         response = bedrock_client.invoke_model(
             modelId=BEDROCK_MODEL_GRADING,
             body=json.dumps(body),
@@ -178,17 +149,12 @@ def call_bedrock_vision(s3_key: str, prompt: str) -> dict:
 
     response_body = json.loads(response["body"].read())
     raw_text = response_body["content"][0]["text"]
-
     return extract_json_from_response(raw_text)
-
-
-# ─── Preliminary Route Decision ──────────────────────────────────────────────
 
 
 def determine_route(
     condition_grade: str, estimated_retail_inr: float
 ) -> tuple[str, str]:
-    # Preliminary route. route_evaluator lambda recalculates using MVSP with real C_remaining.
     if condition_grade == "Poor":
         return "recycle", "Condition graded as Poor — recommended for recycling"
     if condition_grade == "Like New" and estimated_retail_inr >= RENEWED_MIN_VALUE:
@@ -204,9 +170,6 @@ def determine_route(
     if condition_grade == "Fair":
         return "relist", "Fair condition — suitable for C2C relisting"
     return "donate", "Below resale threshold — recommended for donation"
-
-
-# ─── Build Final GradingReport ───────────────────────────────────────────────
 
 
 def build_grading_report(
@@ -258,24 +221,18 @@ def build_grading_report(
     )
 
 
-# ─── Lambda Handler ─────────────────────────────────────────────────────────
-
-
-def handler(event: dict, context=None) -> dict:
-    item_id = event.get("item_id", "unknown")
-    s3_keys = event.get("s3_keys", [])
-    original_price = event.get("original_price_inr", 0)
-    category = event.get("category", "Unknown")
-    product_name = event.get("product_name", "Unknown")
-
+def grade_item(
+    item_id: str,
+    product_name: str,
+    category: str,
+    original_price: float,
+    s3_keys: list[str],
+) -> GradingReport:
+    """Orchestrate full grading pipeline. Called by the FastAPI route."""
     if not s3_keys:
-        return {
-            "statusCode": 400,
-            "body": {"error": "s3_keys is required and must be non-empty"},
-        }
+        raise ValueError("s3_keys is required and must be non-empty")
 
     primary_image = s3_keys[0]
-
     item_metadata = {
         "product_name": product_name,
         "category": category,
@@ -285,10 +242,6 @@ def handler(event: dict, context=None) -> dict:
     rekognition_labels = run_rekognition(primary_image)
     prompt = build_grading_prompt(item_metadata, rekognition_labels)
     claude_output = call_bedrock_vision(primary_image, prompt)
-    report = build_grading_report(
+    return build_grading_report(
         item_id, item_metadata, claude_output, rekognition_labels
     )
-
-    put_item(TABLE_GRADING_REPORTS, report.model_dump())
-
-    return {"statusCode": 200, "body": report.model_dump()}

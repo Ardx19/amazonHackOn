@@ -1,20 +1,12 @@
-# DEPRECATED — migrated to backend/app/schemas/schemas.py (Pydantic) + backend/app/db/models.py (SQLAlchemy ORM)
-# This file kept for reference only. All new code imports from backend/app/schemas/ and backend/app/db/.
-# Key change: Pydantic models now in schemas/ for API validation. SQLAlchemy ORM in db/ for persistence.
+# backend/app/schemas/schemas.py
+# Pydantic v2 models — API validation layer.
+# These are the canonical shapes for all FastAPI request/response bodies.
 
 from datetime import datetime
 from typing import Literal, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel
-
-from shared.config import (
-    CONDITION_GRADES,
-    ROUTE_PATHS,
-    RENEWED_MIN_VALUE,
-    DONATE_MAX_MVSP,
-    RECYCLE_CONDITION,
-)
 
 
 # ─── ItemPhoto ────────────────────────────────────────────────────────────────
@@ -134,6 +126,44 @@ class Persona(BaseModel):
     address_hash: str
     payment_instrument_hash: str
     return_history: list[dict]
+
+
+# ─── Request/Response Schemas ─────────────────────────────────────────────────
+
+
+class GradeRequest(BaseModel):
+    item_id: str
+    original_price_inr: float
+    category: str
+    product_name: str
+
+
+class RouteRequest(BaseModel):
+    item_id: str
+    original_price_inr: float
+    category: str
+    current_location: dict
+    ring_index: int = 0
+
+
+class HealthCardRequest(BaseModel):
+    item_id: str
+    seller_id: str
+    seller_name: str
+    seller_city: str
+
+
+class RoutingResponse(BaseModel):
+    item_id: str
+    final_route: str
+    ring_index: int
+    sale_price_inr: float
+    profitable_radius_km: float
+    listing_id: str
+    routing_reason: str
+    mvsp_inr: float
+    overhead_ratio: float
+    entered_reroute: bool
 
 
 # ─── Helper ───────────────────────────────────────────────────────────────────

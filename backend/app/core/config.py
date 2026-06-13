@@ -1,23 +1,20 @@
-# DEPRECATED — migrated to backend/app/core/config.py
-# This file kept for reference only. All new code imports from backend/app/core/config.py.
-# Key changes in v3: BEDROCK_MODEL_GRADING swapped to Nova Lite, TABLE_* constants dropped,
-# DATABASE_URL added for PostgreSQL.
+# backend/app/core/config.py
+# Central config — no hardcoded values anywhere else in the project
 
-# ─── DynamoDB Table Names ─────────────────────────────────────────────────────
+import os
 
-TABLE_ITEMS = "ReRoute_Items"
-TABLE_GRADING_REPORTS = "ReRoute_GradingReports"
-TABLE_FLOATING_DISCOUNTS = "ReRoute_FloatingDiscounts"
-TABLE_HUB_CHECKPOINTS = "ReRoute_HubCheckpoints"
-TABLE_HEALTH_CARDS = "ReRoute_HealthCards"
-TABLE_TRANSACTIONS = "ReRoute_Transactions"
-TABLE_ABUSE_FLAGS = "ReRoute_AbuseFlags"
+# ─── Database ──────────────────────────────────────────────────────────────────
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@localhost:5432/reroute",
+)
 
 # ─── AWS Config ───────────────────────────────────────────────────────────────
 
 AWS_REGION = "ap-south-1"
-BEDROCK_MODEL_GRADING = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-BEDROCK_MODEL_PRICING = "amazon.nova-lite-v1:0"
+BEDROCK_MODEL_GRADING = "amazon.nova-lite-v1:0"
+BEDROCK_MODEL_HEALTH_CARD = "anthropic.claude-3-5-sonnet-20241022-v2:0"
 REKOGNITION_MAX_LABELS = 20
 REKOGNITION_MIN_CONFIDENCE = 70
 

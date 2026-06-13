@@ -1,99 +1,86 @@
-# ReRoute — Project Status
+# ReRoute -- Project Status
 
-> **Last updated**: Solo night session — foundation layer + grade_item + route_evaluator complete.
-> **Next**: health_card lambda (P1), then app.py (P3).
-> **Ask me nothing** — read the CONNECTORS.md files.
+> **Last updated**: V3 refactor complete. Lambda/DynamoDB/Streamlit layer fully migrated to FastAPI/PostgreSQL.
+> **Next**: Frontend (Next.js), then deployment.
 
 ---
 
 ## FILE STATUS
 
-| File | Status | Owner |
-|---|---|---|
-| `lambdas/shared/config.py` | ✅ COMPLETE | Solo night session |
-| `lambdas/shared/models.py` | ✅ COMPLETE | Solo night session |
-| `lambdas/shared/db.py` | ✅ COMPLETE | Solo night session |
-| `lambdas/shared/CONNECTORS.md` | ✅ COMPLETE | Solo night session |
-| `seed/products.json` | ✅ COMPLETE | Solo night session |
-| `seed/trajectories.json` | ✅ COMPLETE | Solo night session |
-| `seed/personas.json` | ✅ COMPLETE | Solo night session |
-| `seed/seed_dynamodb.py` | ✅ COMPLETE | Solo night session |
-| `lambdas/grade_item/CONNECTORS.md` | ✅ COMPLETE | P1 (solo night) |
-| `lambdas/route_evaluator/CONNECTORS.md` | ✅ COMPLETE | P2 (solo night) |
-| `lambdas/health_card/CONNECTORS.md` | ✅ PLACEHOLDER | Handoff to P1 |
-| `lambdas/grade_item/lambda_function.py` | ✅ COMPLETE | P1 |
-| `lambdas/grade_item/test_local.py` | ✅ COMPLETE | P1 |
-| `lambdas/grade_item/requirements.txt` | ✅ COMPLETE | P1 |
-| `lambdas/route_evaluator/lambda_function.py` | ✅ COMPLETE | P2 |
-| `lambdas/route_evaluator/test_local.py` | ✅ COMPLETE | P2 |
-| `lambdas/route_evaluator/requirements.txt` | ✅ COMPLETE | P2 |
-| `lambdas/health_card/lambda_function.py` | 🔲 NOT STARTED | P1 — START HERE |
-| `lambdas/health_card/lambda_function.py` | 🔲 NOT STARTED | P1 |
-| `app.py` | 🔲 NOT STARTED | P3 — START HERE |
-| `requirements.txt` | 🔲 NOT STARTED | Anyone |
-| `.streamlit/config.toml` | 🔲 NOT STARTED | P3 |
+### Backend (`backend/`) -- NEW
 
----
-
-## WHAT P1 SHOULD BUILD FIRST (grade_item lambda)
-
-1. Read `lambdas/grade_item/CONNECTORS.md`
-2. Read `lambdas/shared/CONNECTORS.md` — every export you need is listed
-3. Build `lambdas/grade_item/lambda_function.py`:
-   - Rekognition DetectLabels → feature extraction
-   - Bedrock Claude 3.5 Sonnet + Vision → condition grading
-   - JSON extraction fallback (handles markdown fences)
-   - Returns a `GradingReport` Pydantic model
-4. Test on the 10 demo products in `seed/products.json`
-5. **The grading prompt is the most important string in the entire project.** See architecture-v2-final.md for the template.
-
-## WHAT P2 SHOULD BUILD FIRST (route_evaluator lambda)
-
-1. Read `lambdas/route_evaluator/CONNECTORS.md`
-2. Read `lambdas/shared/CONNECTORS.md` — every export you need is listed
-3. Build `lambdas/route_evaluator/lambda_function.py`:
-   - MVSP = V_graded − C_remaining
-   - 5-path routing tree (amazon_renewed, reroute_deals, relist, donate, recycle)
-   - Floating discount trajectory calculator
-   - Radius expansion logic
-4. Test against seed trajectory data in `seed/trajectories.json`
-
-## WHAT P3 SHOULD BUILD FIRST (app.py)
-
-1. Read `lambdas/shared/CONNECTORS.md` — models, config, db
-2. Build `app.py` with multi-tab layout:
-   - Tab 1 — Return Center (upload photos → grade)
-   - Tab 2 — ReRoute Deals Marketplace (floating discount cards + price trajectory chart)
-   - Tab 3 — ReList C2C (seller upload → grade → health card + QR → listing)
-3. Use `st.session_state` for state, `st.spinner()` during grading, `st.plotly_chart()` for trajectory
-
----
-
-## BLOCKERS (none)
-
-No blockers discovered during this session. All imports resolve. Seed script is ready to run once AWS credentials are configured and DynamoDB is accessible.
-
----
-
-## KEY CONSTANTS (at a glance)
-
-| Constant | Value |
+| File | Status |
 |---|---|
-| AWS Region | ap-south-1 (Mumbai) |
-| Bedrock Grading Model | `anthropic.claude-3-5-sonnet-20241022-v2:0` |
-| Bedrock Pricing Model | `amazon.nova-lite-v1:0` |
-| DynamoDB Tables | 7 tables, all prefixed `ReRoute_` |
-| Condition Grades | Like New (0.85), Good (0.60), Fair (0.35), Poor (0.15) |
-| Route Paths | amazon_renewed, reroute_deals, relist, donate, recycle |
-| Renewed Min Value | ₹2000 |
-| Demo Hubs | MUM_H1 (Andheri), MUM_H2 (Thane), MUM_H3 (Kalyan), MUM_W (Bhiwandi Warehouse) |
+| `app/core/config.py` | Done (refactored from v2, Nova Lite swap, DATABASE_URL added) |
+| `app/schemas/schemas.py` | Done (8 Pydantic models + request/response schemas) |
+| `app/db/database.py` | Done (SQLAlchemy engine + session) |
+| `app/db/models.py` | Done (7 ORM models, FK constraints) |
+| `app/db/seed.py` | Done (reads existing seed/*.json) |
+| `app/api/routes/grade.py` | Done (POST /api/grade) |
+| `app/api/routes/routing.py` | Done (POST /api/evaluate-route + GET /api/deals) |
+| `app/api/routes/health_card.py` | Done (POST /api/health-card) |
+| `app/services/grade_service.py` | Done (refactored from grade_item lambda) |
+| `app/services/routing_service.py` | Done (refactored from route_evaluator lambda) |
+| `app/services/health_card_service.py` | Done (Claude 3.5 + QR) |
+| `app/main.py` | Done (FastAPI app, CORS, routers) |
+| `requirements.txt` | Done |
+| `Dockerfile` | Done |
+| `apprunner.yaml` | Done |
+
+### Lambda (`lambdas/`) -- KEPT / DEPRECATED
+
+| File | Status |
+|---|---|
+| `cron/advance_rings.py` | Done (only Lambda kept from v2) |
+| `shared/config.py` | DEPRECATED -- migrated to backend/app/core/config.py |
+| `shared/models.py` | DEPRECATED -- migrated to backend/app/schemas/ + backend/app/db/ |
+
+### Seed Data (`seed/`) -- UNCHANGED
+
+| File | Status |
+|---|---|
+| `products.json` | Done (10 products, unchanged from v2) |
+| `trajectories.json` | Done (3 trajectories, unchanged from v2) |
+| `personas.json` | Done (3 personas, unchanged from v2) |
+
+### Frontend (`frontend/`) -- NOT STARTED
+
+| File | Status |
+|---|---|
+| Next.js 14 App Router | Not started |
+
+### Docs
+
+| File | Status |
+|---|---|
+| `README.md` | Done (updated for v3) |
+| `PROJECT_STATUS.md` | Done (updated) |
+| `FUTURE_IDEAS.md` | Done (unchanged) |
+| `docs/plans/2026-06-13-001-feat-reroute-v3-migration-plan.md` | Done |
+
+### Deleted (v2 Lambda artifacts)
+
+| File | Reason |
+|---|---|
+| `lambdas/grade_item/` (4 files) | Refactored into `backend/app/services/grade_service.py` + `grade.py` route |
+| `lambdas/route_evaluator/` (4 files) | Refactored into `backend/app/services/routing_service.py` + `routing.py` route |
+| `lambdas/shared/db.py` | DynamoDB CRUD replaced by SQLAlchemy |
+| `lambdas/shared/CONNECTORS.md` | Replaced by OpenAPI auto-docs |
+| `seed/seed_dynamodb.py` | Replaced by `backend/app/db/seed.py` |
+| All `CONNECTORS.md` files | Replaced by OpenAPI auto-docs at `/docs` |
 
 ---
 
-## SEED DATA SUMMARY
+## Key Changes Summary
 
-- **10 products** across 5 categories (₹299 – ₹8999)
-- **3 trajectory products**: Priya's shoes (Good, ₹599), Rahul's baby monitor (Good, ₹2499), phone case (Fair, ₹349)
-- **3 personas**: Priya (returner), Rahul (seller), Ananya (buyer)
-- **3 trajectories**: Each has 4 checkpoints (H1 → H2 → H3 → W) with decreasing C_remaining
-- **3 floating discounts**: Active at MUM_H1 with full price trajectory pre-calculated
+| What | v2 | v3 |
+|---|---|---|
+| Grading model | Claude 3.5 Sonnet | Nova Lite (faster, cheaper) |
+| Database | DynamoDB (7 tables) | PostgreSQL + SQLAlchemy (7 tables, FK constraints) |
+| API layer | Lambda + API Gateway | FastAPI on App Runner |
+| Docs | CONNECTORS.md files | OpenAPI auto-docs at `/docs` |
+| Health Card AI | (not in v2) | Claude 3.5 Sonnet (prose quality) |
+| QR Code | -- | Python qrcode in FastAPI |
+| Cron | -- | Lambda `advance_rings.py` |
+
+**Zero business logic changes**: All formulas, thresholds, multipliers, prompts, and boto3 call patterns are identical to v2.
