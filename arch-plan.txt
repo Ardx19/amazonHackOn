@@ -1,0 +1,521 @@
+# ReRoute — Architecture v3 (Final Stack)
+
+> **Theme 3: Products Without a Second Chance** — Amazon HackOn 2026
+>
+> **Status**: Architecture complete. Foundation layer (`lambdas/shared/`, `seed/`) + `grade_item` + `route_evaluator` lambdas built (18 files, ~1,300 lines). Migration to final stack pending.
+>
+> **This is the build plan for the final stack.** Read this before writing any code under `backend/` or `frontend/`.
+
+---
+
+## 1. Working Backwards — Press Release
+
+**FOR IMMEDIATE RELEASE**
+
+**Amazon Launches ReRoute: Every Returned Item Finds Its Next Best Owner**
+
+*New AI system turns reverse logistics into a live marketplace, recovering maximum value at every point in the return journey*
+
+Today, Amazon announces ReRoute — an intelligent resale platform embedded inside the Amazon app. When a customer returns an item, ReRoute's AI grades it in under 3 seconds and lists it as a discounted deal for nearby buyers while the item is still in transit. The discount is largest when the item is farthest from the warehouse — because that's where Amazon saves the most logistics cost by not shipping it further. As the item moves through hubs, the price rises automatically. Buyers who act fast get the deepest discount. Every item that sells in transit is a return that never reaches the warehouse.
+
+ReRoute also enables a trusted C2C marketplace: customers can list used or outgrown items, get an AI-generated Product Health Card (immutable, Amazon-verified), and sell to a nearby buyer — with none of the friction or danger of OLX or Facebook Marketplace.
+
+*"My daughter outgrew her baby monitor in two months. I wasn't going to deal with strangers. ReRoute let me list it in 30 seconds, and I had the money before lunch."*
+— Rahul M., Mumbai
+
+---
+
+## 2. The Problem
+
+Amazon routes every return back to the source warehouse regardless of value — destroying ₹470 of a ₹500 item when logistics costs exceed recovery value. No intelligent system intercepts items mid-return, grades them instantly, and routes them to the highest-value exit.
+
+---
+
+## 3. Why v3 — The Stack Decision
+
+The v2 architecture (Lambda + DynamoDB + Streamlit) was selected for maximum build speed under a solo night constraint. It succeeded — the AI grading pipeline and cascade routing engine are fully built and tested (7/7 tests pass).
+
+The final stack optimizes for **demo impact and judging criteria**:
+
+| Dimension | v2 (old) | v3 (final) | Why |
+|---|---|---|---|
+| Frontend | Streamlit | Next.js 14 App Router | SSR, mobile-first, professional UI. Judging panel sees a real web app, not a data dashboard |
+| Backend | Lambda + API Gateway | FastAPI on App Runner | Warm container, async boto3, OpenAPI auto-docs. Judges can see the API surface |
+| Database | DynamoDB | PostgreSQL 15 on RDS | Joins, FK constraints, migrations. Judges see relational integrity, not NoSQL convenience |
+| AI Grading | Bedrock Claude 3.5 Sonnet | Bedrock Nova Lite | Speed + cost. Nova Lite is optimized for structured extraction; Claude is overkill for condition grading |
+| AI Health Card | (not in v2) | Bedrock Claude 3.5 Sonnet | Prose quality matters for consumer trust. Claude writes better health assessments |
+| QR Code | — | Python `qrcode` in FastAPI | Server-side PNG generation, no JS dependency |
+| Deployment | Console zip | Amplify (frontend) + App Runner (backend) | GitHub push → deploy. Judges see CI/CD, not manual uploads |
+| Cron | — | Lambda (kept) | Ring progression is fire-and-forget. Lambda is the right tool for scheduled tasks even with FastAPI |
+
+**What stays**: All business logic (condition multipliers, cascade formulas, routing thresholds, ring price floors). All boto3 calls (Rekognition, Bedrock, S3). All seed data. Zero AI pipeline changes beyond the model ID.
+
+---
+
+## 4. Final Tech Stack
+
+| Layer | Technology | Why |
+|---|---|---|
+| **Frontend** | Next.js 14 App Router (TypeScript) | SSR, mobile-first, file-based routing, Amplify deploy from GitHub push |
+| **Backend** | FastAPI (Python 3.11) on App Runner | Warm container, async boto3, OpenAPI auto-docs, boto3-native |
+| **Cron** | Lambda (Python 3.11) | Ring progression — fire and forget, only Lambda kept from v2 |
+| **Database** | PostgreSQL 15 on RDS (t4g.micro) | Joins, FK constraints, Alembic migrations, SQLAlchemy ORM |
+| **AI — Grading** | Bedrock Nova Lite (`amazon.nova-lite-v1:0`) | Speed + cost optimized for structured JSON extraction |
+| **AI — Features** | Amazon Rekognition (DetectLabels) | Pre-warms category detection. Non-fatal on failure |
+| **AI — Health Card** | Bedrock Claude 3.5 Sonnet (`anthropic.claude-3-5-sonnet-20241022-v2:0`) | Prose quality for consumer-facing health assessments |
+| **QR Code** | Python `qrcode` in FastAPI | Server-side PNG → base64 → frontend display |
+| **Storage** | Amazon S3 | Product photos + health card assets |
+| **Deployment** | Amplify (frontend) + App Runner (backend) | Both deploy from GitHub push |
+| **Auth** | None (hardcoded personas) | Priya, Rahul, Ananya. Mention Cognito for production |
+| **Cost** | < ₹1,500 for 48h | RDS t4g.micro ~₹300, App Runner ~₹500. Bedrock Nova Lite cheaper than Claude |
+
+---
+
+## 5. What We Are NOT Using
+
+| Not using | The v2 tool it replaces | Why not |
+|---|---|---|
+| Streamlit | ✅ used in v2 | Single Python file → polished SSR app. Judges see a web app, not a dashboard |
+| Lambda (for APIs) | ✅ used in v2 | Cold starts visible in demo. Warm FastAPI container has no cold starts |
+| DynamoDB | ✅ used in v2 | No joins, no FK constraints. PostgreSQL shows relational integrity to judges |
+| Claude 3.5 Sonnet (for grading) | ✅ used in v2 | Overkill for structured JSON extraction. Nova Lite is faster and cheaper |
+| API Gateway | ✅ used in v2 | FastAPI handles routing natively. App Runner exposes HTTP directly |
+| Tailwind CSS | — | Next.js with CSS Modules or plain CSS. No framework overhead |
+| Amazon Cognito | — | Login screens don't help a 3-minute demo |
+| Amazon Location Service | — | Text-based distance ("3.2km from you") is sufficient |
+| Vercel | — | Amplify is the Amazon-native choice. Judges care about AWS stack depth |
+
+---
+
+## 6. System Architecture
+
+```mermaid
+flowchart TB
+    subgraph FRONTEND["Next.js 14 App Router (Amplify)"]
+        PAGE1["page.tsx — Return Center<br/>Photo upload + grading trigger"]
+        PAGE2["deals/page.tsx — ReRoute Deals<br/>Floating discount marketplace"]
+        PAGE3["relist/page.tsx — ReList C2C<br/>Seller flow + Health Card"]
+    end
+
+    subgraph BACKEND["FastAPI on App Runner"]
+        API1["POST /api/grade<br/>Rekognition + Bedrock Nova Lite"]
+        API2["POST /api/evaluate-route<br/>Cascade auction + listing"]
+        API3["POST /api/health-card<br/>Claude 3.5 Sonnet + QR"]
+        SVC["services/<br/>grade_service.py<br/>routing_service.py<br/>health_card_service.py"]
+    end
+
+    subgraph CRON["Cron Lambda"]
+        RING["advance_rings.py<br/>Fires every 24h<br/>Advances unsold listings"]
+    end
+
+    subgraph DATA["Data Layer"]
+        RDS[("PostgreSQL 15 on RDS<br/>t4g.micro<br/>7 tables, FK constraints<br/>Alembic migrations")]
+        S3[("S3<br/>reroute-item-images<br/>reroute-health-cards")]
+    end
+
+    subgraph AI["AWS AI Services"]
+        REKOG["Rekognition<br/>DetectLabels<br/>Feature extraction"]
+        NOVA["Bedrock Nova Lite<br/>Condition grading<br/>JSON output"]
+        CLAUDE["Bedrock Claude 3.5 Sonnet<br/>Health Card prose<br/>Consumer quality"]
+    end
+
+    PAGE1 -->|"POST multipart"| API1
+    PAGE2 -->|"GET listings"| API2
+    PAGE3 -->|"POST c2c-grade"| API1
+    PAGE3 -->|"POST health-card"| API3
+
+    API1 --> REKOG
+    API1 --> NOVA
+    API2 --> SVC
+    API3 --> CLAUDE
+    SVC --> RDS
+    API1 --> S3
+    API3 --> S3
+    RING --> RDS
+
+    style FRONTEND fill:#000,stroke:#ff9900,color:#fff
+    style BACKEND fill:#2d3748,stroke:#ff9900,color:#fff
+    style CRON fill:#ff9900,stroke:#232f3e,color:#000
+    style RDS fill:#3b48cc,stroke:#232f3e,color:#fff
+    style S3 fill:#3b48cc,stroke:#232f3e,color:#fff
+    style REKOG fill:#ff9900,stroke:#232f3e,color:#000
+    style NOVA fill:#ff9900,stroke:#232f3e,color:#000
+    style CLAUDE fill:#ff9900,stroke:#232f3e,color:#000
+```
+
+**Data flow (one sentence)**: Next.js uploads photos → FastAPI `/api/grade` calls Rekognition + Bedrock Nova Lite → grading JSON → PostgreSQL → FastAPI `/api/evaluate-route` calculates cascade prices → listing in PostgreSQL → Next.js renders marketplace with prices. Cron Lambda advances unsold listings every 24h.
+
+---
+
+## 7. New Project Structure
+
+```
+ReRoute/
+│
+├── backend/                          # FastAPI on App Runner
+│   ├── app/
+│   │   ├── main.py                   # FastAPI app, CORS, router registration
+│   │   ├── core/
+│   │   │   └── config.py            # ← REFACTORED from lambdas/shared/config.py
+│   │   ├── schemas/
+│   │   │   └── schemas.py           # ← REFACTORED from lambdas/shared/models.py
+│   │   ├── db/
+│   │   │   ├── database.py          # NEW: SQLAlchemy engine + sessionmaker
+│   │   │   ├── models.py            # NEW: SQLAlchemy ORM (7 tables, FK constraints)
+│   │   │   ├── seed.py              # NEW: reads seed/*.json, seeds PostgreSQL
+│   │   │   └── migrations/          # Alembic auto-generated
+│   │   ├── api/
+│   │   │   └── routes/
+│   │   │       ├── grade.py         # ← REFACTORED from lambdas/grade_item/
+│   │   │       ├── routing.py       # ← REFACTORED from lambdas/route_evaluator/
+│   │   │       └── health_card.py   # NEW: health card + QR endpoint
+│   │   ├── services/
+│   │   │   ├── grade_service.py     # ← REFACTORED from grade_item lambda_function.py
+│   │   │   ├── routing_service.py   # ← REFACTORED from route_evaluator lambda_function.py
+│   │   │   └── health_card_service.py  # NEW
+│   │   └── cron/
+│   │       └── advance_rings.py     # ← REFACTORED from advance_to_next_ring()
+│   ├── requirements.txt             # fastapi, uvicorn, sqlalchemy, asyncpg, boto3, pydantic, qrcode, pillow
+│   ├── Dockerfile                   # App Runner deployment
+│   └── apprunner.yaml               # App Runner service config
+│
+├── frontend/                         # Next.js 14 App Router (Amplify)
+│   ├── app/
+│   │   ├── page.tsx                  # Tab 1 — Return Center (upload + grade)
+│   │   ├── deals/
+│   │   │   └── page.tsx              # Tab 2 — ReRoute Deals marketplace
+│   │   ├── relist/
+│   │   │   └── page.tsx              # Tab 3 — ReList C2C
+│   │   └── layout.tsx                # Root layout with navigation
+│   ├── components/
+│   │   ├── GradingCard.tsx           # Condition badge + defect list
+│   │   ├── DealCard.tsx              # Floating discount listing card
+│   │   ├── PriceTrajectory.tsx       # Plotly.js ring progression chart
+│   │   ├── HealthCard.tsx            # Nutrition-label style health card
+│   │   └── QRDisplay.tsx             # QR code image display
+│   ├── lib/
+│   │   └── api.ts                    # fetch() wrappers for FastAPI endpoints
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── next.config.js
+│   └── amplify.yml                   # Amplify build config
+│
+├── lambdas/                          # KEPT: cron Lambda + shared logic
+│   └── cron/
+│       └── advance_rings.py          # Fire-and-forget ring progression
+│
+├── seed/                             # KEPT: seed data
+│   ├── products.json
+│   ├── trajectories.json
+│   └── personas.json
+│
+├── README.md
+└── FUTURE_IDEAS.md
+```
+
+---
+
+## 8. Component Migration Map
+
+Every v2 component maps to a v3 counterpart. Zero logic changes in the business layer.
+
+| v2 File | v3 File | Changes |
+|---|---|---|
+| `lambdas/shared/config.py` | `backend/app/core/config.py` | Drop `TABLE_*` constants (7). Add `DATABASE_URL`. Swap `BEDROCK_MODEL_GRADING` → `amazon.nova-lite-v1:0`. Add `BEDROCK_MODEL_HEALTH_CARD` = `anthropic.claude-3-5-sonnet-20241022-v2:0` |
+| `lambdas/shared/models.py` | `backend/app/schemas/schemas.py` + `backend/app/db/models.py` | Split: Pydantic schemas (API validation) + SQLAlchemy ORM models (DB). Add FK constraints in ORM |
+| `lambdas/shared/db.py` | `backend/app/db/database.py` | DynamoDB `put_item`/`get_item` → SQLAlchemy `session.add()`/`session.query()` |
+| `lambdas/grade_item/lambda_function.py` | `backend/app/services/grade_service.py` + `backend/app/api/routes/grade.py` | `handler(event, context)` → `@router.post("/api/grade")`. Same boto3 calls. Same prompt. Same JSON extraction |
+| `lambdas/route_evaluator/lambda_function.py` | `backend/app/services/routing_service.py` + `backend/app/api/routes/routing.py` | Same cascade formulas. Same ring prices. DB writes via SQLAlchemy |
+| `advance_to_next_ring()` | `lambdas/cron/advance_rings.py` (Lambda) + `backend/app/cron/advance_rings.py` (logic import) | Same logic, deployed as Lambda. Called once per 24h |
+| `seed/seed_dynamodb.py` | `backend/app/db/seed.py` | Reads same 3 JSON files. Seeds via SQLAlchemy |
+| `app.py` (Streamlit) | `frontend/app/` (Next.js pages) | `st.tabs()` → Next.js pages. `st.plotly_chart()` → Plotly.js component. `st.file_uploader` → `<input type="file">` with multipart POST |
+| — | `frontend/lib/api.ts` | NEW: `fetch()` wrappers. `/api/grade`, `/api/evaluate-route`, `/api/health-card` |
+
+**Unchanged**: `seed/products.json`, `seed/trajectories.json`, `seed/personas.json`, all business constants (CONDITION_MULTIPLIERS, ROUTE_PATHS, RING_PRICE_FLOORS, etc.), all formulas (MVSP, profitable radius, ring price), Rekognition/Bedrock boto3 call patterns.
+
+---
+
+## 9. Core API Endpoints
+
+### `POST /api/grade`
+```
+Input:  Multipart form — images[] (2-3 files) + item_id + original_price_inr + category
+Output: GradingReport JSON — condition_grade, defects, confidence, estimated_retail_inr, suggested_resale_band_inr, recommended_route (preliminary)
+
+AWS calls: Rekognition DetectLabels → Bedrock Nova Lite invoke_model
+Writes: grading_reports row in PostgreSQL
+```
+
+### `POST /api/evaluate-route`
+```
+Input:  JSON — item_id + original_price_inr + category + current_location + ring_index
+Output: RoutingDecision JSON — final_route, sale_price_inr, profitable_radius_km, listing_id, overhead_ratio, entered_reroute
+
+Formula:  graded_value = multiplier × price → overhead_ratio → gate → cascade → ring price
+Reads:    grading_reports (PostgreSQL)
+Writes:   floating_discounts row (PostgreSQL)
+```
+
+### `POST /api/health-card`
+```
+Input:  JSON — item_id + seller_id + seller_name + seller_city
+Output: HealthCard JSON — card_uuid, card_url, qr_code_base64, condition_grade, defects, confidence, immutable flag
+
+AWS calls: Bedrock Claude 3.5 Sonnet invoke_model (prose generation) + qrcode lib (PNG → base64)
+Reads:    grading_reports (PostgreSQL)
+Writes:   health_cards row (PostgreSQL)
+```
+
+### `GET /api/deals`
+```
+Input:  Query params — hub_id (optional), max_radius (optional)
+Output: list[FloatingDiscount] — filtered by hub and radius
+
+Reads:   floating_discounts (PostgreSQL)
+Used by: deals/page.tsx (marketplace grid)
+```
+
+---
+
+## 10. PostgreSQL Schema
+
+```sql
+-- 7 tables, FK constraints, Alembic migrations
+
+CREATE TABLE items (
+    item_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    brand TEXT,
+    original_price_inr DECIMAL NOT NULL,
+    image_filename TEXT,
+    demo_condition_preset TEXT,
+    demo_defects_preset JSONB,
+    is_trajectory_product BOOLEAN DEFAULT false,
+    trajectory_id TEXT
+);
+
+CREATE TABLE grading_reports (
+    report_id UUID PRIMARY KEY,
+    item_id TEXT NOT NULL REFERENCES items(item_id),
+    product_category TEXT,
+    brand_guess TEXT,
+    condition_grade TEXT NOT NULL,
+    defects JSONB DEFAULT '[]',
+    completeness TEXT DEFAULT 'complete',
+    confidence DECIMAL NOT NULL,
+    estimated_retail_inr DECIMAL,
+    suggested_resale_band_inr JSONB,
+    recommended_route TEXT,
+    routing_reason TEXT,
+    manual_review_recommended BOOLEAN DEFAULT false,
+    graded_at TIMESTAMP NOT NULL,
+    rekognition_labels TEXT[] DEFAULT '{}'
+);
+
+CREATE TABLE floating_discounts (
+    listing_id UUID PRIMARY KEY,
+    item_id TEXT NOT NULL REFERENCES items(item_id),
+    current_hub_id TEXT,
+    ring_index INTEGER DEFAULT 0,
+    original_price_inr DECIMAL NOT NULL,
+    v_graded_inr DECIMAL NOT NULL,
+    c_remaining_inr DECIMAL NOT NULL,
+    mvsp_inr DECIMAL NOT NULL,
+    current_sale_price_inr DECIMAL NOT NULL,
+    discount_pct DECIMAL NOT NULL,
+    radius_km DECIMAL NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    status TEXT DEFAULT 'active',
+    product_name TEXT,
+    current_hub_name TEXT,
+    trajectory JSONB
+);
+
+CREATE TABLE hub_checkpoints (
+    checkpoint_id UUID PRIMARY KEY,
+    item_id TEXT NOT NULL REFERENCES items(item_id),
+    trajectory_id TEXT,
+    hub_id TEXT NOT NULL,
+    hub_name TEXT,
+    arrived_at TIMESTAMP NOT NULL,
+    c_remaining_inr DECIMAL NOT NULL,
+    distance_to_warehouse_km DECIMAL NOT NULL
+);
+
+CREATE TABLE health_cards (
+    card_uuid TEXT PRIMARY KEY,
+    item_id TEXT NOT NULL REFERENCES items(item_id),
+    card_url TEXT,
+    condition_grade TEXT NOT NULL,
+    defects JSONB DEFAULT '[]',
+    brand_guess TEXT,
+    product_category TEXT,
+    confidence DECIMAL NOT NULL,
+    seller_name TEXT,
+    seller_city TEXT,
+    amazon_guarantee BOOLEAN DEFAULT true,
+    generated_at TIMESTAMP NOT NULL,
+    grading_model_version TEXT
+);
+
+CREATE TABLE transactions (
+    transaction_id UUID PRIMARY KEY,
+    listing_id TEXT NOT NULL,
+    buyer_id TEXT NOT NULL,
+    seller_id TEXT NOT NULL,
+    amount_inr DECIMAL NOT NULL,
+    listing_type TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',
+    created_at TIMESTAMP NOT NULL,
+    completed_at TIMESTAMP
+);
+
+CREATE TABLE abuse_flags (
+    account_id TEXT NOT NULL,
+    rule_triggered TEXT NOT NULL,
+    flagged_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (account_id, rule_triggered)
+);
+```
+
+---
+
+## 11. What Has Already Been Built (v2 Foundation)
+
+18 files, ~1,300 lines of Python. All validated and tested.
+
+| Layer | Status |
+|---|---|
+| `lambdas/shared/config.py` | ✅ All constants, model IDs, Mumbai hubs, thresholds, ring floors |
+| `lambdas/shared/models.py` | ✅ 8 Pydantic v2 models |
+| `lambdas/shared/db.py` | ✅ 6 DynamoDB CRUD functions (will be retired) |
+| `lambdas/grade_item/lambda_function.py` | ✅ 6 functions: Rekognition → prompt → Bedrock → GradingReport |
+| `lambdas/grade_item/test_local.py` | ✅ --mock mode outputs valid GradingReport |
+| `lambdas/route_evaluator/lambda_function.py` | ✅ 8 functions: cascade model, 5-ring auction, 7/7 tests pass |
+| `lambdas/route_evaluator/test_local.py` | ✅ Ring progression verified: ₹316→₹359 |
+| `seed/products.json` | ✅ 10 products (₹299–₹8999, 5 categories) |
+| `seed/trajectories.json` | ✅ 3 trajectories × 4 checkpoints |
+| `seed/personas.json` | ✅ Priya, Rahul, Ananya |
+| `seed/seed_dynamodb.py` | ✅ Creates 7 tables, seeds data (will be retired) |
+
+---
+
+## 12. What Needs to Be Built (v3 Final)
+
+### Phase 1: Backend Skeleton (4h)
+- `backend/app/main.py` + `core/config.py` + `db/database.py`
+- SQLAlchemy models + Alembic initial migration
+- `db/seed.py` (reads existing JSON files)
+- Dockerfile + apprunner.yaml
+
+### Phase 2: API Endpoints (8h)
+- `POST /api/grade` — refactored from existing lambda
+- `POST /api/evaluate-route` — refactored from existing lambda
+- `POST /api/health-card` — new (Claude 3.5 + QR code)
+- `GET /api/deals` — new (read listings from PostgreSQL)
+- Cron Lambda `advance_rings.py`
+
+### Phase 3: Frontend (8h)
+- Next.js 14 App Router scaffold + layout
+- `page.tsx` — Return Center with photo upload
+- `deals/page.tsx` — ReRoute Deals marketplace with price trajectory chart
+- `relist/page.tsx` — ReList C2C with health card display
+- `lib/api.ts` — API client
+- `amplify.yml`
+
+### Phase 4: Integration + Polish (6h)
+- End-to-end flow testing (upload → grade → route → listing → display)
+- Demo scenario rehearsal (3 minutes timed)
+- Backup video recording
+- Pitch deck
+
+---
+
+## 13. 48-Hour Build Plan
+
+| Hours | Work | Owner |
+|---|---|---|
+| **H0–4** | Backend skeleton: FastAPI app, SQLAlchemy, Alembic, seed, Docker/App Runner config | P1 + P2 |
+| **H4–8** | API: `/api/grade` (refactor from lambda). Test with existing product images | P1 |
+| **H8–12** | API: `/api/evaluate-route` (refactor from lambda). Verify ring progression | P1 + P2 |
+| **H12–16** | API: `/api/health-card` (new — Claude 3.5 + QR code). Test with 3 products | P1 |
+| **H16–20** | Frontend: Next.js scaffold, layout, `lib/api.ts`, all 3 pages skeleton | P3 |
+| **H20–24** | Frontend: DealCard, PriceTrajectory (Plotly.js), GradingCard components | P3 |
+| **H24–28** | Integration: end-to-end flow testing | All |
+| **H28–32** | Demo scenario scripting + rehearsal | All |
+| **H32–36** | Pitch deck + backup video | P3 + P1 |
+| **H36–42** | Polish: UI transitions, error states, loading skeletons, mobile responsive | P3 |
+| **H42–48** | **CONTINGENCY** — 6 hours for the unexpected | All |
+
+---
+
+## 14. The 3-Minute Demo Storyboard
+
+### Scene 0: Opening Hook (0:00–0:25)
+
+*Screen*: Title card — "Amazon ReRoute". Split: Left = current returns (warehouse, write-off). Right = ReRoute (intercept, grade, sell in transit).
+
+*We say*: "Amazon delivers in 10 minutes. Returns still take days and lose value at every kilometer. ReRoute fixes that."
+
+### Scene 1: Return Center + Floating Discount (0:25–1:30)
+
+*Screen*: Next.js — Return Center page. "Priya's shoe return."
+
+1. Upload 3 photos of Nike shoes. Loading spinner.
+2. **Grading result**: "Condition: GOOD (87%). Scuff on toe cap. Recovery value: ₹350 (70%)."
+3. **Route Evaluator**: "Route: ReRoute Deals. Overhead: 33.4%. Intercept at current hub."
+4. **Floating discount**: Deals page — "Nike Shoes — ₹316 (47% off). At Ring 0, 25km from you."
+5. *Price trajectory chart*: Line going UP. Ring 0: ₹316 → Ring 1: ₹327 → ... → Home: ₹359.
+6. "Buy now before the price rises."
+
+### Scene 2: C2C Marketplace + Health Card (1:30–2:30)
+
+*Screen*: ReList C2C page. "Rahul's baby monitor."
+
+1. Rahul uploads 3 photos.
+2. **Grading result**: "Baby monitor. Condition: GOOD (83%). Minor bezel scratch."
+3. **Health Card**: Nutrition-label card. QR code. "Seller cannot edit this card."
+4. **AI Pricing**: "Suggested price: ₹800."
+5. **Listing Preview**: Live on ReList.
+
+### Scene 3: Impact + Close (2:30–3:00)
+
+*Screen*: Metrics dashboard.
+
+- "Products Processed: 3 | Recovery Rate: 72% | Revenue Recovered: ₹1,430"
+- "CO2 Saved: 12.4 kg | Active Listings: 2"
+
+*Closing stat*: "At Amazon India scale: 50M returns/year × ₹350 avg benefit = **₹17,500 crore recovered annually.**"
+
+---
+
+## 15. Risk Analysis
+
+| Risk | Severity | Mitigation |
+|---|---|---|
+| Bedrock Nova Lite produces unreliable JSON | **CRITICAL** | Same `extract_json_from_response()` fallback as v2. Nova Lite is optimized for structured extraction — actually lower risk than Claude |
+| Next.js 14 App Router learning curve | High | P3 starts with scaffold + layout before any business logic. Fetch API is universal — `lib/api.ts` wraps all backend calls |
+| PostgreSQL schema drift from DynamoDB | Medium | Same logical schema. FK constraints are additive — they don't break existing logic. Alembic handles migrations |
+| App Runner cold start | Low | Warm container. Unlike Lambda, no per-request cold start |
+| QR code generation in FastAPI | Low | `qrcode` library is stable. Same pattern as v2's Python qrcode |
+| Cron Lambda not triggering | Low | Manual trigger available in demo. Ring progression is a nice-to-have, not core flow |
+
+---
+
+## 16. Cost Estimate (48h + Demo)
+
+| Service | Usage | Est. Cost |
+|---|---|---|
+| Bedrock Nova Lite (grading) | ~200 calls | ~₹300 ($3.60) — cheaper than Claude |
+| Bedrock Claude 3.5 Sonnet (health cards) | ~30 calls | ~₹400 ($4.80) |
+| Rekognition DetectLabels | ~200 calls | Free tier (1,000/month) |
+| RDS t4g.micro (PostgreSQL) | 48h | ~₹300 ($3.60) |
+| App Runner (1 vCPU, 2 GB) | 48h | ~₹500 ($6.00) |
+| Amplify (frontend) | Build + hosting | Free tier |
+| S3 | ~50 images, 50MB | Free tier |
+| **Total** | | **< ₹1,500 (< $18)** |
+
+---
+
+*End of architecture-v3-final. The v2 foundation layer built the AI pipeline and routing engine. v3 wraps them in a polished web app with relational data integrity.*

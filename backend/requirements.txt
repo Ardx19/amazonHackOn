@@ -1,9 +1,35 @@
-fastapi>=0.110.0
-uvicorn>=0.29.0
-sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.0
-boto3>=1.34.0
-pydantic>=2.0.0
-qrcode[pil]>=7.4.0
-pillow>=10.0.0
-python-multipart>=0.0.9
+# ─── Web framework ────────────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12
+
+# ─── Database ─────────────────────────────────────────────────────────────────
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10      # PostgreSQL driver (prod)
+alembic==1.14.0              # DB migrations (run manually; seed.py uses create_all for demo)
+
+# ─── AWS SDK ──────────────────────────────────────────────────────────────────
+boto3==1.35.86               # Bedrock, Rekognition, S3
+
+# ─── Data validation ──────────────────────────────────────────────────────────
+pydantic==2.10.3
+pydantic-settings==2.7.0     # Future: load config from env/secrets manager
+
+# ─── AI / QR ──────────────────────────────────────────────────────────────────
+qrcode[pil]==8.0             # QR code PNG generation
+pillow==11.0.0               # Image processing (QR backend)
+
+# ─── Analytics / anomaly detection ───────────────────────────────────────────
+scipy==1.14.1                # Z-score abuse detection
+numpy==2.1.3                 # Dependency of scipy
+
+# ─── Testing ──────────────────────────────────────────────────────────────────
+pytest==8.3.4
+pytest-cov==6.0.0
+httpx==0.28.1                # Required by FastAPI TestClient
+
+# ─── Optional / future ────────────────────────────────────────────────────────
+# Uncomment when adding the features described in AWS_INTEGRATION_GUIDE.md
+# redis==5.2.1               # Session store / rate-limit counters
+# celery==5.4.0              # Async task queue for grading jobs
+# boto3-stubs[bedrock-runtime,rekognition,s3,ses]==1.35.86  # Type stubs
