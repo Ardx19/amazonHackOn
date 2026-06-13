@@ -27,6 +27,7 @@ export default function RelistPage() {
   const [selectedProduct, setSelectedProduct] = useState(C2C_PRODUCTS[0]);
   const [selectedSeller, setSelectedSeller] = useState(DEMO_SELLERS[0]);
   const [files, setFiles] = useState<FileList | null>(null);
+  const [sellerUsage, setSellerUsage] = useState("");
 
   const [gradingReport, setGradingReport] = useState<GradingReport | null>(null);
   const [healthCard, setHealthCard] = useState<HealthCard | null>(null);
@@ -53,6 +54,7 @@ export default function RelistPage() {
       formData.append("product_name", selectedProduct.name);
       formData.append("category", selectedProduct.category);
       formData.append("original_price_inr", String(selectedProduct.price));
+      formData.append("flow", "relist");
       for (let i = 0; i < Math.min(files.length, 3); i++) {
         formData.append("images", files[i]);
       }
@@ -67,6 +69,7 @@ export default function RelistPage() {
         seller_id: selectedSeller.id,
         seller_name: selectedSeller.name,
         seller_city: selectedSeller.city,
+        seller_usage_description: sellerUsage.trim() || undefined,
       });
       setHealthCard(card);
       setStep("done");
@@ -128,6 +131,18 @@ export default function RelistPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="seller-usage">How long have you used it? (optional)</label>
+              <input
+                id="seller-usage"
+                type="text"
+                placeholder='e.g. "Used for 3 months, works perfectly"'
+                value={sellerUsage}
+                onChange={(e) => setSellerUsage(e.target.value)}
+                style={{ marginTop: 4 }}
+              />
             </div>
 
             <div>

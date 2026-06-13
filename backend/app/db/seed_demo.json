@@ -1,0 +1,1483 @@
+{
+    "items": [
+        {
+            "item_id": "PROD_001",
+            "name": "Nike Revolution 6 Running Shoes",
+            "category": "footwear",
+            "brand": "Nike",
+            "original_price_inr": 599,
+            "image_filename": "prod_001.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "scuff", "severity": "minor", "location": "left toe cap"},
+                {"defect_type": "scuff", "severity": "minor", "location": "right heel"}
+            ],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_PRIYA_F1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_002",
+            "name": "Philips Avent Digital Baby Monitor",
+            "category": "baby_products",
+            "brand": "Philips Avent",
+            "original_price_inr": 2499,
+            "image_filename": "prod_002.jpg",
+            "demo_condition_preset": "Like New",
+            "demo_defects_preset": [],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_003",
+            "name": "Spigen Rugged Armor Case for iPhone 14",
+            "category": "electronics",
+            "brand": "Spigen",
+            "original_price_inr": 349,
+            "image_filename": "prod_003.jpg",
+            "demo_condition_preset": "Fair",
+            "demo_defects_preset": [
+                {"defect_type": "scratch", "severity": "moderate", "location": "back panel"},
+                {"defect_type": "scuff", "severity": "minor", "location": "bottom edge"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_004",
+            "name": "Puma Unisex Smash V2 Sneakers",
+            "category": "footwear",
+            "brand": "Puma",
+            "original_price_inr": 2999,
+            "image_filename": "prod_004.jpg",
+            "demo_condition_preset": "Like New",
+            "demo_defects_preset": [],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_005",
+            "name": "boAt Airdopes 141 Bluetooth Earbuds",
+            "category": "electronics",
+            "brand": "boAt",
+            "original_price_inr": 1499,
+            "image_filename": "prod_005.jpg",
+            "demo_condition_preset": "Fair",
+            "demo_defects_preset": [
+                {"defect_type": "scuff", "severity": "moderate", "location": "charging case"},
+                {"defect_type": "scratch", "severity": "minor", "location": "left earbud"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_006",
+            "name": "Ray-Ban Aviator Classic Sunglasses",
+            "category": "clothing",
+            "brand": "Ray-Ban",
+            "original_price_inr": 8999,
+            "image_filename": "prod_006.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "scratch", "severity": "minor", "location": "left lens edge"}
+            ],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_SNEHA_C1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_007",
+            "name": "Bata Black Leather Formal Shoes",
+            "category": "footwear",
+            "brand": "Bata",
+            "original_price_inr": 1299,
+            "image_filename": "prod_007.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "scuff", "severity": "minor", "location": "right heel edge"}
+            ],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_MEERA_F1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_008",
+            "name": "Adidas Ultraboost 23 Running Shoes",
+            "category": "footwear",
+            "brand": "Adidas",
+            "original_price_inr": 5999,
+            "image_filename": "prod_008.jpg",
+            "demo_condition_preset": "Like New",
+            "demo_defects_preset": [],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_PRIYA_F2",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_009",
+            "name": "Sparx Men's Flip-Flops",
+            "category": "footwear",
+            "brand": "Sparx",
+            "original_price_inr": 299,
+            "image_filename": "prod_009.jpg",
+            "demo_condition_preset": "Poor",
+            "demo_defects_preset": [
+                {"defect_type": "tear", "severity": "major", "location": "right strap detached"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_010",
+            "name": "Crocs Unisex Classic Clogs",
+            "category": "footwear",
+            "brand": "Crocs",
+            "original_price_inr": 1799,
+            "image_filename": "prod_010.jpg",
+            "demo_condition_preset": "Fair",
+            "demo_defects_preset": [
+                {"defect_type": "scuff", "severity": "moderate", "location": "sole tread worn"},
+                {"defect_type": "stain", "severity": "minor", "location": "right clog top"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_011",
+            "name": "JBL Tune 510BT Wireless Headphones",
+            "category": "electronics",
+            "brand": "JBL",
+            "original_price_inr": 2999,
+            "image_filename": "prod_011.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "scratch", "severity": "minor", "location": "headband surface"}
+            ],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_KARAN_E1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_012",
+            "name": "Mi 20000mAh Power Bank",
+            "category": "electronics",
+            "brand": "Xiaomi",
+            "original_price_inr": 1299,
+            "image_filename": "prod_012.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "scuff", "severity": "minor", "location": "USB port area"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_013",
+            "name": "Samsung Galaxy Watch 4 Classic 46mm",
+            "category": "electronics",
+            "brand": "Samsung",
+            "original_price_inr": 9999,
+            "image_filename": "prod_013.jpg",
+            "demo_condition_preset": "Like New",
+            "demo_defects_preset": [],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_MEERA_E1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_014",
+            "name": "AmazonBasics USB-C 7-in-1 Hub",
+            "category": "electronics",
+            "brand": "AmazonBasics",
+            "original_price_inr": 599,
+            "image_filename": "prod_014.jpg",
+            "demo_condition_preset": "Poor",
+            "demo_defects_preset": [
+                {"defect_type": "broken", "severity": "major", "location": "HDMI port not functioning"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_015",
+            "name": "Peter England Slim Fit Formal Shirt",
+            "category": "clothing",
+            "brand": "Peter England",
+            "original_price_inr": 899,
+            "image_filename": "prod_015.jpg",
+            "demo_condition_preset": "Like New",
+            "demo_defects_preset": [],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_016",
+            "name": "Levi's 511 Slim Fit Jeans",
+            "category": "clothing",
+            "brand": "Levi's",
+            "original_price_inr": 2499,
+            "image_filename": "prod_016.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "fade", "severity": "minor", "location": "thigh area wash fade"}
+            ],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_MEERA_C1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_017",
+            "name": "Allen Solly Casual Blazer",
+            "category": "clothing",
+            "brand": "Allen Solly",
+            "original_price_inr": 3499,
+            "image_filename": "prod_017.jpg",
+            "demo_condition_preset": "Like New",
+            "demo_defects_preset": [],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_018",
+            "name": "Jockey Cotton T-Shirts Pack of 3",
+            "category": "clothing",
+            "brand": "Jockey",
+            "original_price_inr": 699,
+            "image_filename": "prod_018.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "fade", "severity": "minor", "location": "one t-shirt collar fade"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_019",
+            "name": "W by Westside Underwired Bra",
+            "category": "clothing",
+            "brand": "Westside",
+            "original_price_inr": 549,
+            "image_filename": "prod_019.jpg",
+            "demo_condition_preset": "Fair",
+            "demo_defects_preset": [
+                {"defect_type": "stain", "severity": "moderate", "location": "inner lining discoloration"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_020",
+            "name": "Prestige Magnus 750W Mixer Grinder",
+            "category": "home_goods",
+            "brand": "Prestige",
+            "original_price_inr": 3499,
+            "image_filename": "prod_020.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "scratch", "severity": "minor", "location": "jar exterior"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_021",
+            "name": "Philips Air Fryer HD9252",
+            "category": "home_goods",
+            "brand": "Philips",
+            "original_price_inr": 4999,
+            "image_filename": "prod_021.jpg",
+            "demo_condition_preset": "Like New",
+            "demo_defects_preset": [],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_PRIYA_H1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_022",
+            "name": "Wonderchef Non-Stick Tawa 28cm",
+            "category": "home_goods",
+            "brand": "Wonderchef",
+            "original_price_inr": 499,
+            "image_filename": "prod_022.jpg",
+            "demo_condition_preset": "Fair",
+            "demo_defects_preset": [
+                {"defect_type": "scratch", "severity": "moderate", "location": "non-stick coating peeling"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_023",
+            "name": "Milton Thermos 1000ml Flask",
+            "category": "home_goods",
+            "brand": "Milton",
+            "original_price_inr": 399,
+            "image_filename": "prod_023.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "dent", "severity": "minor", "location": "base edge"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_024",
+            "name": "Bajaj 1200W Immersion Water Heater",
+            "category": "home_goods",
+            "brand": "Bajaj",
+            "original_price_inr": 249,
+            "image_filename": "prod_024.jpg",
+            "demo_condition_preset": "Poor",
+            "demo_defects_preset": [
+                {"defect_type": "rust", "severity": "major", "location": "heating coil corroded"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_025",
+            "name": "FabIndia Hand Block Printed Cushion Cover",
+            "category": "home_goods",
+            "brand": "FabIndia",
+            "original_price_inr": 699,
+            "image_filename": "prod_025.jpg",
+            "demo_condition_preset": "Poor",
+            "demo_defects_preset": [
+                {"defect_type": "stain", "severity": "major", "location": "center fabric ink stain"}
+            ],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_VIKRAM_H1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_026",
+            "name": "Mamaearth Moisturizing Baby Lotion 400ml",
+            "category": "baby_products",
+            "brand": "Mamaearth",
+            "original_price_inr": 499,
+            "image_filename": "prod_026.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "stain", "severity": "minor", "location": "label peeling at corner"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_027",
+            "name": "Luvlap Baby Stroller with Canopy",
+            "category": "baby_products",
+            "brand": "Luvlap",
+            "original_price_inr": 4999,
+            "image_filename": "prod_027.jpg",
+            "demo_condition_preset": "Like New",
+            "demo_defects_preset": [],
+            "is_trajectory_product": true,
+            "trajectory_id": "TRAJ_SNEHA_B1",
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_028",
+            "name": "Pampers Premium Care Diapers XL Pack 72",
+            "category": "baby_products",
+            "brand": "Pampers",
+            "original_price_inr": 1299,
+            "image_filename": "prod_028.jpg",
+            "demo_condition_preset": "Good",
+            "demo_defects_preset": [
+                {"defect_type": "crush", "severity": "minor", "location": "outer packaging torn"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_029",
+            "name": "Fisher Price Activity Walker",
+            "category": "baby_products",
+            "brand": "Fisher Price",
+            "original_price_inr": 1799,
+            "image_filename": "prod_029.jpg",
+            "demo_condition_preset": "Fair",
+            "demo_defects_preset": [
+                {"defect_type": "scratch", "severity": "moderate", "location": "tray surface scratched"},
+                {"defect_type": "scuff", "severity": "minor", "location": "wheel wear"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "PROD_030",
+            "name": "Mee Mee Baby Carrier",
+            "category": "baby_products",
+            "brand": "Mee Mee",
+            "original_price_inr": 899,
+            "image_filename": "prod_030.jpg",
+            "demo_condition_preset": "Poor",
+            "demo_defects_preset": [
+                {"defect_type": "tear", "severity": "major", "location": "shoulder strap stitching undone"}
+            ],
+            "is_trajectory_product": false,
+            "trajectory_id": null,
+            "record_type": null
+        },
+        {
+            "item_id": "USER_PRIYA",
+            "name": "Priya Sharma",
+            "category": "persona",
+            "brand": null,
+            "original_price_inr": 0,
+            "is_trajectory_product": false,
+            "record_type": "persona",
+            "demo_defects_preset": {
+                "role": "returner",
+                "city": "Mumbai",
+                "lat": 19.1136,
+                "lng": 72.8697,
+                "address": "304, Silver Oaks, Andheri East, Mumbai 400069",
+                "return_history": [
+                    {"category": "footwear", "return_count": 2, "days": 90},
+                    {"category": "clothing", "return_count": 1, "days": 90}
+                ],
+                "purchase_history": [
+                    {"product": "Nike Revolution 6 Running Shoes", "purchased_at": "2026-06-01T14:00:00+05:30", "price_inr": 599},
+                    {"product": "Adidas Ultraboost 23", "purchased_at": "2026-05-20T11:00:00+05:30", "price_inr": 5999},
+                    {"product": "Philips Air Fryer HD9252", "purchased_at": "2026-05-28T16:00:00+05:30", "price_inr": 4999}
+                ]
+            }
+        },
+        {
+            "item_id": "USER_RAHUL",
+            "name": "Rahul Mehta",
+            "category": "persona",
+            "brand": null,
+            "original_price_inr": 0,
+            "is_trajectory_product": false,
+            "record_type": "persona",
+            "demo_defects_preset": {
+                "role": "seller",
+                "city": "Mumbai",
+                "lat": 19.2183,
+                "lng": 72.9781,
+                "address": "12B, Neelkanth Heights, Thane West, Mumbai 400602",
+                "return_history": [],
+                "purchase_history": [
+                    {"product": "Philips Avent Digital Baby Monitor", "purchased_at": "2026-04-10T16:00:00+05:30", "price_inr": 2499},
+                    {"product": "Mi 20000mAh Power Bank", "purchased_at": "2026-03-15T10:00:00+05:30", "price_inr": 1299},
+                    {"product": "Crocs Unisex Classic Clogs", "purchased_at": "2026-02-28T14:00:00+05:30", "price_inr": 1799}
+                ]
+            }
+        },
+        {
+            "item_id": "USER_ARUL",
+            "name": "Arul Kumar",
+            "category": "persona",
+            "brand": null,
+            "original_price_inr": 0,
+            "is_trajectory_product": false,
+            "record_type": "persona",
+            "demo_defects_preset": {
+                "role": "buyer",
+                "city": "Mumbai",
+                "lat": 19.1048,
+                "lng": 72.8567,
+                "address": "5A, Gokul Nagar, Vile Parle East, Mumbai 400057",
+                "return_history": [],
+                "purchase_history": []
+            }
+        },
+        {
+            "item_id": "USER_KAVYA",
+            "name": "Kavya Iyer",
+            "category": "persona",
+            "brand": null,
+            "original_price_inr": 0,
+            "is_trajectory_product": false,
+            "record_type": "persona",
+            "demo_defects_preset": {
+                "role": "buyer",
+                "city": "Mumbai",
+                "lat": 19.1717,
+                "lng": 72.9570,
+                "address": "302, Gokuldham Society, Mulund West, Mumbai 400080",
+                "return_history": [
+                    {"category": "baby_products", "return_count": 1, "days": 90}
+                ],
+                "purchase_history": [
+                    {"product": "Mamaearth Baby Lotion 400ml", "purchased_at": "2026-05-28T10:00:00+05:30", "price_inr": 499}
+                ]
+            }
+        },
+        {
+            "item_id": "USER_VIKRAM",
+            "name": "Vikram Joshi",
+            "category": "persona",
+            "brand": null,
+            "original_price_inr": 0,
+            "is_trajectory_product": false,
+            "record_type": "persona",
+            "demo_defects_preset": {
+                "role": "seller",
+                "city": "Mumbai",
+                "lat": 19.0178,
+                "lng": 72.8478,
+                "address": "22, Shivaji Park Road, Dadar West, Mumbai 400028",
+                "return_history": [
+                    {"category": "electronics", "return_count": 1, "days": 90}
+                ],
+                "purchase_history": [
+                    {"product": "Apple iPhone 15 128GB Black", "purchased_at": "2026-05-20T18:30:00+05:30", "price_inr": 79900}
+                ]
+            }
+        },
+        {
+            "item_id": "USER_MEERA",
+            "name": "Meera Nair",
+            "category": "persona",
+            "brand": null,
+            "original_price_inr": 0,
+            "is_trajectory_product": false,
+            "record_type": "persona",
+            "demo_defects_preset": {
+                "role": "returner",
+                "city": "Mumbai",
+                "lat": 19.0596,
+                "lng": 72.8297,
+                "address": "14C, Sea Breeze Apartments, Bandra West, Mumbai 400050",
+                "return_history": [
+                    {"category": "footwear", "return_count": 2, "days": 90},
+                    {"category": "clothing", "return_count": 2, "days": 90},
+                    {"category": "home_goods", "return_count": 1, "days": 90}
+                ],
+                "purchase_history": [
+                    {"product": "Bata Black Leather Formal Shoes", "purchased_at": "2026-05-30T09:00:00+05:30", "price_inr": 1299},
+                    {"product": "Levi's 511 Slim Fit Jeans", "purchased_at": "2026-05-25T14:00:00+05:30", "price_inr": 2499},
+                    {"product": "Samsung Galaxy Watch 4", "purchased_at": "2026-06-05T11:00:00+05:30", "price_inr": 9999},
+                    {"product": "Bajaj Immersion Water Heater", "purchased_at": "2026-06-02T08:00:00+05:30", "price_inr": 249}
+                ]
+            }
+        },
+        {
+            "item_id": "USER_KARAN",
+            "name": "Karan Malhotra",
+            "category": "persona",
+            "brand": null,
+            "original_price_inr": 0,
+            "is_trajectory_product": false,
+            "record_type": "persona",
+            "demo_defects_preset": {
+                "role": "buyer",
+                "city": "Mumbai",
+                "lat": 19.1196,
+                "lng": 72.9102,
+                "address": "7B, Hiranandani Gardens, Powai, Mumbai 400076",
+                "return_history": [],
+                "purchase_history": [
+                    {"product": "JBL Tune 510BT Wireless Headphones", "purchased_at": "2026-05-10T16:00:00+05:30", "price_inr": 2999}
+                ]
+            }
+        },
+        {
+            "item_id": "USER_SNEHA",
+            "name": "Sneha Deshmukh",
+            "category": "persona",
+            "brand": null,
+            "original_price_inr": 0,
+            "is_trajectory_product": false,
+            "record_type": "persona",
+            "demo_defects_preset": {
+                "role": "seller",
+                "city": "Mumbai",
+                "lat": 19.1663,
+                "lng": 72.8526,
+                "address": "3A, Shree Apartments, Goregaon East, Mumbai 400063",
+                "return_history": [
+                    {"category": "clothing", "return_count": 1, "days": 90}
+                ],
+                "purchase_history": [
+                    {"product": "Puma Unisex Smash V2 Sneakers", "purchased_at": "2026-04-05T10:00:00+05:30", "price_inr": 2999},
+                    {"product": "boAt Airdopes 141 Earbuds", "purchased_at": "2026-03-20T15:00:00+05:30", "price_inr": 1499},
+                    {"product": "Peter England Slim Fit Formal Shirt", "purchased_at": "2026-04-12T12:00:00+05:30", "price_inr": 899},
+                    {"product": "Allen Solly Casual Blazer", "purchased_at": "2026-03-28T17:00:00+05:30", "price_inr": 3499},
+                    {"product": "Ray-Ban Aviator Sunglasses", "purchased_at": "2026-05-15T11:00:00+05:30", "price_inr": 8999}
+                ]
+            }
+        }
+    ],
+    "grading_reports": [
+        {
+            "report_id": "GR-001",
+            "item_id": "PROD_001",
+            "product_category": "footwear",
+            "brand_guess": "Nike",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "scuff", "severity": "minor", "location": "left toe cap"},
+                {"defect_type": "scuff", "severity": "minor", "location": "right heel"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.87,
+            "estimated_retail_inr": 599,
+            "suggested_resale_band_inr": [323.46, 395.34],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 33.4% exceeds 7.0% threshold — ReRoute cascade initiated. Good condition, 87% AI confidence.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T10:30:00+05:30",
+            "rekognition_labels": ["Shoe", "Footwear", "Sneaker", "Sole", "Nike Swoosh", "Athletic"]
+        },
+        {
+            "report_id": "GR-002",
+            "item_id": "PROD_002",
+            "product_category": "baby_products",
+            "brand_guess": "Philips Avent",
+            "condition_grade": "Like New",
+            "defects": [],
+            "completeness": "complete",
+            "confidence": 0.95,
+            "estimated_retail_inr": 2499,
+            "suggested_resale_band_inr": [2136.65, 2611.46],
+            "recommended_route": "relist",
+            "routing_reason": "Like New condition, 95% AI confidence. All accessories present. Prime C2C ReList candidate.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T09:15:00+05:30",
+            "rekognition_labels": ["Electronics", "Baby Monitor", "LCD Screen", "Camera", "Philips Logo"]
+        },
+        {
+            "report_id": "GR-003",
+            "item_id": "PROD_003",
+            "product_category": "electronics",
+            "brand_guess": "Spigen",
+            "condition_grade": "Fair",
+            "defects": [
+                {"defect_type": "scratch", "severity": "moderate", "location": "back panel"},
+                {"defect_type": "scuff", "severity": "minor", "location": "bottom edge"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.78,
+            "estimated_retail_inr": 349,
+            "suggested_resale_band_inr": [109.94, 134.37],
+            "recommended_route": "standard_return",
+            "routing_reason": "Grading confidence 78% below 85% threshold — manual inspection recommended. Fair condition with moderate cosmetic wear.",
+            "manual_review_recommended": true,
+            "graded_at": "2026-06-14T08:45:00+05:30",
+            "rekognition_labels": ["Phone Case", "Electronics", "Protective Case", "Spigen", "iPhone Cutout"]
+        },
+        {
+            "report_id": "GR-004",
+            "item_id": "PROD_004",
+            "product_category": "footwear",
+            "brand_guess": "Puma",
+            "condition_grade": "Like New",
+            "defects": [],
+            "completeness": "complete",
+            "confidence": 0.96,
+            "estimated_retail_inr": 2999,
+            "suggested_resale_band_inr": [2563.15, 3133.05],
+            "recommended_route": "relist",
+            "routing_reason": "Like New condition, 96% AI confidence. Clean soles, no defects. Excellent C2C listing candidate.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T09:30:00+05:30",
+            "rekognition_labels": ["Shoe", "Footwear", "Sneaker", "Puma Logo", "Lace"]
+        },
+        {
+            "report_id": "GR-005",
+            "item_id": "PROD_005",
+            "product_category": "electronics",
+            "brand_guess": "boAt",
+            "condition_grade": "Fair",
+            "defects": [
+                {"defect_type": "scuff", "severity": "moderate", "location": "charging case"},
+                {"defect_type": "scratch", "severity": "minor", "location": "left earbud"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.80,
+            "estimated_retail_inr": 1499,
+            "suggested_resale_band_inr": [471.44, 576.12],
+            "recommended_route": "relist",
+            "routing_reason": "Fair condition, fully functional. Audio tested OK. Suitable for budget C2C listing.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T10:00:00+05:30",
+            "rekognition_labels": ["Earbuds", "Electronics", "Charging Case", "boAt Logo", "Bluetooth"]
+        },
+        {
+            "report_id": "GR-006",
+            "item_id": "PROD_006",
+            "product_category": "clothing",
+            "brand_guess": "Ray-Ban",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "scratch", "severity": "minor", "location": "left lens edge"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.89,
+            "estimated_retail_inr": 8999,
+            "suggested_resale_band_inr": [4859.46, 5939.34],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 10.2% exceeds 7.0% threshold — ReRoute cascade initiated. High-value item, 89% confidence.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T11:00:00+05:30",
+            "rekognition_labels": ["Sunglasses", "Aviator", "Lens", "Ray-Ban Logo", "Metal Frame"]
+        },
+        {
+            "report_id": "GR-007",
+            "item_id": "PROD_007",
+            "product_category": "footwear",
+            "brand_guess": "Bata",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "scuff", "severity": "minor", "location": "right heel edge"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.88,
+            "estimated_retail_inr": 1299,
+            "suggested_resale_band_inr": [701.46, 857.34],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 12.8% exceeds 7.0% threshold — ReRoute cascade initiated. Good condition, 88% confidence.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T08:00:00+05:30",
+            "rekognition_labels": ["Shoe", "Footwear", "Formal Shoe", "Leather", "Bata Logo", "Sole"]
+        },
+        {
+            "report_id": "GR-008",
+            "item_id": "PROD_008",
+            "product_category": "footwear",
+            "brand_guess": "Adidas",
+            "condition_grade": "Like New",
+            "defects": [],
+            "completeness": "complete",
+            "confidence": 0.94,
+            "estimated_retail_inr": 5999,
+            "suggested_resale_band_inr": [5127.15, 6267.05],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 18.6% exceeds 7.0% threshold — ReRoute cascade initiated. Premium Like New item.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T10:45:00+05:30",
+            "rekognition_labels": ["Shoe", "Footwear", "Running Shoe", "Adidas Logo", "Boost Sole", "Primeknit"]
+        },
+        {
+            "report_id": "GR-009",
+            "item_id": "PROD_009",
+            "product_category": "footwear",
+            "brand_guess": "Sparx",
+            "condition_grade": "Poor",
+            "defects": [
+                {"defect_type": "tear", "severity": "major", "location": "right strap detached"}
+            ],
+            "completeness": "accessories_missing",
+            "confidence": 0.91,
+            "estimated_retail_inr": 299,
+            "suggested_resale_band_inr": [40.37, 49.34],
+            "recommended_route": "recycle",
+            "routing_reason": "Poor condition — right strap detached. Item not resaleable. Recycle recommended.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T07:30:00+05:30",
+            "rekognition_labels": ["Flip Flop", "Footwear", "Rubber", "Sparx Logo", "Broken Strap"]
+        },
+        {
+            "report_id": "GR-010",
+            "item_id": "PROD_010",
+            "product_category": "footwear",
+            "brand_guess": "Crocs",
+            "condition_grade": "Fair",
+            "defects": [
+                {"defect_type": "scuff", "severity": "moderate", "location": "sole tread worn"},
+                {"defect_type": "stain", "severity": "minor", "location": "right clog top"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.79,
+            "estimated_retail_inr": 1799,
+            "suggested_resale_band_inr": [566.39, 692.04],
+            "recommended_route": "relist",
+            "routing_reason": "Fair condition with moderate sole wear. Functional and wearable. Budget C2C candidate.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T09:00:00+05:30",
+            "rekognition_labels": ["Clog", "Footwear", "Crocs Logo", "Rubber", "Strap"]
+        },
+        {
+            "report_id": "GR-011",
+            "item_id": "PROD_011",
+            "product_category": "electronics",
+            "brand_guess": "JBL",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "scratch", "severity": "minor", "location": "headband surface"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.86,
+            "estimated_retail_inr": 2999,
+            "suggested_resale_band_inr": [1619.46, 1979.34],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 14.7% exceeds 7.0% threshold — ReRoute cascade initiated. Good condition, 86% confidence.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T09:45:00+05:30",
+            "rekognition_labels": ["Headphones", "Electronics", "JBL Logo", "Ear Cushion", "Headband"]
+        },
+        {
+            "report_id": "GR-012",
+            "item_id": "PROD_012",
+            "product_category": "electronics",
+            "brand_guess": "Xiaomi",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "scuff", "severity": "minor", "location": "USB port area"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.88,
+            "estimated_retail_inr": 1299,
+            "suggested_resale_band_inr": [701.46, 857.34],
+            "recommended_route": "relist",
+            "routing_reason": "Good condition, fully functional. Tested charging output OK. Reliable C2C listing.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T10:15:00+05:30",
+            "rekognition_labels": ["Power Bank", "Electronics", "USB Port", "Mi Logo", "Battery"]
+        },
+        {
+            "report_id": "GR-013",
+            "item_id": "PROD_013",
+            "product_category": "electronics",
+            "brand_guess": "Samsung",
+            "condition_grade": "Like New",
+            "defects": [],
+            "completeness": "complete",
+            "confidence": 0.95,
+            "estimated_retail_inr": 9999,
+            "suggested_resale_band_inr": [8547.15, 10447.05],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 16.8% exceeds 7.0% threshold — premium item entering cascade. Like New, 95% confidence.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T11:30:00+05:30",
+            "rekognition_labels": ["Smartwatch", "Electronics", "Samsung Logo", "Display", "Rotating Bezel"]
+        },
+        {
+            "report_id": "GR-014",
+            "item_id": "PROD_014",
+            "product_category": "electronics",
+            "brand_guess": "AmazonBasics",
+            "condition_grade": "Poor",
+            "defects": [
+                {"defect_type": "broken", "severity": "major", "location": "HDMI port not functioning"}
+            ],
+            "completeness": "incomplete",
+            "confidence": 0.93,
+            "estimated_retail_inr": 599,
+            "suggested_resale_band_inr": [80.87, 98.84],
+            "recommended_route": "recycle",
+            "routing_reason": "Poor condition — HDMI port broken. Item not resaleable. Recycle recommended.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T07:00:00+05:30",
+            "rekognition_labels": ["USB Hub", "Electronics", "HDMI Port", "AmazonBasics Logo", "Cable"]
+        },
+        {
+            "report_id": "GR-015",
+            "item_id": "PROD_015",
+            "product_category": "clothing",
+            "brand_guess": "Peter England",
+            "condition_grade": "Like New",
+            "defects": [],
+            "completeness": "complete",
+            "confidence": 0.97,
+            "estimated_retail_inr": 899,
+            "suggested_resale_band_inr": [768.65, 939.46],
+            "recommended_route": "relist",
+            "routing_reason": "Like New condition, 97% AI confidence. Tags still attached. Premium C2C listing.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T09:00:00+05:30",
+            "rekognition_labels": ["Shirt", "Clothing", "Formal Wear", "Peter England Tag", "Cotton Fabric"]
+        },
+        {
+            "report_id": "GR-016",
+            "item_id": "PROD_016",
+            "product_category": "clothing",
+            "brand_guess": "Levi's",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "fade", "severity": "minor", "location": "thigh area wash fade"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.86,
+            "estimated_retail_inr": 2499,
+            "suggested_resale_band_inr": [1349.46, 1649.34],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 9.6% exceeds 7.0% threshold — ReRoute cascade initiated. Good condition, 86% confidence.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T08:15:00+05:30",
+            "rekognition_labels": ["Jeans", "Clothing", "Denim", "Levi's Tag", "Blue Fabric"]
+        },
+        {
+            "report_id": "GR-017",
+            "item_id": "PROD_017",
+            "product_category": "clothing",
+            "brand_guess": "Allen Solly",
+            "condition_grade": "Like New",
+            "defects": [],
+            "completeness": "complete",
+            "confidence": 0.96,
+            "estimated_retail_inr": 3499,
+            "suggested_resale_band_inr": [2991.65, 3656.46],
+            "recommended_route": "relist",
+            "routing_reason": "Like New condition, 96% AI confidence. Dry cleaned, ready to wear. Premium C2C candidate.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T10:00:00+05:30",
+            "rekognition_labels": ["Blazer", "Clothing", "Formal Wear", "Allen Solly Tag", "Wool Blend"]
+        },
+        {
+            "report_id": "GR-018",
+            "item_id": "PROD_018",
+            "product_category": "clothing",
+            "brand_guess": "Jockey",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "fade", "severity": "minor", "location": "one t-shirt collar fade"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.87,
+            "estimated_retail_inr": 699,
+            "suggested_resale_band_inr": [377.46, 461.34],
+            "recommended_route": "relist",
+            "routing_reason": "Good condition, 87% confidence. Pack of 3 — two unworn. Affordable C2C listing.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T08:30:00+05:30",
+            "rekognition_labels": ["T-Shirt", "Clothing", "Cotton", "Jockey Tag", "Pack of 3"]
+        },
+        {
+            "report_id": "GR-019",
+            "item_id": "PROD_019",
+            "product_category": "clothing",
+            "brand_guess": "Westside",
+            "condition_grade": "Fair",
+            "defects": [
+                {"defect_type": "stain", "severity": "moderate", "location": "inner lining discoloration"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.77,
+            "estimated_retail_inr": 549,
+            "suggested_resale_band_inr": [172.46, 210.78],
+            "recommended_route": "standard_return",
+            "routing_reason": "Grading confidence 77% below 85% threshold — manual inspection recommended. Fair condition.",
+            "manual_review_recommended": true,
+            "graded_at": "2026-06-14T07:45:00+05:30",
+            "rekognition_labels": ["Bra", "Clothing", "Lingerie", "Westside Tag", "Lace"]
+        },
+        {
+            "report_id": "GR-020",
+            "item_id": "PROD_020",
+            "product_category": "home_goods",
+            "brand_guess": "Prestige",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "scratch", "severity": "minor", "location": "jar exterior"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.88,
+            "estimated_retail_inr": 3499,
+            "suggested_resale_band_inr": [1889.46, 2309.34],
+            "recommended_route": "relist",
+            "routing_reason": "Good condition, 88% confidence. Motor tested OK. All jars included. Solid C2C listing.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T09:45:00+05:30",
+            "rekognition_labels": ["Mixer Grinder", "Kitchen Appliance", "Prestige Logo", "Jar", "Motor Base"]
+        },
+        {
+            "report_id": "GR-021",
+            "item_id": "PROD_021",
+            "product_category": "home_goods",
+            "brand_guess": "Philips",
+            "condition_grade": "Like New",
+            "defects": [],
+            "completeness": "complete",
+            "confidence": 0.94,
+            "estimated_retail_inr": 4999,
+            "suggested_resale_band_inr": [4273.15, 5223.05],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 11.5% exceeds 7.0% threshold — ReRoute cascade initiated. Like New air fryer.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T11:15:00+05:30",
+            "rekognition_labels": ["Air Fryer", "Kitchen Appliance", "Philips Logo", "Basket", "Digital Display"]
+        },
+        {
+            "report_id": "GR-022",
+            "item_id": "PROD_022",
+            "product_category": "home_goods",
+            "brand_guess": "Wonderchef",
+            "condition_grade": "Fair",
+            "defects": [
+                {"defect_type": "scratch", "severity": "moderate", "location": "non-stick coating peeling"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.80,
+            "estimated_retail_inr": 499,
+            "suggested_resale_band_inr": [156.87, 191.77],
+            "recommended_route": "relist",
+            "routing_reason": "Fair condition with coating wear. Still usable with oil. Budget C2C candidate.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T08:00:00+05:30",
+            "rekognition_labels": ["Tawa", "Cookware", "Non-Stick", "Wonderchef Logo", "Handle"]
+        },
+        {
+            "report_id": "GR-023",
+            "item_id": "PROD_023",
+            "product_category": "home_goods",
+            "brand_guess": "Milton",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "dent", "severity": "minor", "location": "base edge"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.89,
+            "estimated_retail_inr": 399,
+            "suggested_resale_band_inr": [215.46, 263.34],
+            "recommended_route": "relist",
+            "routing_reason": "Good condition, 89% confidence. Vacuum seal tested OK. Minor cosmetic dent only.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T08:15:00+05:30",
+            "rekognition_labels": ["Flask", "Thermos", "Milton Logo", "Stainless Steel", "Cap"]
+        },
+        {
+            "report_id": "GR-024",
+            "item_id": "PROD_024",
+            "product_category": "home_goods",
+            "brand_guess": "Bajaj",
+            "condition_grade": "Poor",
+            "defects": [
+                {"defect_type": "rust", "severity": "major", "location": "heating coil corroded"}
+            ],
+            "completeness": "incomplete",
+            "confidence": 0.92,
+            "estimated_retail_inr": 249,
+            "suggested_resale_band_inr": [33.62, 41.09],
+            "recommended_route": "recycle",
+            "routing_reason": "Poor condition — rusted heating coil. Safety hazard. Recycle recommended.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T07:15:00+05:30",
+            "rekognition_labels": ["Immersion Heater", "Kitchen Appliance", "Bajaj Logo", "Coil", "Plug"]
+        },
+        {
+            "report_id": "GR-025",
+            "item_id": "PROD_025",
+            "product_category": "home_goods",
+            "brand_guess": "FabIndia",
+            "condition_grade": "Poor",
+            "defects": [
+                {"defect_type": "stain", "severity": "major", "location": "center fabric ink stain"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.93,
+            "estimated_retail_inr": 699,
+            "suggested_resale_band_inr": [94.37, 115.34],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 23.6% exceeds 7.0% threshold — entering cascade at deep discount. Major stain reduces value.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T08:30:00+05:30",
+            "rekognition_labels": ["Cushion Cover", "Home Decor", "Fabric", "FabIndia Label", "Block Print"]
+        },
+        {
+            "report_id": "GR-026",
+            "item_id": "PROD_026",
+            "product_category": "baby_products",
+            "brand_guess": "Mamaearth",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "stain", "severity": "minor", "location": "label peeling at corner"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.87,
+            "estimated_retail_inr": 499,
+            "suggested_resale_band_inr": [269.46, 329.34],
+            "recommended_route": "standard_return",
+            "routing_reason": "Overhead ratio below 7% — standard return more efficient. Low-value consumable.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T07:00:00+05:30",
+            "rekognition_labels": ["Baby Lotion", "Baby Product", "Mamaearth Logo", "Bottle", "Pump"]
+        },
+        {
+            "report_id": "GR-027",
+            "item_id": "PROD_027",
+            "product_category": "baby_products",
+            "brand_guess": "Luvlap",
+            "condition_grade": "Like New",
+            "defects": [],
+            "completeness": "complete",
+            "confidence": 0.96,
+            "estimated_retail_inr": 4999,
+            "suggested_resale_band_inr": [4273.15, 5223.05],
+            "recommended_route": "reroute_deals",
+            "routing_reason": "Overhead ratio 8.8% exceeds 7.0% threshold — ReRoute cascade initiated. Like New stroller, 96% confidence.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T11:45:00+05:30",
+            "rekognition_labels": ["Baby Stroller", "Baby Product", "Luvlap Logo", "Canopy", "Wheels", "Frame"]
+        },
+        {
+            "report_id": "GR-028",
+            "item_id": "PROD_028",
+            "product_category": "baby_products",
+            "brand_guess": "Pampers",
+            "condition_grade": "Good",
+            "defects": [
+                {"defect_type": "crush", "severity": "minor", "location": "outer packaging torn"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.86,
+            "estimated_retail_inr": 1299,
+            "suggested_resale_band_inr": [701.46, 857.34],
+            "recommended_route": "standard_return",
+            "routing_reason": "Low overhead — standard return more efficient. Consumable baby product.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T07:30:00+05:30",
+            "rekognition_labels": ["Diapers", "Baby Product", "Pampers Logo", "Packaging", "XL Size"]
+        },
+        {
+            "report_id": "GR-029",
+            "item_id": "PROD_029",
+            "product_category": "baby_products",
+            "brand_guess": "Fisher Price",
+            "condition_grade": "Fair",
+            "defects": [
+                {"defect_type": "scratch", "severity": "moderate", "location": "tray surface scratched"},
+                {"defect_type": "scuff", "severity": "minor", "location": "wheel wear"}
+            ],
+            "completeness": "complete",
+            "confidence": 0.79,
+            "estimated_retail_inr": 1799,
+            "suggested_resale_band_inr": [566.69, 692.62],
+            "recommended_route": "relist",
+            "routing_reason": "Fair condition with play wear. Fully functional, all sounds working. Budget C2C.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T09:30:00+05:30",
+            "rekognition_labels": ["Activity Walker", "Baby Toy", "Fisher Price Logo", "Tray", "Wheels", "Plastic"]
+        },
+        {
+            "report_id": "GR-030",
+            "item_id": "PROD_030",
+            "product_category": "baby_products",
+            "brand_guess": "Mee Mee",
+            "condition_grade": "Poor",
+            "defects": [
+                {"defect_type": "tear", "severity": "major", "location": "shoulder strap stitching undone"}
+            ],
+            "completeness": "incomplete",
+            "confidence": 0.91,
+            "estimated_retail_inr": 899,
+            "suggested_resale_band_inr": [121.37, 148.34],
+            "recommended_route": "recycle",
+            "routing_reason": "Poor condition — strap stitching undone. Safety hazard for baby. Recycle recommended.",
+            "manual_review_recommended": false,
+            "graded_at": "2026-06-14T07:00:00+05:30",
+            "rekognition_labels": ["Baby Carrier", "Baby Product", "Mee Mee Logo", "Strap", "Fabric", "Buckle"]
+        }
+    ],
+    "floating_discounts": [
+        {
+            "listing_id": "FD-001",
+            "item_id": "PROD_001",
+            "current_hub_id": "H0_PRIYA",
+            "ring_index": 0,
+            "original_price_inr": 599,
+            "v_graded_inr": 359.40,
+            "c_remaining_inr": 120.00,
+            "mvsp_inr": 239.40,
+            "current_sale_price_inr": 407,
+            "discount_pct": 32.0,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T10:30:00+05:30",
+            "status": "active",
+            "product_name": "Nike Revolution 6 Running Shoes",
+            "current_hub_name": "Priya's House (Andheri East)",
+            "trajectory": [
+                {"hub_id": "H0_PRIYA", "hub_name": "Priya's House (Andheri East)", "c_remaining_inr": 120.00, "discount_pct": 32, "sale_price": 407},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 75.00, "discount_pct": 24, "sale_price": 455},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 30.00, "discount_pct": 12, "sale_price": 527},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 599}
+            ]
+        },
+        {
+            "listing_id": "FD-006",
+            "item_id": "PROD_006",
+            "current_hub_id": "MUM_H2",
+            "ring_index": 2,
+            "original_price_inr": 8999,
+            "v_graded_inr": 5399.40,
+            "c_remaining_inr": 30.00,
+            "mvsp_inr": 5369.40,
+            "current_sale_price_inr": 4799,
+            "discount_pct": 46.7,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T11:00:00+05:30",
+            "status": "active",
+            "product_name": "Ray-Ban Aviator Classic Sunglasses",
+            "current_hub_name": "Thane Hub",
+            "trajectory": [
+                {"hub_id": "H0_SNEHA", "hub_name": "Sneha's House (Goregaon East)", "c_remaining_inr": 70.00, "discount_pct": 48, "sale_price": 4679},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 50.00, "discount_pct": 47, "sale_price": 4769},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 30.00, "discount_pct": 46, "sale_price": 4799},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 8999}
+            ]
+        },
+        {
+            "listing_id": "FD-007",
+            "item_id": "PROD_007",
+            "current_hub_id": "MUM_H1",
+            "ring_index": 1,
+            "original_price_inr": 1299,
+            "v_graded_inr": 779.40,
+            "c_remaining_inr": 75.00,
+            "mvsp_inr": 704.40,
+            "current_sale_price_inr": 649,
+            "discount_pct": 50.0,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T08:00:00+05:30",
+            "status": "active",
+            "product_name": "Bata Black Leather Formal Shoes",
+            "current_hub_name": "Andheri Hub",
+            "trajectory": [
+                {"hub_id": "H0_MEERA", "hub_name": "Meera's House (Bandra West)", "c_remaining_inr": 100.00, "discount_pct": 52, "sale_price": 623},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 75.00, "discount_pct": 50, "sale_price": 649},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 45.00, "discount_pct": 42, "sale_price": 753},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 1299}
+            ]
+        },
+        {
+            "listing_id": "FD-008",
+            "item_id": "PROD_008",
+            "current_hub_id": "H0_PRIYA",
+            "ring_index": 0,
+            "original_price_inr": 5999,
+            "v_graded_inr": 5699.05,
+            "c_remaining_inr": 120.00,
+            "mvsp_inr": 5579.05,
+            "current_sale_price_inr": 4199,
+            "discount_pct": 30.0,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T10:45:00+05:30",
+            "status": "active",
+            "product_name": "Adidas Ultraboost 23 Running Shoes",
+            "current_hub_name": "Priya's House (Andheri East)",
+            "trajectory": [
+                {"hub_id": "H0_PRIYA", "hub_name": "Priya's House (Andheri East)", "c_remaining_inr": 120.00, "discount_pct": 30, "sale_price": 4199},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 75.00, "discount_pct": 25, "sale_price": 4499},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 30.00, "discount_pct": 20, "sale_price": 4799},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 5999}
+            ]
+        },
+        {
+            "listing_id": "FD-011",
+            "item_id": "PROD_011",
+            "current_hub_id": "MUM_H2",
+            "ring_index": 2,
+            "original_price_inr": 2999,
+            "v_graded_inr": 1799.40,
+            "c_remaining_inr": 45.00,
+            "mvsp_inr": 1754.40,
+            "current_sale_price_inr": 1500,
+            "discount_pct": 50.0,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T09:45:00+05:30",
+            "status": "active",
+            "product_name": "JBL Tune 510BT Wireless Headphones",
+            "current_hub_name": "Thane Hub",
+            "trajectory": [
+                {"hub_id": "H0_KARAN", "hub_name": "Karan's House (Powai)", "c_remaining_inr": 147.00, "discount_pct": 52, "sale_price": 1440},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 100.00, "discount_pct": 51, "sale_price": 1470},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 45.00, "discount_pct": 50, "sale_price": 1500},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 2999}
+            ]
+        },
+        {
+            "listing_id": "FD-013",
+            "item_id": "PROD_013",
+            "current_hub_id": "H0_MEERA",
+            "ring_index": 0,
+            "original_price_inr": 9999,
+            "v_graded_inr": 9499.05,
+            "c_remaining_inr": 140.00,
+            "mvsp_inr": 9359.05,
+            "current_sale_price_inr": 6999,
+            "discount_pct": 30.0,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T11:30:00+05:30",
+            "status": "active",
+            "product_name": "Samsung Galaxy Watch 4 Classic 46mm",
+            "current_hub_name": "Meera's House (Bandra West)",
+            "trajectory": [
+                {"hub_id": "H0_MEERA", "hub_name": "Meera's House (Bandra West)", "c_remaining_inr": 140.00, "discount_pct": 30, "sale_price": 6999},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 90.00, "discount_pct": 27, "sale_price": 7299},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 50.00, "discount_pct": 24, "sale_price": 7599},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 9999}
+            ]
+        },
+        {
+            "listing_id": "FD-016",
+            "item_id": "PROD_016",
+            "current_hub_id": "MUM_H1",
+            "ring_index": 1,
+            "original_price_inr": 2499,
+            "v_graded_inr": 1499.40,
+            "c_remaining_inr": 50.00,
+            "mvsp_inr": 1449.40,
+            "current_sale_price_inr": 1250,
+            "discount_pct": 50.0,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T08:15:00+05:30",
+            "status": "active",
+            "product_name": "Levi's 511 Slim Fit Jeans",
+            "current_hub_name": "Andheri Hub",
+            "trajectory": [
+                {"hub_id": "H0_MEERA", "hub_name": "Meera's House (Bandra West)", "c_remaining_inr": 80.00, "discount_pct": 52, "sale_price": 1200},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 50.00, "discount_pct": 50, "sale_price": 1250},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 20.00, "discount_pct": 40, "sale_price": 1499},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 2499}
+            ]
+        },
+        {
+            "listing_id": "FD-021",
+            "item_id": "PROD_021",
+            "current_hub_id": "H0_PRIYA",
+            "ring_index": 0,
+            "original_price_inr": 4999,
+            "v_graded_inr": 4749.05,
+            "c_remaining_inr": 144.00,
+            "mvsp_inr": 4605.05,
+            "current_sale_price_inr": 3199,
+            "discount_pct": 36.0,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T11:15:00+05:30",
+            "status": "active",
+            "product_name": "Philips Air Fryer HD9252",
+            "current_hub_name": "Priya's House (Andheri East)",
+            "trajectory": [
+                {"hub_id": "H0_PRIYA", "hub_name": "Priya's House (Andheri East)", "c_remaining_inr": 144.00, "discount_pct": 36, "sale_price": 3199},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 100.00, "discount_pct": 30, "sale_price": 3499},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 50.00, "discount_pct": 22, "sale_price": 3899},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 4999}
+            ]
+        },
+        {
+            "listing_id": "FD-025",
+            "item_id": "PROD_025",
+            "current_hub_id": "MUM_W",
+            "ring_index": 3,
+            "original_price_inr": 699,
+            "v_graded_inr": 104.85,
+            "c_remaining_inr": 0.00,
+            "mvsp_inr": 104.85,
+            "current_sale_price_inr": 560,
+            "discount_pct": 20.0,
+            "radius_km": 20,
+            "expires_at": "2026-06-15T08:30:00+05:30",
+            "status": "active",
+            "product_name": "FabIndia Hand Block Printed Cushion Cover",
+            "current_hub_name": "Bhiwandi Warehouse",
+            "trajectory": [
+                {"hub_id": "H0_VIKRAM", "hub_name": "Vikram's House (Dadar West)", "c_remaining_inr": 165.00, "discount_pct": 45, "sale_price": 384},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 110.00, "discount_pct": 35, "sale_price": 454},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 55.00, "discount_pct": 25, "sale_price": 524},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 20, "sale_price": 560}
+            ]
+        },
+        {
+            "listing_id": "FD-027",
+            "item_id": "PROD_027",
+            "current_hub_id": "MUM_H1",
+            "ring_index": 1,
+            "original_price_inr": 4999,
+            "v_graded_inr": 4749.05,
+            "c_remaining_inr": 68.00,
+            "mvsp_inr": 4681.05,
+            "current_sale_price_inr": 3250,
+            "discount_pct": 35.0,
+            "radius_km": 50,
+            "expires_at": "2026-06-15T11:45:00+05:30",
+            "status": "active",
+            "product_name": "Luvlap Baby Stroller with Canopy",
+            "current_hub_name": "Andheri Hub",
+            "trajectory": [
+                {"hub_id": "H0_SNEHA", "hub_name": "Sneha's House (Goregaon East)", "c_remaining_inr": 98.00, "discount_pct": 38, "sale_price": 3099},
+                {"hub_id": "MUM_H1", "hub_name": "Andheri Hub", "c_remaining_inr": 68.00, "discount_pct": 35, "sale_price": 3250},
+                {"hub_id": "MUM_H2", "hub_name": "Thane Hub", "c_remaining_inr": 35.00, "discount_pct": 28, "sale_price": 3599},
+                {"hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "c_remaining_inr": 0.00, "discount_pct": 0, "sale_price": 4999}
+            ]
+        }
+    ],
+    "hub_checkpoints": [
+        {"checkpoint_id": "CP-001-H0", "item_id": "PROD_001", "trajectory_id": "TRAJ_PRIYA_F1", "hub_id": "H0_PRIYA", "hub_name": "Priya's House (Andheri East)", "arrived_at": "2026-06-14T10:30:00+05:30", "c_remaining_inr": 120.00, "distance_to_warehouse_km": 48.0},
+        {"checkpoint_id": "CP-001-H1", "item_id": "PROD_001", "trajectory_id": "TRAJ_PRIYA_F1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T10:30:00+05:30", "c_remaining_inr": 75.00, "distance_to_warehouse_km": 30.0},
+        {"checkpoint_id": "CP-001-H2", "item_id": "PROD_001", "trajectory_id": "TRAJ_PRIYA_F1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T10:30:00+05:30", "c_remaining_inr": 30.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-001-HW", "item_id": "PROD_001", "trajectory_id": "TRAJ_PRIYA_F1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T10:30:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-006-H0", "item_id": "PROD_006", "trajectory_id": "TRAJ_SNEHA_C1", "hub_id": "H0_SNEHA", "hub_name": "Sneha's House (Goregaon East)", "arrived_at": "2026-06-14T11:00:00+05:30", "c_remaining_inr": 70.00, "distance_to_warehouse_km": 35.0},
+        {"checkpoint_id": "CP-006-H1", "item_id": "PROD_006", "trajectory_id": "TRAJ_SNEHA_C1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T11:00:00+05:30", "c_remaining_inr": 50.00, "distance_to_warehouse_km": 25.0},
+        {"checkpoint_id": "CP-006-H2", "item_id": "PROD_006", "trajectory_id": "TRAJ_SNEHA_C1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T11:00:00+05:30", "c_remaining_inr": 30.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-006-HW", "item_id": "PROD_006", "trajectory_id": "TRAJ_SNEHA_C1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T11:00:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-007-H0", "item_id": "PROD_007", "trajectory_id": "TRAJ_MEERA_F1", "hub_id": "H0_MEERA", "hub_name": "Meera's House (Bandra West)", "arrived_at": "2026-06-14T08:00:00+05:30", "c_remaining_inr": 100.00, "distance_to_warehouse_km": 40.0},
+        {"checkpoint_id": "CP-007-H1", "item_id": "PROD_007", "trajectory_id": "TRAJ_MEERA_F1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T08:00:00+05:30", "c_remaining_inr": 75.00, "distance_to_warehouse_km": 30.0},
+        {"checkpoint_id": "CP-007-H2", "item_id": "PROD_007", "trajectory_id": "TRAJ_MEERA_F1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T08:00:00+05:30", "c_remaining_inr": 45.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-007-HW", "item_id": "PROD_007", "trajectory_id": "TRAJ_MEERA_F1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T08:00:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-008-H0", "item_id": "PROD_008", "trajectory_id": "TRAJ_PRIYA_F2", "hub_id": "H0_PRIYA", "hub_name": "Priya's House (Andheri East)", "arrived_at": "2026-06-14T10:45:00+05:30", "c_remaining_inr": 120.00, "distance_to_warehouse_km": 48.0},
+        {"checkpoint_id": "CP-008-H1", "item_id": "PROD_008", "trajectory_id": "TRAJ_PRIYA_F2", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T10:45:00+05:30", "c_remaining_inr": 75.00, "distance_to_warehouse_km": 30.0},
+        {"checkpoint_id": "CP-008-H2", "item_id": "PROD_008", "trajectory_id": "TRAJ_PRIYA_F2", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T10:45:00+05:30", "c_remaining_inr": 30.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-008-HW", "item_id": "PROD_008", "trajectory_id": "TRAJ_PRIYA_F2", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T10:45:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-011-H0", "item_id": "PROD_011", "trajectory_id": "TRAJ_KARAN_E1", "hub_id": "H0_KARAN", "hub_name": "Karan's House (Powai)", "arrived_at": "2026-06-14T09:45:00+05:30", "c_remaining_inr": 147.00, "distance_to_warehouse_km": 42.0},
+        {"checkpoint_id": "CP-011-H1", "item_id": "PROD_011", "trajectory_id": "TRAJ_KARAN_E1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T09:45:00+05:30", "c_remaining_inr": 100.00, "distance_to_warehouse_km": 28.0},
+        {"checkpoint_id": "CP-011-H2", "item_id": "PROD_011", "trajectory_id": "TRAJ_KARAN_E1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T09:45:00+05:30", "c_remaining_inr": 45.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-011-HW", "item_id": "PROD_011", "trajectory_id": "TRAJ_KARAN_E1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T09:45:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-013-H0", "item_id": "PROD_013", "trajectory_id": "TRAJ_MEERA_E1", "hub_id": "H0_MEERA", "hub_name": "Meera's House (Bandra West)", "arrived_at": "2026-06-14T11:30:00+05:30", "c_remaining_inr": 140.00, "distance_to_warehouse_km": 40.0},
+        {"checkpoint_id": "CP-013-H1", "item_id": "PROD_013", "trajectory_id": "TRAJ_MEERA_E1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T11:30:00+05:30", "c_remaining_inr": 90.00, "distance_to_warehouse_km": 25.0},
+        {"checkpoint_id": "CP-013-H2", "item_id": "PROD_013", "trajectory_id": "TRAJ_MEERA_E1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T11:30:00+05:30", "c_remaining_inr": 50.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-013-HW", "item_id": "PROD_013", "trajectory_id": "TRAJ_MEERA_E1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T11:30:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-016-H0", "item_id": "PROD_016", "trajectory_id": "TRAJ_MEERA_C1", "hub_id": "H0_MEERA", "hub_name": "Meera's House (Bandra West)", "arrived_at": "2026-06-14T08:15:00+05:30", "c_remaining_inr": 80.00, "distance_to_warehouse_km": 40.0},
+        {"checkpoint_id": "CP-016-H1", "item_id": "PROD_016", "trajectory_id": "TRAJ_MEERA_C1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T08:15:00+05:30", "c_remaining_inr": 50.00, "distance_to_warehouse_km": 25.0},
+        {"checkpoint_id": "CP-016-H2", "item_id": "PROD_016", "trajectory_id": "TRAJ_MEERA_C1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T08:15:00+05:30", "c_remaining_inr": 20.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-016-HW", "item_id": "PROD_016", "trajectory_id": "TRAJ_MEERA_C1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T08:15:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-021-H0", "item_id": "PROD_021", "trajectory_id": "TRAJ_PRIYA_H1", "hub_id": "H0_PRIYA", "hub_name": "Priya's House (Andheri East)", "arrived_at": "2026-06-14T11:15:00+05:30", "c_remaining_inr": 144.00, "distance_to_warehouse_km": 48.0},
+        {"checkpoint_id": "CP-021-H1", "item_id": "PROD_021", "trajectory_id": "TRAJ_PRIYA_H1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T11:15:00+05:30", "c_remaining_inr": 100.00, "distance_to_warehouse_km": 30.0},
+        {"checkpoint_id": "CP-021-H2", "item_id": "PROD_021", "trajectory_id": "TRAJ_PRIYA_H1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T11:15:00+05:30", "c_remaining_inr": 50.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-021-HW", "item_id": "PROD_021", "trajectory_id": "TRAJ_PRIYA_H1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T11:15:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-025-H0", "item_id": "PROD_025", "trajectory_id": "TRAJ_VIKRAM_H1", "hub_id": "H0_VIKRAM", "hub_name": "Vikram's House (Dadar West)", "arrived_at": "2026-06-14T08:30:00+05:30", "c_remaining_inr": 165.00, "distance_to_warehouse_km": 55.0},
+        {"checkpoint_id": "CP-025-H1", "item_id": "PROD_025", "trajectory_id": "TRAJ_VIKRAM_H1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T08:30:00+05:30", "c_remaining_inr": 110.00, "distance_to_warehouse_km": 38.0},
+        {"checkpoint_id": "CP-025-H2", "item_id": "PROD_025", "trajectory_id": "TRAJ_VIKRAM_H1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T08:30:00+05:30", "c_remaining_inr": 55.00, "distance_to_warehouse_km": 20.0},
+        {"checkpoint_id": "CP-025-HW", "item_id": "PROD_025", "trajectory_id": "TRAJ_VIKRAM_H1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T08:30:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0},
+        {"checkpoint_id": "CP-027-H0", "item_id": "PROD_027", "trajectory_id": "TRAJ_SNEHA_B1", "hub_id": "H0_SNEHA", "hub_name": "Sneha's House (Goregaon East)", "arrived_at": "2026-06-14T11:45:00+05:30", "c_remaining_inr": 98.00, "distance_to_warehouse_km": 35.0},
+        {"checkpoint_id": "CP-027-H1", "item_id": "PROD_027", "trajectory_id": "TRAJ_SNEHA_B1", "hub_id": "MUM_H1", "hub_name": "Andheri Hub", "arrived_at": "2026-06-15T11:45:00+05:30", "c_remaining_inr": 68.00, "distance_to_warehouse_km": 25.0},
+        {"checkpoint_id": "CP-027-H2", "item_id": "PROD_027", "trajectory_id": "TRAJ_SNEHA_B1", "hub_id": "MUM_H2", "hub_name": "Thane Hub", "arrived_at": "2026-06-16T11:45:00+05:30", "c_remaining_inr": 35.00, "distance_to_warehouse_km": 12.0},
+        {"checkpoint_id": "CP-027-HW", "item_id": "PROD_027", "trajectory_id": "TRAJ_SNEHA_B1", "hub_id": "MUM_W", "hub_name": "Bhiwandi Warehouse", "arrived_at": "2026-06-17T11:45:00+05:30", "c_remaining_inr": 0.00, "distance_to_warehouse_km": 0.0}
+    ],
+    "health_cards": [
+        {"card_uuid": "HC-2026-MUM-C2C-PROD002", "item_id": "PROD_002", "card_id": "HC-2026-MUM-C2C-PROD002", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD002", "condition_grade": "Like New", "defects": [], "brand_guess": "Philips Avent", "product_category": "baby_products", "confidence": 0.95, "seller_name": "Rahul Mehta", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T09:20:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD004", "item_id": "PROD_004", "card_id": "HC-2026-MUM-C2C-PROD004", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD004", "condition_grade": "Like New", "defects": [], "brand_guess": "Puma", "product_category": "footwear", "confidence": 0.96, "seller_name": "Sneha Deshmukh", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T09:35:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD005", "item_id": "PROD_005", "card_id": "HC-2026-MUM-C2C-PROD005", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD005", "condition_grade": "Fair", "defects": [{"defect_type": "scuff", "severity": "moderate", "location": "charging case"}, {"defect_type": "scratch", "severity": "minor", "location": "left earbud"}], "brand_guess": "boAt", "product_category": "electronics", "confidence": 0.80, "seller_name": "Sneha Deshmukh", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T10:05:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD010", "item_id": "PROD_010", "card_id": "HC-2026-MUM-C2C-PROD010", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD010", "condition_grade": "Fair", "defects": [{"defect_type": "scuff", "severity": "moderate", "location": "sole tread worn"}, {"defect_type": "stain", "severity": "minor", "location": "right clog top"}], "brand_guess": "Crocs", "product_category": "footwear", "confidence": 0.79, "seller_name": "Rahul Mehta", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T09:05:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD012", "item_id": "PROD_012", "card_id": "HC-2026-MUM-C2C-PROD012", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD012", "condition_grade": "Good", "defects": [{"defect_type": "scuff", "severity": "minor", "location": "USB port area"}], "brand_guess": "Xiaomi", "product_category": "electronics", "confidence": 0.88, "seller_name": "Rahul Mehta", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T10:20:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD015", "item_id": "PROD_015", "card_id": "HC-2026-MUM-C2C-PROD015", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD015", "condition_grade": "Like New", "defects": [], "brand_guess": "Peter England", "product_category": "clothing", "confidence": 0.97, "seller_name": "Sneha Deshmukh", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T09:05:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD017", "item_id": "PROD_017", "card_id": "HC-2026-MUM-C2C-PROD017", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD017", "condition_grade": "Like New", "defects": [], "brand_guess": "Allen Solly", "product_category": "clothing", "confidence": 0.96, "seller_name": "Sneha Deshmukh", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T10:05:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD018", "item_id": "PROD_018", "card_id": "HC-2026-MUM-C2C-PROD018", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD018", "condition_grade": "Good", "defects": [{"defect_type": "fade", "severity": "minor", "location": "one t-shirt collar fade"}], "brand_guess": "Jockey", "product_category": "clothing", "confidence": 0.87, "seller_name": "Priya Sharma", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T08:35:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD020", "item_id": "PROD_020", "card_id": "HC-2026-MUM-C2C-PROD020", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD020", "condition_grade": "Good", "defects": [{"defect_type": "scratch", "severity": "minor", "location": "jar exterior"}], "brand_guess": "Prestige", "product_category": "home_goods", "confidence": 0.88, "seller_name": "Priya Sharma", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T09:50:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD022", "item_id": "PROD_022", "card_id": "HC-2026-MUM-C2C-PROD022", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD022", "condition_grade": "Fair", "defects": [{"defect_type": "scratch", "severity": "moderate", "location": "non-stick coating peeling"}], "brand_guess": "Wonderchef", "product_category": "home_goods", "confidence": 0.80, "seller_name": "Meera Nair", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T08:05:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD023", "item_id": "PROD_023", "card_id": "HC-2026-MUM-C2C-PROD023", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD023", "condition_grade": "Good", "defects": [{"defect_type": "dent", "severity": "minor", "location": "base edge"}], "brand_guess": "Milton", "product_category": "home_goods", "confidence": 0.89, "seller_name": "Meera Nair", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T08:20:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"},
+        {"card_uuid": "HC-2026-MUM-C2C-PROD029", "item_id": "PROD_029", "card_id": "HC-2026-MUM-C2C-PROD029", "card_url": "https://reroute.demo/card/HC-2026-MUM-C2C-PROD029", "condition_grade": "Fair", "defects": [{"defect_type": "scratch", "severity": "moderate", "location": "tray surface scratched"}, {"defect_type": "scuff", "severity": "minor", "location": "wheel wear"}], "brand_guess": "Fisher Price", "product_category": "baby_products", "confidence": 0.79, "seller_name": "Rahul Mehta", "seller_city": "Mumbai", "amazon_guarantee": true, "generated_at": "2026-06-14T09:35:00+05:30", "grading_model_version": "claude-3-5-sonnet-20241022"}
+    ],
+    "transactions": [
+        {"transaction_id": "TXN-001", "listing_id": "FD-001", "buyer_id": "USER_ARUL", "seller_id": "USER_PRIYA", "amount_inr": 407, "listing_type": "reroute_deal", "status": "pending", "created_at": "2026-06-14T15:00:00+05:30", "completed_at": null},
+        {"transaction_id": "TXN-002", "listing_id": "C2C-PROD-002", "buyer_id": "USER_KAVYA", "seller_id": "USER_RAHUL", "amount_inr": 1899, "listing_type": "relist", "status": "pending", "created_at": "2026-06-14T14:00:00+05:30", "completed_at": null},
+        {"transaction_id": "TXN-003", "listing_id": "FD-011", "buyer_id": "USER_KARAN", "seller_id": "USER_KARAN", "amount_inr": 1500, "listing_type": "reroute_deal", "status": "completed", "created_at": "2026-06-14T12:00:00+05:30", "completed_at": "2026-06-14T12:45:00+05:30"},
+        {"transaction_id": "TXN-004", "listing_id": "C2C-PROD-005", "buyer_id": "USER_KARAN", "seller_id": "USER_SNEHA", "amount_inr": 799, "listing_type": "relist", "status": "completed", "created_at": "2026-06-13T18:00:00+05:30", "completed_at": "2026-06-13T18:30:00+05:30"},
+        {"transaction_id": "TXN-005", "listing_id": "FD-021", "buyer_id": "USER_ARUL", "seller_id": "USER_PRIYA", "amount_inr": 3199, "listing_type": "reroute_deal", "status": "pending", "created_at": "2026-06-14T16:00:00+05:30", "completed_at": null},
+        {"transaction_id": "TXN-006", "listing_id": "C2C-PROD-017", "buyer_id": "USER_KARAN", "seller_id": "USER_SNEHA", "amount_inr": 2799, "listing_type": "relist", "status": "completed", "created_at": "2026-06-13T20:00:00+05:30", "completed_at": "2026-06-13T20:45:00+05:30"}
+    ],
+    "abuse_flags": []
+}

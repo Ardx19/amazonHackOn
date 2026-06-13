@@ -99,6 +99,11 @@ class HealthCard(BaseModel):
     generated_at: datetime
     grading_model_version: str
     qr_code_base64: Optional[str] = None
+    # AI-written (or templated) honest condition prose
+    condition_summary: Optional[str] = None
+    usage_estimate: Optional[str] = None        # AI visual wear-level description
+    care_recommendation: Optional[str] = None
+    seller_usage_description: Optional[str] = None  # seller's own declaration
 
 
 # ─── Transaction ──────────────────────────────────────────────────────────────
@@ -152,6 +157,7 @@ class HealthCardRequest(BaseModel):
     seller_id: str
     seller_name: str
     seller_city: str
+    seller_usage_description: Optional[str] = None  # free-text from seller: "used 6 months, works perfectly"
 
 
 class RoutingResponse(BaseModel):
@@ -165,6 +171,11 @@ class RoutingResponse(BaseModel):
     mvsp_inr: float
     overhead_ratio: float
     entered_reroute: bool
+    # Floating-discount economic breakdown (Scenario 1). Optional for back-compat.
+    mrp_inr: float = 0.0
+    cogs_inr: float = 0.0
+    discount_pct: float = 0.0
+    sale_case: str = ""
 
 
 # ─── Helper ───────────────────────────────────────────────────────────────────

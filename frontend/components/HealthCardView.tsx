@@ -41,6 +41,37 @@ export default function HealthCardView({ card, qrBase64 }: Props) {
 
       <div style={styles.divider} />
 
+      {/* Dual trust signals: seller declaration + AI independent assessment */}
+      {(card.seller_usage_description || card.condition_summary) && (
+        <div style={styles.trustSignals}>
+          {card.seller_usage_description && (
+            <div style={styles.sellerSignal}>
+              <div style={styles.signalLabel}>🗣 Seller says</div>
+              <div>"{card.seller_usage_description}"</div>
+              <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+                Self-declared by seller — not verified
+              </div>
+            </div>
+          )}
+          {card.condition_summary && (
+            <div style={styles.aiSignal}>
+              <div style={styles.signalLabel}>🤖 Amazon AI independently assessed</div>
+              <div>{card.condition_summary}</div>
+              {card.usage_estimate && (
+                <div style={{ marginTop: 4, color: "#333" }}>
+                  Visible wear: {card.usage_estimate}
+                </div>
+              )}
+              {card.care_recommendation && (
+                <div style={{ marginTop: 4, color: "#555", fontStyle: "italic" }}>
+                  Care tip: {card.care_recommendation}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Condition */}
       <div style={styles.row}>
         <span style={styles.rowLabel}>Condition</span>
@@ -135,6 +166,33 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 3,
   },
   divider: { borderTop: "1px solid #eee", margin: "8px 0" },
+  trustSignals: { marginBottom: 8, display: "flex", flexDirection: "column" as const, gap: 8 },
+  sellerSignal: {
+    background: "#fffbf0",
+    border: "1px solid #ffe082",
+    borderRadius: 3,
+    padding: "8px 10px",
+    fontSize: 12.5,
+    lineHeight: 1.4,
+  },
+  aiSignal: {
+    background: "#f0f7ff",
+    border: "1px solid #d6e8ff",
+    borderRadius: 3,
+    padding: "8px 10px",
+    fontSize: 12.5,
+    lineHeight: 1.4,
+  },
+  signalLabel: { fontWeight: 700, marginBottom: 3, color: "#111", fontSize: 12 },
+  summary: {
+    background: "#f0f7ff",
+    border: "1px solid #d6e8ff",
+    borderRadius: 3,
+    padding: "8px 10px",
+    marginBottom: 8,
+    fontSize: 12.5,
+    lineHeight: 1.4,
+  },
   row: { display: "flex", gap: 8, marginBottom: 4 },
   rowLabel: { fontWeight: 600, minWidth: 110, color: "#333" },
   trust: {

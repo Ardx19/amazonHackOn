@@ -8,6 +8,7 @@ from datetime import datetime
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
 
 from app.main import app
@@ -21,7 +22,13 @@ TEST_DB_URL = "sqlite:///:memory:"
 
 @pytest.fixture(scope="module")
 def test_db_engine():
-    engine = create_engine(TEST_DB_URL, connect_args={"check_same_thread": False})
+    # StaticPool keeps a single shared connection so every session sees the same
+    # in-memory database (otherwise each connection gets its own empty DB).
+    engine = create_engine(
+        TEST_DB_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(bind=engine)
     yield engine
     engine.dispose()

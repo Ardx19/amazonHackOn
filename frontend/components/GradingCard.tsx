@@ -92,12 +92,14 @@ export default function GradingCard({ report }: Props) {
         </div>
       )}
 
-      {/* Route suggestion */}
-      <div style={styles.routeBox}>
-        <span style={styles.label}>Suggested route:</span>&nbsp;
-        <strong>{report.recommended_route.replace(/_/g, " ")}</strong>
-        <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>{report.routing_reason}</div>
-      </div>
+      {/* Route suggestion (hidden in C2C/relist flow where route is empty) */}
+      {report.recommended_route && (
+        <div style={styles.routeBox}>
+          <span style={styles.label}>Suggested route:</span>&nbsp;
+          <strong>{report.recommended_route.replace(/_/g, " ")}</strong>
+          <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>{report.routing_reason}</div>
+        </div>
+      )}
 
       {/* Rekognition labels (debug) */}
       {report.rekognition_labels.length > 0 && (

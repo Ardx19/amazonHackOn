@@ -14,9 +14,16 @@ DATABASE_URL = os.getenv(
 
 AWS_REGION = "ap-south-1"
 BEDROCK_MODEL_GRADING = "apac.amazon.nova-lite-v1:0"
-BEDROCK_MODEL_HEALTH_CARD = "apac.anthropic.claude-3-5-sonnet-20241022-v2:0"
+# Health card prose uses Amazon Nova (already enabled) rather than Anthropic
+# Claude — Claude requires a separate Bedrock use-case approval form. Staying on
+# Nova keeps the whole pipeline inside the Amazon AI ecosystem.
+BEDROCK_MODEL_HEALTH_CARD = "apac.amazon.nova-lite-v1:0"
 REKOGNITION_MAX_LABELS = 20
 REKOGNITION_MIN_CONFIDENCE = 70
+
+# Public base URL the Health Card QR code resolves to. The frontend route at
+# {base}/{card_uuid} should fetch GET /api/health-card/{card_uuid} and render it.
+HEALTH_CARD_BASE_URL = os.getenv("HEALTH_CARD_BASE_URL", "https://reroute.demo/card")
 
 # ─── Condition Grades ─────────────────────────────────────────────────────────
 
@@ -49,6 +56,21 @@ OVERHEAD_RATIO_THRESHOLD = 0.07
 GRADING_CONFIDENCE_THRESHOLD = 0.85
 MIN_PROFIT_MARGIN = 0.01
 OPERATING_CHARGE_PCT = 0.08
+
+# ─── Floating Discount Economic Model (Scenario 1: Priya return) ──────────────
+# The price Priya originally paid decomposes as: original_price = C + p + d
+#   C = COGS (Amazon's cost to source the goods)
+#   p = original profit margin
+#   d = original last-mile delivery cost (warehouse -> Priya)
+# MRP ceiling (price of a new unit, no delivery) = C + p
+#
+# DEMO NOTE: Amazon knows C, p, and d exactly from its internal OMS/WMS.
+# Here we approximate them as fixed ratios of the original price purely for the
+# simulation. The ratios sum to 1.0.
+COGS_RATIO = 0.55              # C  as fraction of original price
+MARGIN_RATIO = 0.30            # p  as fraction of original price
+ORIGINAL_DELIVERY_RATIO = 0.15  # d  as fraction of original price
+MRP_RATIO = COGS_RATIO + MARGIN_RATIO  # 0.85 — ceiling resale price (C + p)
 
 # ─── Ring Price Floors ─────────────────────────────────────────────────────────
 

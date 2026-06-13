@@ -65,7 +65,7 @@ def run_rekognition(s3_key: str) -> list[str]:
 def build_grading_prompt(item_metadata: dict, rekognition_labels: list[str]) -> str:
     prompt = (
         "You are a product condition assessor for an e-commerce returns platform. "
-        "Analyze the attached product photo and estimate its condition and resale value.\n\n"
+        "Analyze the attached product photo carefully and objectively.\n\n"
         f"Item: {item_metadata.get('product_name', 'Unknown')}\n"
         f"Category: {item_metadata.get('category', 'Unknown')}\n"
         f"Original Retail Price (INR): {item_metadata.get('original_price_inr', 'Unknown')}\n"
@@ -75,7 +75,12 @@ def build_grading_prompt(item_metadata: dict, rekognition_labels: list[str]) -> 
         prompt += f"\nPre-detected visual features: {', '.join(rekognition_labels)}\n"
 
     prompt += (
-        "\nReturn ONLY a valid JSON object with these exact keys. "
+        "\nIMPORTANT RULES:\n"
+        "- Only report defects you can visually confirm in the image.\n"
+        "- If the item appears new, unused, or defect-free, return an empty defects array [].\n"
+        "- Do NOT invent, assume, or guess defects that are not clearly visible.\n"
+        "- Be precise: describe only what you actually see.\n\n"
+        "Return ONLY a valid JSON object with these exact keys. "
         "No markdown code fences. No explanation before or after. "
         "The first character of your response must be { and the last must be }.\n\n"
         "{\n"
@@ -86,11 +91,11 @@ def build_grading_prompt(item_metadata: dict, rekognition_labels: list[str]) -> 
         '    {"defect_type": "scuff|scratch|crack|stain|missing_part|other",\n'
         '     "severity": "minor|moderate|major",\n'
         '     "location": "descriptive location on the item"}\n'
-        "  ],\n"
+        '  ],\n'
         '  "completeness": "complete|incomplete|accessories_missing",\n'
-        '  "confidence": "0.0 to 1.0 — how confident you are in this assessment",\n'
-        '  "estimated_retail_inr": "your best estimate of this item\'s original retail price in INR",\n'
-        '  "suggested_resale_band_inr": [low_inr, high_inr]\n'
+        '  "confidence": 0.0 to 1.0,\n'
+        '  "estimated_retail_inr": your best estimate as a number,\n'
+        '  "suggested_resale_band_inr": [low_number, high_number]\n'
         "}"
     )
 
@@ -180,6 +185,7 @@ def build_grading_report(
     item_metadata: dict,
     claude_output: dict,
     rekognition_labels: list[str],
+    flow: str = "return",
 ) -> GradingReport:
     defects = claude_output.get("defects", [])
     confidence = float(claude_output.get("confidence", 0.5))
@@ -198,7 +204,12 @@ def build_grading_report(
         "estimated_retail_inr", item_metadata.get("original_price_inr", 0)
     ) or 0)
 
-    route, reason = determine_route(claude_output["condition_grade"], estimated_retail)
+    # Routing is a separate concern — only compute it for the Returns flow.
+    # ReList (C2C) doesn't go through ReRoute, so the route fields stay blank.
+    if flow == "return":
+        route, reason = determine_route(claude_output["condition_grade"], estimated_retail)
+    else:
+        route, reason = "", ""
 
     return GradingReport(
         report_id=str(uuid4()),
@@ -227,8 +238,10 @@ def grade_item(
     category: str,
     original_price: float,
     s3_keys: list[str],
+    flow: str = "return",
 ) -> GradingReport:
-    """Orchestrate full grading pipeline. Called by the FastAPI route."""
+    """Orchestrate full grading pipeline. Called by the FastAPI route.
+    flow='return' computes a recommended route; flow='relist' leaves it blank."""
     if not s3_keys:
         raise ValueError("s3_keys is required and must be non-empty")
 
@@ -243,5 +256,5 @@ def grade_item(
     prompt = build_grading_prompt(item_metadata, rekognition_labels)
     claude_output = call_bedrock_vision(primary_image, prompt)
     return build_grading_report(
-        item_id, item_metadata, claude_output, rekognition_labels
+        item_id, item_metadata, claude_output, rekognition_labels, flow=flow
     )

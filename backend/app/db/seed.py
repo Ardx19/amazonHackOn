@@ -10,6 +10,8 @@ import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from sqlalchemy import text
+
 from app.db.database import Base, engine, SessionLocal
 from app.db.models import (
     Item,
@@ -26,6 +28,12 @@ from app.core.config import (
     INITIAL_RADIUS_KM,
     HUB_ZONES,
 )
+from app.services.routing_service import (
+    decompose_costs,
+    compute_radius,
+    compute_floating_price,
+    _discount_pct,
+)
 
 SEED_DIR = Path(__file__).resolve().parent.parent.parent.parent / "seed"
 
@@ -36,19 +44,33 @@ def create_tables():
 
 def reset_all():
     db = SessionLocal()
-    tables = [
-        AbuseFlag,
-        Transaction,
-        HealthCard,
-        HubCheckpoint,
-        FloatingDiscount,
-        GradingReport,
-        Item,
-    ]
-    for t in reversed(tables):
-        db.execute(t.__table__.delete())
-    db.commit()
-    db.close()
+    # Use TRUNCATE ... CASCADE so PostgreSQL handles FK dependencies automatically.
+    # Fall back to ordered DELETEs if TRUNCATE is unavailable.
+    try:
+        db.execute(
+            text(
+                "TRUNCATE TABLE abuse_flags, transactions, health_cards, "
+                "hub_checkpoints, floating_discounts, grading_reports, items CASCADE"
+            )
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        # Ordered delete fallback (children before parents)
+        tables = [
+            AbuseFlag,
+            Transaction,
+            HealthCard,
+            HubCheckpoint,
+            FloatingDiscount,
+            GradingReport,
+            Item,
+        ]
+        for t in tables:
+            db.execute(t.__table__.delete())
+        db.commit()
+    finally:
+        db.close()
 
 
 def seed_products(db) -> dict:
@@ -94,12 +116,22 @@ def seed_trajectories(db, products_by_id: dict):
         original_price = product["original_price_inr"]
 
         v_graded = CONDITION_MULTIPLIERS[condition] * original_price
-        cost_per_km = DELIVERY_COST_PER_KM.get(
-            category, DELIVERY_COST_PER_KM["default"]
-        )
-        max_cost = traj["checkpoints"][0]["c_remaining_inr"]
+        costs = decompose_costs(original_price)
+        C, d, mrp = costs["C"], costs["d"], costs["mrp"]
 
         listing_id = str(uuid.uuid4())
+
+        def _hub_deal(d_remaining: float) -> dict:
+            """Apply the floating-discount model at one checkpoint.
+            Same formula everywhere: price = MRP - (return cost still avoidable),
+            so the price rises and the radius shrinks as the item nears the RC."""
+            radius = compute_radius(d_remaining, category)
+            sale = compute_floating_price(mrp, C, d_remaining, category)
+            return {
+                "radius": radius,
+                "sale_price": sale,
+                "discount_pct": _discount_pct(mrp, sale),
+            }
 
         for idx, cp in enumerate(traj["checkpoints"]):
             hub_id = cp["hub_id"]
@@ -120,9 +152,7 @@ def seed_trajectories(db, products_by_id: dict):
             cp_count += 1
 
             if idx == 0:
-                discount_pct = round((cp["c_remaining_inr"] / max_cost) * 40)
-                sale_price = round(original_price * (1 - discount_pct / 100))
-                mvsp = v_graded - cp["c_remaining_inr"]
+                deal0 = _hub_deal(cp["c_remaining_inr"])
 
                 discount = FloatingDiscount(
                     listing_id=listing_id,
@@ -131,13 +161,14 @@ def seed_trajectories(db, products_by_id: dict):
                     current_hub_id=hub_id,
                     current_hub_name=hub["name"],
                     ring_index=0,
-                    original_price_inr=original_price,
+                    # original_price_inr holds the MRP ceiling (C + p)
+                    original_price_inr=round(mrp, 2),
                     v_graded_inr=round(v_graded, 2),
                     c_remaining_inr=cp["c_remaining_inr"],
-                    mvsp_inr=round(mvsp, 2),
-                    current_sale_price_inr=sale_price,
-                    discount_pct=float(discount_pct),
-                    radius_km=float(INITIAL_RADIUS_KM),
+                    mvsp_inr=round(deal0["sale_price"], 2),
+                    current_sale_price_inr=deal0["sale_price"],
+                    discount_pct=deal0["discount_pct"],
+                    radius_km=round(deal0["radius"], 1) or float(INITIAL_RADIUS_KM),
                     expires_at=now + timedelta(hours=24),
                     status="active",
                     trajectory=[
@@ -145,17 +176,12 @@ def seed_trajectories(db, products_by_id: dict):
                             "hub_id": tc["hub_id"],
                             "hub_name": HUB_ZONES[tc["hub_id"]]["name"],
                             "c_remaining_inr": tc["c_remaining_inr"],
-                            "discount_pct": round(
-                                (tc["c_remaining_inr"] / max_cost) * 40
-                            ),
-                            "sale_price": round(
-                                original_price
-                                * (
-                                    1
-                                    - round((tc["c_remaining_inr"] / max_cost) * 40)
-                                    / 100
-                                )
-                            ),
+                            "discount_pct": _hub_deal(tc["c_remaining_inr"])[
+                                "discount_pct"
+                            ],
+                            "sale_price": _hub_deal(tc["c_remaining_inr"])[
+                                "sale_price"
+                            ],
                         }
                         for tc in traj["checkpoints"]
                     ],

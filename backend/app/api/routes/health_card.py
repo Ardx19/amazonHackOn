@@ -5,11 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.services.health_card_service import generate_health_card
+from app.services.health_card_service import generate_health_card, generate_qr_code
 from app.services.routing_service import load_grading_report
 from app.db.models import HealthCard as HealthCardORM
 from app.db.database import get_db
-from app.schemas.schemas import HealthCard, HealthCardRequest
+from app.schemas.schemas import HealthCard, HealthCardRequest, Defect
 
 router = APIRouter(prefix="/api", tags=["health-card"])
 
@@ -30,6 +30,7 @@ def create_health_card(body: HealthCardRequest, db: Session = Depends(get_db)):
             seller_id=body.seller_id,
             seller_name=body.seller_name,
             seller_city=body.seller_city,
+            seller_usage_description=body.seller_usage_description,
         )
 
         db_card = HealthCardORM(
@@ -47,8 +48,13 @@ def create_health_card(body: HealthCardRequest, db: Session = Depends(get_db)):
             amazon_guarantee=card.amazon_guarantee,
             generated_at=card.generated_at,
             grading_model_version=card.grading_model_version,
+            condition_summary=card.condition_summary,
+            usage_estimate=card.usage_estimate,
+            care_recommendation=card.care_recommendation,
+            seller_usage_description=card.seller_usage_description,
+            qr_code_base64=card.qr_code_base64,
         )
-        db.add(db_card)
+        db.merge(db_card)  # merge = upsert, so re-generating a card won't crash
         db.commit()
 
         return HealthCardResponse(card=card)
@@ -56,3 +62,36 @@ def create_health_card(body: HealthCardRequest, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/health-card/{card_uuid}", response_model=HealthCardResponse)
+def get_health_card(card_uuid: str, db: Session = Depends(get_db)):
+    """Public verification endpoint — the QR code resolves here. Lets any UI
+    render the tamper-proof card by its ID."""
+    row = db.query(HealthCardORM).filter_by(card_uuid=card_uuid).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Health card not found: {card_uuid}")
+
+    defects = [Defect(**d) for d in (row.defects or [])]
+    card = HealthCard(
+        card_id=row.card_id,
+        item_id=row.item_id,
+        card_uuid=row.card_uuid,
+        card_url=row.card_url,
+        condition_grade=row.condition_grade,
+        defects=defects,
+        brand_guess=row.brand_guess,
+        product_category=row.product_category,
+        confidence=row.confidence,
+        seller_name=row.seller_name,
+        seller_city=row.seller_city,
+        amazon_guarantee=row.amazon_guarantee,
+        generated_at=row.generated_at,
+        grading_model_version=row.grading_model_version,
+        qr_code_base64=row.qr_code_base64 or generate_qr_code(row.card_url),
+        condition_summary=row.condition_summary,
+        usage_estimate=row.usage_estimate,
+        care_recommendation=row.care_recommendation,
+        seller_usage_description=row.seller_usage_description,
+    )
+    return HealthCardResponse(card=card)

@@ -1,6 +1,7 @@
 # backend/app/api/routes/grade.py
 # POST /api/grade — AI Grading endpoint
 
+import uuid as _uuid
 import boto3
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
@@ -31,6 +32,7 @@ async def grade_product(
     original_price_inr: float = Form(...),
     category: str = Form(...),
     product_name: str = Form(...),
+    flow: str = Form("return"),  # "return" (default) or "relist"
     db: Session = Depends(get_db),
 ):
     if not images:
@@ -41,13 +43,17 @@ async def grade_product(
     try:
         for img in images[:3]:
             content = await img.read()
+            # Prefix with a unique token so every upload gets its own S3 object.
+            # Without this, uploading the same filename would overwrite the old
+            # object and Nova could return a cached/stale response.
+            unique_key = f"{_uuid.uuid4().hex}/{img.filename}"
             s3_client.put_object(
                 Bucket=S3_BUCKET_IMAGES,
-                Key=img.filename,
+                Key=unique_key,
                 Body=content,
                 ContentType=img.content_type,
             )
-            s3_keys.append(img.filename)
+            s3_keys.append(unique_key)
 
         report = grade_item(
             item_id=item_id,
@@ -55,7 +61,13 @@ async def grade_product(
             category=category,
             original_price=original_price_inr,
             s3_keys=s3_keys,
+            flow=flow,
         )
+
+        # Delete any previous grading report for this item before inserting the
+        # new one (item_id has a unique constraint). Re-grading the same item
+        # is valid — the latest result wins.
+        db.query(GradingReportORM).filter_by(item_id=item_id).delete()
 
         db_report = GradingReportORM(
             report_id=report.report_id,

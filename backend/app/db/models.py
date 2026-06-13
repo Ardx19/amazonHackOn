@@ -123,6 +123,11 @@ class HealthCard(Base):
     amazon_guarantee = Column(Boolean, default=True)
     generated_at = Column(DateTime, nullable=False)
     grading_model_version = Column(String)
+    condition_summary = Column(Text)
+    usage_estimate = Column(String)
+    care_recommendation = Column(Text)
+    seller_usage_description = Column(Text)
+    qr_code_base64 = Column(Text, nullable=True)
 
     item = relationship("Item", back_populates="health_cards")
 
