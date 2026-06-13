@@ -121,4 +121,5 @@ def generate_health_card(
         amazon_guarantee=True,
         generated_at=datetime.utcnow(),
         grading_model_version="claude-3-5-sonnet-20241022",
+        qr_code_base64=qr_b64,
     )

@@ -166,7 +166,7 @@ export default function RelistPage() {
           {healthCard && (
             <div>
               <div style={styles.resultLabel}>Product Health Card</div>
-              <HealthCardView card={healthCard} />
+              <HealthCardView card={healthCard} qrBase64={healthCard.qr_code_base64 ?? undefined} />
             </div>
           )}
 

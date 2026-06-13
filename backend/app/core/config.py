@@ -13,8 +13,8 @@ DATABASE_URL = os.getenv(
 # ─── AWS Config ───────────────────────────────────────────────────────────────
 
 AWS_REGION = "ap-south-1"
-BEDROCK_MODEL_GRADING = "amazon.nova-lite-v1:0"
-BEDROCK_MODEL_HEALTH_CARD = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+BEDROCK_MODEL_GRADING = "apac.amazon.nova-lite-v1:0"
+BEDROCK_MODEL_HEALTH_CARD = "apac.anthropic.claude-3-5-sonnet-20241022-v2:0"
 REKOGNITION_MAX_LABELS = 20
 REKOGNITION_MIN_CONFIDENCE = 70
 
@@ -99,5 +99,5 @@ AMAZON_FEE_PCT = 0.05
 
 # ─── S3 Buckets ──────────────────────────────────────────────────────────────
 
-S3_BUCKET_IMAGES = "reroute-item-images"
-S3_BUCKET_HEALTH_CARDS = "reroute-health-cards"
+S3_BUCKET_IMAGES = "reroute-item-images-720800607906"
+S3_BUCKET_HEALTH_CARDS = "reroute-health-cards-720800607906"

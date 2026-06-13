@@ -2,9 +2,10 @@
 # POST /api/evaluate-route — Cascade routing
 # GET /api/deals — Marketplace listings
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy.orm import Session
 
 from app.services.routing_service import evaluate_route
 from app.db.models import FloatingDiscount as FloatingDiscountORM
@@ -20,8 +21,7 @@ class RouteResult(BaseModel):
 
 
 @router.post("/evaluate-route", response_model=RouteResult)
-def route_product(body: RouteRequest):
-    db = next(get_db())
+def route_product(body: RouteRequest, db: Session = Depends(get_db)):
     try:
         result = evaluate_route(
             db=db,
@@ -36,8 +36,6 @@ def route_product(body: RouteRequest):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()
 
 
 class DealItem(BaseModel):
@@ -61,8 +59,7 @@ class DealsResponse(BaseModel):
 
 
 @router.get("/deals", response_model=DealsResponse)
-def list_deals(hub_id: Optional[str] = Query(None)):
-    db = next(get_db())
+def list_deals(hub_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
     try:
         query = db.query(FloatingDiscountORM).filter_by(status="active")
         if hub_id:
@@ -87,5 +84,5 @@ def list_deals(hub_id: Optional[str] = Query(None)):
         ]
 
         return DealsResponse(count=len(deals), deals=deals)
-    finally:
-        db.close()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

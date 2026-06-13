@@ -101,37 +101,39 @@ def call_bedrock_vision(s3_key: str, prompt: str) -> dict:
     image_bytes = s3_client.get_object(Bucket=S3_BUCKET_IMAGES, Key=s3_key)[
         "Body"
     ].read()
-    b64_image = base64.b64encode(image_bytes).decode()
 
+    # Detect image format for Nova Lite's format field
     key_lower = s3_key.lower()
     if key_lower.endswith(".png"):
-        media_type = "image/png"
+        image_format = "png"
     elif key_lower.endswith(".webp"):
-        media_type = "image/webp"
+        image_format = "webp"
     elif key_lower.endswith(".gif"):
-        media_type = "image/gif"
+        image_format = "gif"
     else:
-        media_type = "image/jpeg"
+        image_format = "jpeg"
+
+    # Nova Lite native format via InvokeModel API:
+    # - bytes field must be Base64-encoded string (not raw bytes)
+    # - uses inferenceConfig (not max_tokens), no anthropic_version
+    b64_image = base64.b64encode(image_bytes).decode()
 
     body = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 1024,
         "messages": [
             {
                 "role": "user",
                 "content": [
                     {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": b64_image,
-                        },
+                        "image": {
+                            "format": image_format,
+                            "source": {"bytes": b64_image},
+                        }
                     },
-                    {"type": "text", "text": prompt},
+                    {"text": prompt},
                 ],
             }
         ],
+        "inferenceConfig": {"maxTokens": 1024},
     }
 
     try:
@@ -148,7 +150,8 @@ def call_bedrock_vision(s3_key: str, prompt: str) -> dict:
         )
 
     response_body = json.loads(response["body"].read())
-    raw_text = response_body["content"][0]["text"]
+    # Nova Lite response shape: {"output": {"message": {"content": [{"text": "..."}]}}}
+    raw_text = response_body["output"]["message"]["content"][0]["text"]
     return extract_json_from_response(raw_text)
 
 
@@ -178,15 +181,8 @@ def build_grading_report(
     claude_output: dict,
     rekognition_labels: list[str],
 ) -> GradingReport:
-    route, reason = determine_route(
-        claude_output["condition_grade"],
-        claude_output.get(
-            "estimated_retail_inr", item_metadata.get("original_price_inr", 0)
-        ),
-    )
-
     defects = claude_output.get("defects", [])
-    confidence = claude_output.get("confidence", 0.5)
+    confidence = float(claude_output.get("confidence", 0.5))
 
     manual_review = confidence < 0.70 or (
         len(defects) == 0 and claude_output["condition_grade"] != "Like New"
@@ -197,6 +193,12 @@ def build_grading_report(
         resale_band = (float(resale_band[0]), float(resale_band[1]))
     else:
         resale_band = (0.0, 0.0)
+
+    estimated_retail = float(claude_output.get(
+        "estimated_retail_inr", item_metadata.get("original_price_inr", 0)
+    ) or 0)
+
+    route, reason = determine_route(claude_output["condition_grade"], estimated_retail)
 
     return GradingReport(
         report_id=str(uuid4()),
@@ -209,9 +211,7 @@ def build_grading_report(
         defects=[Defect(**d) for d in defects] if isinstance(defects, list) else [],
         completeness=claude_output.get("completeness", "complete"),
         confidence=confidence,
-        estimated_retail_inr=claude_output.get(
-            "estimated_retail_inr", item_metadata.get("original_price_inr", 0)
-        ),
+        estimated_retail_inr=estimated_retail,
         suggested_resale_band_inr=resale_band,
         recommended_route=route,
         routing_reason=reason,

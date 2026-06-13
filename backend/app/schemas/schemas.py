@@ -98,6 +98,7 @@ class HealthCard(BaseModel):
     amazon_guarantee: bool = True
     generated_at: datetime
     grading_model_version: str
+    qr_code_base64: Optional[str] = None
 
 
 # ─── Transaction ──────────────────────────────────────────────────────────────

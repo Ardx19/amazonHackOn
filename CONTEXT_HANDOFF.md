@@ -1,249 +1,229 @@
-# ReRoute — Agent Context Handoff
+# ReRoute — Agent Context Handoff (Updated)
 ### Amazon HackOn '26 · Theme 3: Products Without a Second Chance
-*Generated: 13 June 2026. Read this before writing a single line of code.*
+*Updated: 13 June 2026 — post AWS wiring + first successful end-to-end grade*
 
 ---
 
-## 1. What this project is
+## 1. Current State Summary
 
-**Amazon ReRoute** is an AI-powered returns marketplace for Amazon India. It intercepts
-returned items mid-transit, grades them via Bedrock + Rekognition, calculates a
-floating discount based on logistics savings, and lists them to nearby buyers. It also
-supports C2C listings (ReList) with an AI-generated immutable Product Health Card.
+**We are fully operational.** The end-to-end demo flow works:
+- Upload image → Nova Lite grades it → routing formula runs → listing appears on Deals page
+- Tested live with a real Nike shoe image. Got: Good / 85% confident / scuff on toe / ₹316 sale price / listed on Deals
 
-**Submission deadline:** 15 June 23:59. Build window is effectively over. We are now
-in **polish + deploy + demo-prep mode**.
+**What's done vs what remains:**
 
-The full product context is in `amazon_reroute_context_handoff.md`. All product
-decisions are locked. Do not re-open them.
-
----
-
-## 2. Exact file state right now
-
-### Backend — `backend/` — COMPLETE (written, not yet running against live AWS)
-
-| Path | What it does | Status |
-|---|---|---|
-| `app/main.py` | FastAPI app, CORS, router registration | ✅ Done |
-| `app/core/config.py` | All constants: model IDs, thresholds, hub zones, costs | ✅ Done |
-| `app/db/database.py` | SQLAlchemy sync engine + `get_db()` generator | ✅ Done |
-| `app/db/models.py` | 7 ORM models with FK constraints | ✅ Done |
-| `app/db/seed.py` | Reads `seed/*.json`, seeds PostgreSQL | ✅ Done |
-| `app/schemas/schemas.py` | 8 Pydantic models + request/response schemas | ✅ Done |
-| `app/services/grade_service.py` | Rekognition + Bedrock Nova Lite grading pipeline | ✅ Done |
-| `app/services/routing_service.py` | Cascade auction, ring pricing, MVSP formula | ✅ Done |
-| `app/services/health_card_service.py` | Claude 3.5 prose + QR code generation | ✅ Done |
-| `app/api/routes/grade.py` | `POST /api/grade` | ✅ Done |
-| `app/api/routes/routing.py` | `POST /api/evaluate-route` + `GET /api/deals` | ✅ Done |
-| `app/api/routes/health_card.py` | `POST /api/health-card` | ✅ Done |
-| `requirements.txt` | Pinned versions, including scipy/numpy | ✅ Done |
-| `Dockerfile` | Python 3.11 slim, uvicorn CMD | ✅ Done |
-| `apprunner.yaml` | App Runner source-based deploy config | ✅ Done |
-| `conftest.py` (root) | Sets `DATABASE_URL=sqlite:///:memory:` before imports | ✅ Done |
-| `pytest.ini` | Test discovery config | ✅ Done |
-| `tests/conftest.py` | SQLite engine + seed fixtures | ✅ Done |
-| `tests/test_grade_service.py` | 29 tests — grading logic, mocked boto3 | ✅ 29/29 pass |
-| `tests/test_routing_service.py` | 27 tests — routing formulas, DB interactions | ✅ 27/27 pass |
-| `tests/test_health_card_service.py` | 11 tests — QR generation, health card | ✅ 11/11 pass |
-| `tests/test_api_routes.py` | FastAPI TestClient route tests | ✅ Written, not run yet |
-
-**Total backend tests: 67 passing** (run with SQLite, no AWS needed).
-
-### Frontend — `frontend/` — COMPLETE BUILD (builds clean, not connected to live API)
-
-| Path | What it does | Status |
-|---|---|---|
-| `lib/types.ts` | TypeScript interfaces matching all Pydantic schemas | ✅ Done |
-| `lib/api.ts` | `fetch()` wrappers: gradeProduct, evaluateRoute, getDeals, generateHealthCard | ✅ Done |
-| `app/layout.tsx` | Amazon-dark nav bar, 3 links | ✅ Done |
-| `app/globals.css` | Minimal Amazon-palette CSS | ✅ Done |
-| `app/page.tsx` | Return Center (Priya flow: select product → upload → grade + route) | ✅ Done |
-| `app/deals/page.tsx` | ReRoute Deals marketplace (hub filter, DealCard grid) | ✅ Done |
-| `app/relist/page.tsx` | ReList C2C (Rahul flow: upload → grade → health card) | ✅ Done |
-| `components/GradingCard.tsx` | Condition badge, defect list, confidence bar | ✅ Done |
-| `components/RoutingResult.tsx` | Route badge, price/overhead/radius grid | ✅ Done |
-| `components/DealCard.tsx` | Discount pill, hub, price, Buy Now | ✅ Done |
-| `components/HealthCardView.tsx` | Nutrition-label card, QR placeholder | ✅ Done |
-| `.env.local` | `NEXT_PUBLIC_API_URL=http://localhost:8000` | ✅ Done |
-| `package.json` | ESLint removed (disk space), Next.js 14.2.35 | ✅ Done |
-
-`npm run build` passes clean. `npm run dev` serves all 3 pages.
-
-### Seed data — `seed/` — UNCHANGED
-
-`products.json` (10 products), `trajectories.json` (3 trajectories × 4 checkpoints),
-`personas.json` (Priya, Rahul, Ananya). Do not modify.
-
-### Supporting docs
-- `amazon_reroute_context_handoff.md` — full product context, all locked decisions
-- `arch-plan.txt` — architecture v3, migration map, stack rationale
-- `plan.md` — implementation units U1–U8, dependency graph
-- `AWS_INTEGRATION_GUIDE.md` — **NEW** step-by-step AWS wiring guide
-- `PROJECT_STATUS.md` — high-level status (slightly stale — frontend shows "Not started",
-  but it is now done; update if you have time)
+| Area | Status |
+|---|---|
+| Backend code (all routes, services, models) | ✅ Complete |
+| All 5 known bugs fixed | ✅ Fixed |
+| 67 unit tests passing | ✅ Green |
+| AWS credentials configured locally | ✅ Done |
+| S3 buckets created | ✅ Done |
+| Bedrock Nova Lite (grading) | ✅ Live, verified |
+| Bedrock Claude 3.5 Sonnet (health card) | ✅ Live, verified |
+| Amazon Rekognition | ✅ Live, verified |
+| RDS PostgreSQL 15.13 | ✅ Live, seeded |
+| Frontend builds clean | ✅ Done |
+| Return Center flow (Priya) | ✅ Working end-to-end |
+| Deals page showing seeded listings | ✅ Working |
+| ReList flow (Rahul) + Health Card | ⚠️ Built, not yet tested live |
+| `/card/[uuid]` dynamic Health Card page | ❌ Not built yet |
+| `amplify.yml` for frontend deploy | ❌ Not created yet |
+| Backend deploy to App Runner | ❌ Not deployed yet |
+| Frontend deploy to Amplify | ❌ Not deployed yet |
+| Demo video | ❌ Not recorded |
 
 ---
 
-## 3. Known bugs that must be fixed before the demo runs
+## 2. AWS Resources (do not re-provision)
 
-These are documented in `AWS_INTEGRATION_GUIDE.md` §10 and must be fixed before the
-backend can make real API calls. They do not affect the 67 unit tests (which mock AWS).
+| Resource | Value |
+|---|---|
+| AWS Account ID | 720800607906 |
+| Region | ap-south-1 |
+| IAM User | `reroute-backend` |
+| Credentials location | `C:\Users\Divyansh\.aws\credentials` (default profile) |
+| S3 images bucket | `reroute-item-images-720800607906` |
+| S3 health cards bucket | `reroute-health-cards-720800607906` |
+| Bedrock grading model | `apac.amazon.nova-lite-v1:0` |
+| Bedrock health card model | `apac.anthropic.claude-3-5-sonnet-20241022-v2:0` |
+| RDS identifier | `reroute-db` |
+| RDS endpoint | `reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com` |
+| RDS port | 5432 |
+| RDS DB name | `reroute` |
+| RDS master user | `postgres` |
+| RDS master password | `ReRoute2026!` |
+| RDS security group | `reroute-rds-sg` (sg-0efdc99b06e2f8cd7) — port 5432 open 0.0.0.0/0 |
 
-### Bug 1 — Nova Lite body format (CRITICAL)
-**File:** `backend/app/services/grade_service.py`, function `call_bedrock_vision`
-**Problem:** The request body uses `anthropic_version: bedrock-2023-05-31` which is
-Claude's format. Nova Lite requires a different structure without `anthropic_version`
-and uses `inferenceConfig` instead of `max_tokens`.
-**Fix:** Test with a real image. If you get `ValidationException`, change the body to:
-```python
-body = {
-    "messages": [{
-        "role": "user",
-        "content": [
-            {"image": {"format": "jpeg", "source": {"bytes": image_bytes}}},
-            {"text": prompt}
-        ]
-    }],
-    "inferenceConfig": {"maxTokens": 1024}
-}
-```
-Note: Nova Lite accepts raw bytes (no base64), so remove the base64 encoding step too.
-
-### Bug 2 — S3 client created in loop (minor but messy)
-**File:** `backend/app/api/routes/grade.py`, inside `grade_product`
-**Problem:** `boto3.client("s3", ...)` is created inside the `for img in images` loop.
-**Fix:** Move to module level: `s3_client = boto3.client("s3", region_name=AWS_REGION)`
-at the top of `grade.py`, remove the `import boto3` from inside the function.
-
-### Bug 3 — `Item._new_uuid()` in seed.py (breaks seed script)
-**File:** `backend/app/db/seed.py`, function `seed_trajectories`
-**Problem:** `Item._new_uuid()` is called as if `_new_uuid` is a class method, but it's
-a module-level function defined in `models.py`. This raises `AttributeError` at runtime.
-**Fix:** Replace all occurrences with `str(uuid.uuid4())` (uuid is already imported in
-models.py but needs to be imported in seed.py too).
-
-### Bug 4 — QR code not returned in HealthCard response
-**File:** `backend/app/schemas/schemas.py` (HealthCard model) and
-`backend/app/services/health_card_service.py` (generate_health_card)
-**Problem:** `generate_health_card` generates a QR code (`qr_b64`) but never puts it
-in the returned `HealthCard` object. The frontend `HealthCardView` shows a placeholder
-instead of the real QR.
-**Fix:** Add `qr_code_base64: Optional[str] = None` to the `HealthCard` Pydantic schema.
-Populate it in `generate_health_card`: `qr_code_base64=qr_b64`. Update the ORM model
-`health_cards` table and the `db_card` instantiation in `health_card.py` route to store
-it too (or just return it in the API response without storing, since it's derivable from
-`card_url`).
-
-### Bug 5 — `get_db()` used with `next()` instead of `Depends()`
-**File:** `backend/app/api/routes/grade.py`, `routing.py`, `health_card.py`
-**Problem:** All three route handlers call `db = next(get_db())`. This works but bypasses
-FastAPI's dependency lifecycle — the session won't be properly closed if an exception
-happens before the `finally` block.
-**Fix:** Change each route function signature to use `db: Session = Depends(get_db)`.
-Remove the manual `db = next(get_db())` and `db.close()` calls. FastAPI handles cleanup.
+**IMPORTANT — Model IDs changed from original plan:**
+The original `config.py` used bare model IDs (`amazon.nova-lite-v1:0`). These fail in ap-south-1 with "on-demand throughput not supported". The correct APAC cross-region inference profile IDs are what's now in `config.py`. Do NOT revert these.
 
 ---
 
-## 4. What needs to happen before the demo (in order)
+## 3. Dev Commands (this machine)
 
-### Step 1: Fix the 5 bugs above
-None require AWS access. Do these first. The unit tests still pass after the fixes.
-
-### Step 2: AWS setup (follow `AWS_INTEGRATION_GUIDE.md`)
-1. IAM role with Bedrock + Rekognition + S3 permissions → 20 min
-2. S3 buckets: `reroute-item-images`, `reroute-health-cards` → 10 min
-3. Bedrock model access for Nova Lite + Claude 3.5 Sonnet (ap-south-1) → 10 min
-4. RDS PostgreSQL t4g.micro (ap-south-1) → 20 min
-
-### Step 3: Smoke test backend locally
-```bash
-# Set env vars
-$env:DATABASE_URL = "postgresql://postgres:<pw>@<rds-endpoint>:5432/reroute"
-$env:AWS_DEFAULT_REGION = "ap-south-1"
-# (credentials in ~/.aws/credentials or via IAM role)
-
-cd backend
-python -m app.db.seed --reset        # seeds RDS
-uvicorn app.main:app --reload        # starts on :8000
-
-# Quick checks:
-# GET http://localhost:8000/          → {"status": "ok"}
-# GET http://localhost:8000/docs      → OpenAPI UI
-# GET http://localhost:8000/api/deals → 3 seeded listings
-```
-
-### Step 4: Test grading endpoint with a real image
-```bash
-curl -X POST http://localhost:8000/api/grade \
-  -F "images=@shoe.jpg" \
-  -F "item_id=PROD_001" \
-  -F "original_price_inr=599" \
-  -F "category=footwear" \
-  -F "product_name=Nike Shoes"
-```
-Expected: 200 with `condition_grade`, `confidence`, `defects`. If you get a
-`ValidationException` from Bedrock, fix Bug 1 (Nova Lite body format).
-
-### Step 5: Run frontend against live backend
-```bash
-cd frontend
-# Edit .env.local: NEXT_PUBLIC_API_URL=http://localhost:8000
-npm run dev
-```
-Navigate to localhost:3000. Try the Return Center flow end-to-end.
-
-### Step 6: Deploy
-- Backend: App Runner from GitHub (see `AWS_INTEGRATION_GUIDE.md` §6)
-- Frontend: Amplify from GitHub (see `AWS_INTEGRATION_GUIDE.md` §7 — create `amplify.yml` first)
-- Update `NEXT_PUBLIC_API_URL` in Amplify env vars to the App Runner URL
-
-### Step 7: Demo prep
-- Seed the deployed RDS with `python -m app.db.seed --reset`
-- Record a backup video of the full 3-minute demo flow
-- Rehearse the script in `amazon_reroute_context_handoff.md` §14
-
----
-
-## 5. Disk space constraint (Windows dev machine)
-
-C: drive has **0 bytes free**. D: has ~65 GB free.
-
-- `npm install` must use `--cache D:\npm-cache` (`.npmrc` in `frontend/` already sets this)
-- `pip install` must use `--no-cache-dir --target D:\py-pkgs` and
-  `$env:PYTHONPATH="D:\py-pkgs;d:\hackon-new\amazonHackOn\backend"` must be set
-- pytest must be run with the `PYTHONPATH` env var set (see test run commands below)
-
-### Command to run tests
 ```powershell
-cd d:\hackon-new\amazonHackOn\backend
-$env:PYTHONPATH="D:\py-pkgs;d:\hackon-new\amazonHackOn\backend"
-python -m pytest tests/ -v --tb=short
-# Expected: 67 passed (test_api_routes.py adds more when you run it with a live DB)
-```
+# Backend (run in a terminal, keep it running)
+cd d:\amazonHackOn\backend
+$env:DATABASE_URL="postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute"
+$env:AWS_DEFAULT_REGION="ap-south-1"
+$env:PYTHONPATH="d:\amazonHackOn\backend"
+C:\Users\Divyansh\AppData\Local\Programs\Python\Python311\python.exe -m uvicorn app.main:app --reload --port 8000
 
-### Command to start frontend dev server
-```powershell
-cd d:\hackon-new\amazonHackOn\frontend
-npm run dev --cache D:\npm-cache
-# Serves on http://localhost:3000
+# Frontend (separate terminal)
+cd d:\amazonHackOn\frontend
+node_modules\.bin\next.cmd dev
+# → http://localhost:3000
+
+# Run tests
+cd d:\amazonHackOn\backend
+$env:PYTHONPATH="d:\amazonHackOn\backend"
+C:\Users\Divyansh\AppData\Local\Programs\Python\Python311\python.exe -m pytest tests/ -v --tb=short
+
+# Re-seed database (if needed)
+cd d:\amazonHackOn\backend
+$env:DATABASE_URL="postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute"
+$env:PYTHONPATH="d:\amazonHackOn\backend"
+C:\Users\Divyansh\AppData\Local\Programs\Python\Python311\python.exe -m app.db.seed --reset
 ```
 
 ---
 
-## 6. What NOT to do
+## 4. Exact File State
 
-- Do not re-open any product decision from `amazon_reroute_context_handoff.md`
-- Do not change the seed JSON files
-- Do not introduce new dependencies without checking disk space first
-- Do not use Tailwind CSS (not installed, disk space concern)
-- Do not use Cognito (hardcoded personas are fine for demo)
-- Do not touch the business logic formulas in `routing_service.py`
-- Do not run `alembic` (tables are created by `Base.metadata.create_all()` in seed.py)
+### Backend — `backend/` — ALL BUGS FIXED, LIVE AGAINST AWS
+
+| Path | Status | Notes |
+|---|---|---|
+| `app/main.py` | ✅ | FastAPI app, CORS, routers |
+| `app/core/config.py` | ✅ | **Updated** — APAC model IDs, real S3 bucket names |
+| `app/db/database.py` | ✅ | SQLAlchemy engine + get_db() |
+| `app/db/models.py` | ✅ | 7 ORM models, FK constraints |
+| `app/db/seed.py` | ✅ | Bug 3 fixed (uuid) |
+| `app/schemas/schemas.py` | ✅ | Bug 4 fixed (qr_code_base64 added) |
+| `app/services/grade_service.py` | ✅ | Bug 1 fixed (Nova Lite body format + APAC profile). Bug: confidence/estimated_retail str→float cast fixed |
+| `app/services/routing_service.py` | ✅ | Untouched, all formulas correct |
+| `app/services/health_card_service.py` | ✅ | Bug 4 fixed (qr_b64 returned) |
+| `app/api/routes/grade.py` | ✅ | Bug 2 fixed (S3 client at module level). Bug 5 fixed (Depends) |
+| `app/api/routes/routing.py` | ✅ | Bug 5 fixed (Depends). Syntax bug fixed (missing except) |
+| `app/api/routes/health_card.py` | ✅ | Bug 5 fixed (Depends) |
+| `requirements.txt` | ✅ | All installed on this machine |
+| `conftest.py` + `pytest.ini` | ✅ | SQLite in-memory for tests |
+| `tests/` | ✅ | 67/67 passing |
+
+### Frontend — `frontend/` — BUILT, NOT YET DEPLOYED
+
+| Path | Status | Notes |
+|---|---|---|
+| `lib/types.ts` | ✅ | qr_code_base64 added to HealthCard |
+| `lib/api.ts` | ✅ | All fetch wrappers |
+| `app/layout.tsx` | ✅ | Amazon-dark nav |
+| `app/page.tsx` | ✅ | Return Center — **tested, working** |
+| `app/deals/page.tsx` | ✅ | Deals marketplace — **shows seeded + graded listings** |
+| `app/relist/page.tsx` | ✅ | ReList C2C — built, not yet live-tested |
+| `components/` (all 4) | ✅ | GradingCard, RoutingResult, DealCard, HealthCardView |
+| `.env.local` | ✅ | Points to `http://localhost:8000` |
+| `amplify.yml` | ❌ | **Not created** — needed for Amplify deploy |
 
 ---
 
-## 7. The 3 personas (hardcoded, used as drop-downs in frontend)
+## 5. Known Remaining Issues
+
+### Missing: `/card/[uuid]` Health Card page
+The health card data is generated and stored (when ReList flow runs), but there's no Next.js dynamic route at `app/card/[uuid]/page.tsx` that renders it as a public web page. QR code points to `https://reroute.demo/card/<uuid>` which doesn't exist yet. For demo: the HealthCardView component renders inline on the ReList page, which is sufficient. Add the dynamic route if time permits.
+
+### Not tested live: ReList flow (Rahul)
+The `/relist` page is built and `npm run build` passes, but we haven't tested it against the live backend. The flow: upload image → grade → generate health card → show QR. Should work — no known bugs — but needs a test run.
+
+### Not tested live: Health Card generation
+`POST /api/health-card` calls Claude 3.5 Sonnet. Model is verified working (tested directly). Route requires a `grading_report` to exist in DB for the item_id first, so must grade before generating health card.
+
+### Deploy not done
+Neither App Runner (backend) nor Amplify (frontend) is configured. The app runs only locally. For Unstop submission, deployment is required.
+
+---
+
+## 6. Live Database State (as of last check)
+
+**RDS: `reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com`**
+
+| Table | Rows | Content |
+|---|---|---|
+| items | 13 | 10 products + 3 personas (Priya, Rahul, Ananya) |
+| grading_reports | 1 | Nike shoe test grade from live run |
+| floating_discounts | 4 | 3 seeded + 1 from live test |
+| hub_checkpoints | 12 | 3 trajectories × 4 hubs each |
+| health_cards | 0 | Empty — ReList flow not yet tested |
+| transactions | 0 | Empty — Buy Now not yet tested |
+| abuse_flags | 0 | Empty |
+
+---
+
+## 7. What to Do Next (priority order)
+
+### 1. Test ReList flow end-to-end (15 min)
+- Go to `http://localhost:3000/relist`
+- Select Rahul + baby monitor, upload any image
+- Should: grade → generate health card with QR → show inline
+
+### 2. Create `amplify.yml` for frontend deploy (10 min)
+Content:
+```yaml
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm install
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+```
+
+### 3. Deploy backend to App Runner (30 min)
+- Push repo to GitHub if not already
+- App Runner → Create service → Source: GitHub → `backend/` directory
+- Set env vars: `DATABASE_URL`, `AWS_DEFAULT_REGION`
+- App Runner needs an IAM role with Bedrock + Rekognition + S3 permissions
+
+### 4. Deploy frontend to Amplify (20 min)
+- Amplify → New app → Host web app → GitHub repo
+- Set `NEXT_PUBLIC_API_URL` to the App Runner URL
+- Amplify auto-builds from `amplify.yml`
+
+### 5. Create `/card/[uuid]` dynamic page (optional, 30 min)
+- `frontend/app/card/[uuid]/page.tsx`
+- Fetch health card from `GET /api/health-card/{uuid}` (need to add this GET route)
+- Render full HealthCardView + print button
+
+### 6. Seed deployed RDS + smoke test deployed endpoints
+
+### 7. Record demo video (3-minute script in `amazon_reroute_context_handoff.md` §14)
+
+---
+
+## 8. Bugs Fixed in This Session (for reference)
+
+| Bug | File | Fix |
+|---|---|---|
+| Bug 1 — Nova Lite body format | `grade_service.py` | Switched to APAC inference profile + `inferenceConfig` + base64 bytes |
+| Bug 2 — S3 client in loop | `grade.py` | Moved to module level |
+| Bug 3 — `Item._new_uuid()` | `seed.py` | Replaced with `str(uuid.uuid4())`, added `import uuid` |
+| Bug 4 — QR not returned | `schemas.py`, `health_card_service.py`, `relist/page.tsx`, `types.ts` | Added `qr_code_base64` field end-to-end |
+| Bug 5 — `next(get_db())` pattern | `grade.py`, `routing.py`, `health_card.py` | Switched to `Depends(get_db)` |
+| Bug 6 — Missing `except` in `list_deals` | `routing.py` | Added `except Exception` block |
+| Bug 7 — str/float comparison | `grade_service.py` | Cast `confidence` and `estimated_retail_inr` to `float()` before use |
+
+---
+
+## 9. The 3 Personas (unchanged)
 
 | ID | Name | Role | Scenario |
 |---|---|---|---|
@@ -253,27 +233,18 @@ npm run dev --cache D:\npm-cache
 
 ---
 
-## 8. API contract (quick reference)
+## 10. Python / Node Paths (this machine)
 
-```
-POST /api/grade
-  Form: images[] (files), item_id, product_name, category, original_price_inr
-  Returns: {status, report: GradingReport}
+| Tool | Path |
+|---|---|
+| Python 3.11 | `C:\Users\Divyansh\AppData\Local\Programs\Python\Python311\python.exe` |
+| pip | Same Python's pip |
+| uvx | `C:\Users\Divyansh\AppData\Local\Programs\Python\Python311\Scripts\uvx.exe` |
+| node | System PATH (v22.18.0) |
+| npm | System PATH (v11.13.0) |
+| next | `d:\amazonHackOn\frontend\node_modules\.bin\next.cmd` |
 
-POST /api/evaluate-route
-  JSON: {item_id, original_price_inr, category, current_location: {hub_id, distance_to_home_warehouse_km}, ring_index}
-  Returns: {status, result: RoutingResult}
+---
 
-POST /api/health-card
-  JSON: {item_id, seller_id, seller_name, seller_city}
-  Returns: {status, card: HealthCard}
-
-GET /api/deals
-  Query: hub_id (optional)
-  Returns: {status, count, deals: DealItem[]}
-
-GET /
-  Returns: {status: "ok", service: "ReRoute API", version: "1.0.0"}
-```
-
-Full schema: visit `/docs` on a running backend instance (FastAPI auto-generates OpenAPI).
+*Updated: 13 June 2026 — after full AWS wiring, bug fixing, and first live end-to-end test*
+*All product decisions remain locked per `amazon_reroute_context_handoff.md`*

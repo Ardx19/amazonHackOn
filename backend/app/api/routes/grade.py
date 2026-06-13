@@ -1,16 +1,22 @@
 # backend/app/api/routes/grade.py
 # POST /api/grade — AI Grading endpoint
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+import boto3
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
 from typing import List
+from sqlalchemy.orm import Session
 
+from app.core.config import S3_BUCKET_IMAGES, AWS_REGION
 from app.services.grade_service import grade_item
 from app.db.models import GradingReport as GradingReportORM
 from app.db.database import get_db
 from app.schemas.schemas import GradingReport
 
 router = APIRouter(prefix="/api", tags=["grading"])
+
+# Module-level S3 client — not recreated per request or per image
+s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 
 class GradeResponse(BaseModel):
@@ -25,20 +31,16 @@ async def grade_product(
     original_price_inr: float = Form(...),
     category: str = Form(...),
     product_name: str = Form(...),
+    db: Session = Depends(get_db),
 ):
     if not images:
         raise HTTPException(status_code=400, detail="At least one image is required")
 
-    db = next(get_db())
     s3_keys = []
 
     try:
         for img in images[:3]:
             content = await img.read()
-            import boto3
-            from app.core.config import S3_BUCKET_IMAGES, AWS_REGION
-
-            s3_client = boto3.client("s3", region_name=AWS_REGION)
             s3_client.put_object(
                 Bucket=S3_BUCKET_IMAGES,
                 Key=img.filename,
@@ -80,5 +82,3 @@ async def grade_product(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()

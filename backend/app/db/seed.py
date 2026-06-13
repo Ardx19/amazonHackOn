@@ -6,6 +6,7 @@
 import json
 import sys
 import time
+import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -98,11 +99,7 @@ def seed_trajectories(db, products_by_id: dict):
         )
         max_cost = traj["checkpoints"][0]["c_remaining_inr"]
 
-        listing_id = str(
-            Item._new_uuid()
-            if hasattr(Item, "_new_uuid")
-            else __import__("uuid").uuid4()
-        )
+        listing_id = str(uuid.uuid4())
 
         for idx, cp in enumerate(traj["checkpoints"]):
             hub_id = cp["hub_id"]
@@ -110,11 +107,7 @@ def seed_trajectories(db, products_by_id: dict):
             arrived_at = now + timedelta(hours=cp["hours_from_start"])
 
             checkpoint = HubCheckpoint(
-                checkpoint_id=str(
-                    Item._new_uuid()
-                    if hasattr(Item, "_new_uuid")
-                    else __import__("uuid").uuid4()
-                ),
+                checkpoint_id=str(uuid.uuid4()),
                 item_id=traj["product_id"],
                 trajectory_id=traj["trajectory_id"],
                 hub_id=hub_id,

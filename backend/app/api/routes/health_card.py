@@ -1,8 +1,9 @@
 # backend/app/api/routes/health_card.py
 # POST /api/health-card — Generate Health Card + QR code
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.services.health_card_service import generate_health_card
 from app.services.routing_service import load_grading_report
@@ -19,8 +20,7 @@ class HealthCardResponse(BaseModel):
 
 
 @router.post("/health-card", response_model=HealthCardResponse)
-def create_health_card(body: HealthCardRequest):
-    db = next(get_db())
+def create_health_card(body: HealthCardRequest, db: Session = Depends(get_db)):
     try:
         grading_report = load_grading_report(db, body.item_id)
 
@@ -56,5 +56,3 @@ def create_health_card(body: HealthCardRequest):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()

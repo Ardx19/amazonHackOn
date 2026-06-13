@@ -67,4 +67,5 @@ export interface HealthCard {
   amazon_guarantee: boolean;
   generated_at: string;
   grading_model_version: string;
+  qr_code_base64: string | null;
 }
