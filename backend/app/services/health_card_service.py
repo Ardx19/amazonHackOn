@@ -29,7 +29,16 @@ from app.core.config import (
 from app.schemas.schemas import HealthCard, generate_card_uuid
 
 logger = logging.getLogger(__name__)
-bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
+
+# Lazy singleton — created on first use so env vars are already loaded
+_bedrock_client = None
+
+
+def _get_bedrock():
+    global _bedrock_client
+    if _bedrock_client is None:
+        _bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
+    return _bedrock_client
 
 
 def extract_json_from_response(text: str) -> dict:
@@ -157,15 +166,16 @@ def generate_health_prose(grading_report, seller_name: str) -> dict:
     }
 
     try:
+        bedrock = _get_bedrock()
         try:
-            response = bedrock_client.invoke_model(
+            response = bedrock.invoke_model(
                 modelId=BEDROCK_MODEL_HEALTH_CARD,
                 body=json.dumps(body),
             )
-        except bedrock_client.exceptions.ThrottlingException:
+        except bedrock.exceptions.ThrottlingException:
             logger.warning("Bedrock throttled — retrying in 2s")
             _time.sleep(2)
-            response = bedrock_client.invoke_model(
+            response = bedrock.invoke_model(
                 modelId=BEDROCK_MODEL_HEALTH_CARD,
                 body=json.dumps(body),
             )

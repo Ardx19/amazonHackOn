@@ -1,6 +1,17 @@
 # backend/app/main.py
 # FastAPI application entry point.
 
+# Load .env FIRST — before any AWS/DB imports so boto3 and SQLAlchemy pick up
+# the correct credentials and DATABASE_URL.
+import os
+from pathlib import Path
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).resolve().parent.parent / ".env"
+    load_dotenv(_env_path, override=False)
+except ImportError:
+    pass  # python-dotenv not installed — rely on shell env vars
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

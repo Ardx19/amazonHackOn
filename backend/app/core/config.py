@@ -2,6 +2,15 @@
 # Central config — no hardcoded values anywhere else in the project
 
 import os
+from pathlib import Path
+
+# Load .env from backend/ directory — must happen before any os.getenv() calls
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+    load_dotenv(_env_path, override=False)
+except ImportError:
+    pass  # fall back to shell environment vars
 
 # ─── Database ──────────────────────────────────────────────────────────────────
 

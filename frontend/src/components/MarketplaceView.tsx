@@ -24,7 +24,8 @@ import {
   HelpCircle,
   Video,
   Camera,
-  Loader2
+  Loader2,
+  Search,
 } from 'lucide-react';
 import { Product } from '../types';
 import { getDeals, gradeProduct, generateHealthCard } from '../lib/api';
@@ -40,6 +41,7 @@ interface MarketplaceViewProps {
   session: any;
   relistItems: any[];
   setRelistItems: React.Dispatch<React.SetStateAction<any[]>>;
+  initialTab?: 'float' | 'relist';
 }
 
 // Hardcoded fallback (replaced by API data via getDeals())
@@ -60,10 +62,11 @@ export default function MarketplaceView({
   onOpenSimulation,
   session,
   relistItems,
-  setRelistItems
+  setRelistItems,
+  initialTab = 'float',
 }: MarketplaceViewProps) {
   // Navigation tabs: 'float' or 'relist'
-  const [activeTab, setActiveTab] = useState<'float' | 'relist'>('float');
+  const [activeTab, setActiveTab] = useState<'float' | 'relist'>(initialTab);
   
   // Controls ReList multi-page state: 'feed' or 'create-listing'
   const [relistPage, setRelistPage] = useState<'feed' | 'identity' | 'declaration' | 'create-listing'>('feed');
@@ -123,6 +126,10 @@ export default function MarketplaceView({
   const [minRatingFilter, setMinRatingFilter] = useState<boolean>(false);
   const [underPriceFilter, setUnderPriceFilter] = useState<boolean>(false);
 
+  // Search queries — one per tab
+  const [floatSearchQuery, setFloatSearchQuery] = useState('');
+  const [relistSearchQuery, setRelistSearchQuery] = useState('');
+
   // States for ReList Tab are loaded from global App.tsx container props now.
 
   // Form states for creating a new relisting
@@ -167,10 +174,12 @@ export default function MarketplaceView({
   // Handle Tab Switch smoothly
   const handleTabSwitch = (tab: 'float' | 'relist') => {
     setActiveTab(tab);
-    // Reset filters
+    // Reset filters and search
     setSelectedCategory('All');
     setMinRatingFilter(false);
     setUnderPriceFilter(false);
+    setFloatSearchQuery('');
+    setRelistSearchQuery('');
   };
 
   // ── Identity verification submit ──────────────────────────────────
@@ -406,10 +415,16 @@ export default function MarketplaceView({
   };
 
   // Filter lists dynamically — uses apiDeals from backend
+  const floatSearch = floatSearchQuery.trim().toLowerCase();
+  const relistSearch = relistSearchQuery.trim().toLowerCase();
+
   const filteredFloatItems = apiDeals.filter(item => {
     if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
     if (minRatingFilter && item.rating < 4.8) return false;
     if (underPriceFilter && item.price > 20000) return false;
+    if (floatSearch && !item.name?.toLowerCase().includes(floatSearch) &&
+        !item.hub_name?.toLowerCase().includes(floatSearch) &&
+        !item.category?.toLowerCase().includes(floatSearch)) return false;
     return true;
   });
 
@@ -417,6 +432,10 @@ export default function MarketplaceView({
     if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
     if (minRatingFilter && item.condition !== 'Like New') return false;
     if (underPriceFilter && item.askingPrice > 15000) return false;
+    if (relistSearch && !item.name?.toLowerCase().includes(relistSearch) &&
+        !item.category?.toLowerCase().includes(relistSearch) &&
+        !item.listedBy?.toLowerCase().includes(relistSearch) &&
+        !item.location?.toLowerCase().includes(relistSearch)) return false;
     return true;
   });
 
@@ -921,6 +940,26 @@ export default function MarketplaceView({
                 </div>
               </div>
 
+              {/* Float Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={floatSearchQuery}
+                  onChange={(e) => setFloatSearchQuery(e.target.value)}
+                  placeholder="Search float deals by name, hub or category..."
+                  className="w-full pl-10 pr-10 py-3 bg-white border-2 border-black shadow-[3px_3px_0px_#000] font-mono text-sm text-black placeholder-gray-400 outline-none focus:shadow-[5px_5px_0px_#000] transition-shadow"
+                />
+                {floatSearchQuery && (
+                  <button
+                    onClick={() => setFloatSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
               {apiDealsLoading ? (
                 <div className="bg-white border-3 border-black p-12 text-center text-gray-500 font-mono font-bold shadow-[4px_4px_0px_#000] select-none flex items-center justify-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -1086,6 +1125,26 @@ export default function MarketplaceView({
                     <div className="bg-black text-white px-4 py-2 font-mono text-[11px] uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_#000] flex justify-between">
                       <span>Live Noida Classifieds Feed</span>
                       <span className="text-[#ff5c00] font-black">{filteredRelistItems.length} Available Listings</span>
+                    </div>
+
+                    {/* ReList Search Bar */}
+                    <div className="relative">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={relistSearchQuery}
+                        onChange={(e) => setRelistSearchQuery(e.target.value)}
+                        placeholder="Search listings by name, category, seller or location..."
+                        className="w-full pl-10 pr-10 py-3 bg-white border-2 border-black shadow-[3px_3px_0px_#000] font-mono text-sm text-black placeholder-gray-400 outline-none focus:shadow-[5px_5px_0px_#000] transition-shadow"
+                      />
+                      {relistSearchQuery && (
+                        <button
+                          onClick={() => setRelistSearchQuery('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
 
                     {filteredRelistItems.length === 0 ? (

@@ -15,6 +15,7 @@ interface YourAccountViewProps {
   onOpenAmazonPay: () => void;
   onOpenSignIn: () => void;
   onOpenMarketplace: () => void;
+  onOpenMarketplaceRelist: () => void;
   relistItems: any[];
   setRelistItems: React.Dispatch<React.SetStateAction<any[]>>;
 }
@@ -28,6 +29,7 @@ export default function YourAccountView({
   onOpenAmazonPay,
   onOpenSignIn,
   onOpenMarketplace,
+  onOpenMarketplaceRelist,
   relistItems,
   setRelistItems,
 }: YourAccountViewProps) {
@@ -616,7 +618,7 @@ export default function YourAccountView({
               <p className="text-[11px] text-gray-400 leading-none">Click any Listed Product card to modify prices, inspect uploaded diagnostics or change descriptions.</p>
             </div>
             <button
-              onClick={onOpenMarketplace}
+              onClick={onOpenMarketplaceRelist}
               className="bg-[#00ff9d] hover:bg-[#00e08b] text-black border border-black px-3.5 py-1 text-xs font-black uppercase tracking-wide cursor-pointer"
             >
               + List New Item

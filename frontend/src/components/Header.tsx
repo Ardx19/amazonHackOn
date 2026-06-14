@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, MapPin, ShoppingCart, ChevronDown, User, LogOut, X, CreditCard, RotateCcw } from 'lucide-react';
+import { Search, MapPin, ShoppingCart, ChevronDown, User, LogOut, X, CreditCard, RotateCcw, Users } from 'lucide-react';
 import { UserSession } from '../types';
+import { PERSONA_LIST } from '../data/personas';
 
 interface HeaderProps {
   session: UserSession;
@@ -19,6 +20,7 @@ interface HeaderProps {
   onOpenAccount: () => void;
   onOpenMarketplace: () => void;
   onOpenAdmin?: () => void;
+  onSwitchPersona: (personaId: string) => void;
 }
 
 export default function Header({
@@ -38,6 +40,7 @@ export default function Header({
   onOpenAccount,
   onOpenMarketplace,
   onOpenAdmin,
+  onSwitchPersona,
 }: HeaderProps) {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [enteredPincode, setEnteredPincode] = useState(session.pincode);
@@ -45,6 +48,7 @@ export default function Header({
   const [pincodeError, setPincodeError] = useState('');
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showPersonaSwitcher, setShowPersonaSwitcher] = useState(false);
 
   const handlePincodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -358,6 +362,59 @@ export default function Header({
               >
                 <span className="text-[9px] text-gray-500 font-light tracking-wider">INTERNAL</span>
                 <span className="text-[11px] font-bold text-gray-400 mt-0.5">Admin</span>
+              </div>
+            )}
+
+            {/* Persona Switcher — visible when logged in */}
+            {session.isLoggedIn && (
+              <div
+                className="relative"
+                onMouseEnter={() => setShowPersonaSwitcher(true)}
+                onMouseLeave={() => setShowPersonaSwitcher(false)}
+              >
+                <button
+                  className="border border-transparent hover:border-white p-2 cursor-pointer transition-all rounded leading-tight flex flex-col text-left"
+                  title="Switch demo persona"
+                >
+                  <span className="text-[9px] text-gray-400 font-light tracking-wider">Demo</span>
+                  <span className="text-[11px] font-bold text-[#00ff9d] flex items-center gap-0.5 mt-0.5">
+                    <Users className="w-3 h-3" /> Persona
+                  </span>
+                </button>
+
+                {showPersonaSwitcher && (
+                  <div className="absolute top-[42px] right-0 w-52 bg-[#1a2332] border border-gray-600 rounded shadow-2xl z-50 p-2">
+                    <p className="text-[9px] font-mono font-bold text-gray-400 uppercase px-1 pb-1.5 border-b border-gray-700 mb-1.5 flex items-center gap-1">
+                      <Users className="w-3 h-3" /> Switch Persona
+                    </p>
+                    <div className="grid grid-cols-1 gap-0.5">
+                      {PERSONA_LIST.map((p) => {
+                        const isActive = session.name === p.label ||
+                          session.name.startsWith(p.label.split(' ')[0]);
+                        return (
+                          <button
+                            key={p.id}
+                            onClick={() => { onSwitchPersona(p.id); setShowPersonaSwitcher(false); }}
+                            className={`flex items-center gap-2 px-2 py-1.5 rounded text-left text-xs font-medium cursor-pointer transition-all w-full ${
+                              isActive
+                                ? 'bg-[#00ff9d]/20 text-[#00ff9d] font-bold'
+                                : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            }`}
+                          >
+                            <span className="text-sm leading-none">{p.emoji}</span>
+                            <div>
+                              <span className="block text-[11px] font-bold leading-tight">{p.label}</span>
+                              <span className="block text-[9px] text-gray-400 leading-tight">{p.role}</span>
+                            </div>
+                            {isActive && (
+                              <span className="ml-auto text-[8px] bg-[#00ff9d] text-black px-1 font-black rounded">YOU</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

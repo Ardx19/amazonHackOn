@@ -16,6 +16,7 @@ import SimulationView from './components/SimulationView';
 import AdminReviewView from './components/AdminReviewView';
 
 import { INITIAL_PRODUCTS } from './data/products';
+import { PERSONAS } from './data/personas';
 import { Product, CartItem, UserSession, Order } from './types';
 
 export default function App() {
@@ -35,136 +36,19 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
-  const [currentView, setCurrentView] = useState<'landing' | 'search' | 'orders' | 'account' | 'marketplace' | 'simulation' | 'admin'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'search' | 'orders' | 'account' | 'marketplace' | 'marketplace-relist' | 'simulation' | 'admin'>('landing');
 
-  // Shared Relist items state
-  const [relistItems, setRelistItems] = useState<any[]>([
-    {
-      id: 'relist-1',
-      name: 'IKEA Ektorp 3-Seater Sofa Set (Linen Grey)',
-      category: 'Home Essentials',
-      listedBy: 'Aarav Sharma',
-      location: 'Sector 15, Noida',
-      originalPrice: 38000,
-      askingPrice: 11500,
-      condition: 'Very Good',
-      yearsUsed: '1.5 years',
-      imageUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&auto=format&fit=crop&q=60',
-      description: 'Super plush, covers are completely removable and machine washable. Urgent sale due to relocation to Bengaluru!',
-      likes: 14,
-      isUserListing: false,
-      verifiedSeller: true
-    },
-    {
-      id: 'relist-2',
-      name: 'Raleigh Detour Hybrid Commuter Bicycle (21 Gears)',
-      category: 'Sports',
-      listedBy: 'Priya Patel',
-      location: 'Indirapuram, Ghaziabad',
-      originalPrice: 22500,
-      askingPrice: 7900,
-      condition: 'Good',
-      yearsUsed: '2 years',
-      imageUrl: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&auto=format&fit=crop&q=60',
-      description: 'Shimano Tourney gearset works beautifully. Brand new front tires, minor chain rust. Selling because outgrown.',
-      likes: 8,
-      isUserListing: false,
-      verifiedSeller: false
-    },
-    {
-      id: 'relist-3',
-      name: 'Apple iPad Air (4th Generation, 64GB, Sky Blue)',
-      category: 'Electronics',
-      listedBy: 'Rohan Verma',
-      location: 'Sector 62, Noida',
-      originalPrice: 54900,
-      askingPrice: 23000,
-      condition: 'Like New',
-      yearsUsed: '8 months',
-      imageUrl: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&auto=format&fit=crop&q=60',
-      description: 'Always maintained inside rugged Spigen armor. Scratchless retina panel. Unused original power brick. 92% battery cycle.',
-      likes: 29,
-      isUserListing: false,
-      verifiedSeller: true
-    },
-    {
-      id: 'relist-user-demo',
-      name: 'Sony WH-1000XM4 Noise Cancelling Premium Headphones',
-      category: 'Electronics',
-      listedBy: 'You (Session Seller)',
-      location: 'Sector 62, Noida',
-      originalPrice: 29990,
-      askingPrice: 12500,
-      condition: 'Like New',
-      yearsUsed: '6 months',
-      imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&auto=format&fit=crop&q=60',
-      description: 'Excellent condition Sony ANC headphones. Complete original premium leather carry case and gold-plated aux cable. Absolutely no battery degrade.',
-      likes: 4,
-      isUserListing: true,
-      verifiedSeller: false
-    }
-  ]);
+  // Shared Relist items state — initialised from Ishaan (default) persona
+  const [relistItems, setRelistItems] = useState<any[]>(PERSONAS.USER_ISHAAN.relistItems);
   
-  // Initial populated orders + session-tracked list
-  // The demo return order uses a low-value footwear item so it reliably enters
-  // the floating-discount flow (high return-cost ratio, below Renewed cutoff).
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 'AMZN-IN-482910',
-      orderDate: 'June 12, 2026',
-      items: [
-        {
-          product: {
-            id: 'DEMO_RETURN_SHOE',
-            name: 'Skechers Summits Slip-On Sneakers (Navy)',
-            category: 'Footwear',
-            categoryKey: 'fashion',
-            subCategoryKey: 'shoes',
-            price: 999,
-            originalPrice: 3499,
-            rating: 4.4,
-            reviewCount: 6210,
-            imageUrl: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=400&auto=format&fit=crop&q=60',
-            description: 'Slip-on walking sneakers with Air-Cooled Memory Foam insole and a flexible, lightweight sole.',
-            features: ['Air-Cooled Memory Foam', 'Slip-on design', 'Machine washable'],
-            inStock: true,
-            brand: 'Skechers',
-          },
-          quantity: 1,
-          selectedColor: 'Navy',
-          selectedSize: 'UK 8',
-        }
-      ],
-      subtotal: 999,
-      paymentMethod: 'Amazon Pay Balance',
-      shippingAddress: '304, Silver Oaks, Andheri East, Mumbai, 400069',
-      status: 'Delivered',
-      expectedDelivery: 'Delivered Yesterday',
-    },
-    {
-      id: 'AMZN-IN-482877',
-      orderDate: 'June 10, 2026',
-      items: [
-        {
-          product: INITIAL_PRODUCTS[0],
-          quantity: 1,
-          selectedColor: 'Jet Black',
-          selectedSize: 'Premium Pack',
-        }
-      ],
-      subtotal: INITIAL_PRODUCTS[0].price,
-      paymentMethod: 'Amazon Pay Balance',
-      shippingAddress: 'Sector 62, Noida, Uttar Pradesh, 201301',
-      status: 'Delivered',
-      expectedDelivery: 'Delivered Yesterday',
-    }
-  ]);
+  // Initial populated orders + session-tracked list — from Ishaan persona
+  const [orders, setOrders] = useState<Order[]>(PERSONAS.USER_ISHAAN.orders);
   
   // Triggers/Modals
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeModal, setActiveModal] = useState<'signin' | 'pay' | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
-  const [walletBalance, setWalletBalance] = useState<number>(2500);
+  const [walletBalance, setWalletBalance] = useState<number>(PERSONAS.USER_ISHAAN.walletBalance);
 
   // Computed Cart Quantities
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -267,8 +151,27 @@ export default function App() {
     setCartItems([]);
   };
 
+  // Persona switch — atomically replaces all per-user state and clears cart
+  const handlePersonaSwitch = (personaId: string) => {
+    const persona = PERSONAS[personaId];
+    if (!persona) return;
+    setSession(persona.session);
+    setOrders(persona.orders);
+    setRelistItems(persona.relistItems);
+    setWalletBalance(persona.walletBalance);
+    setCartItems([]);
+    setCurrentView('landing');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Auth Operations
-  const handleLoginSuccess = (name: string, email: string, pincode?: string, city?: string) => {
+  const handleLoginSuccess = (name: string, email: string, pincode?: string, city?: string, personaId?: string) => {
+    // If a known persona ID is provided, do a full persona switch
+    if (personaId && PERSONAS[personaId]) {
+      handlePersonaSwitch(personaId);
+      return;
+    }
+    // Otherwise just update session fields (manual sign-in form)
     setSession((prev: any) => ({
       ...prev,
       isLoggedIn: true,
@@ -340,6 +243,7 @@ export default function App() {
           onOpenAccount={() => { setCurrentView('account'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           onOpenMarketplace={() => { setCurrentView('marketplace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           onOpenAdmin={() => setCurrentView('admin')}
+          onSwitchPersona={handlePersonaSwitch}
         />
 
         {/* 2. Secondary Navigation category band */}
@@ -385,6 +289,7 @@ export default function App() {
             onOpenAmazonPay={() => setActiveModal('pay')}
             onOpenSignIn={() => setActiveModal('signin')}
             onOpenMarketplace={() => setCurrentView('marketplace')}
+            onOpenMarketplaceRelist={() => { setCurrentView('marketplace-relist'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             relistItems={relistItems}
             setRelistItems={setRelistItems}
           />
@@ -397,6 +302,18 @@ export default function App() {
             session={session}
             relistItems={relistItems}
             setRelistItems={setRelistItems}
+            initialTab="float"
+          />
+        ) : currentView === 'marketplace-relist' ? (
+          /* Marketplace opened directly on ReList tab — from "List New Item" */
+          <MarketplaceView
+            onAddToCart={(prod) => handleAddToCart(prod)}
+            onGoHome={() => setCurrentView('landing')}
+            onOpenSimulation={() => setCurrentView('simulation')}
+            session={session}
+            relistItems={relistItems}
+            setRelistItems={setRelistItems}
+            initialTab="relist"
           />
         ) : currentView === 'simulation' ? (
           /* Float Simulation — manual checkpoint advancement for demo */
@@ -546,6 +463,7 @@ export default function App() {
         <MockSignIn
           onClose={() => setActiveModal(null)}
           onLoginSuccess={handleLoginSuccess}
+          onSwitchPersona={(id) => { handlePersonaSwitch(id); setActiveModal(null); }}
         />
       )}
 

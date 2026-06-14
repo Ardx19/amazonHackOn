@@ -26,9 +26,31 @@ from app.schemas.schemas import GradingReport, Defect
 
 logger = logging.getLogger(__name__)
 
-rekognition_client = boto3.client("rekognition", region_name=AWS_REGION)
-bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
-s3_client = boto3.client("s3", region_name=AWS_REGION)
+# Lazy singletons — created on first use so env vars are already loaded by then
+_rekognition_client = None
+_bedrock_client = None
+_s3_client = None
+
+
+def _get_rekognition():
+    global _rekognition_client
+    if _rekognition_client is None:
+        _rekognition_client = boto3.client("rekognition", region_name=AWS_REGION)
+    return _rekognition_client
+
+
+def _get_bedrock():
+    global _bedrock_client
+    if _bedrock_client is None:
+        _bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
+    return _bedrock_client
+
+
+def _get_s3():
+    global _s3_client
+    if _s3_client is None:
+        _s3_client = boto3.client("s3", region_name=AWS_REGION)
+    return _s3_client
 
 
 def extract_json_from_response(text: str) -> dict:
@@ -47,7 +69,7 @@ def extract_json_from_response(text: str) -> dict:
 
 def run_rekognition(s3_key: str) -> list[str]:
     try:
-        response = rekognition_client.detect_labels(
+        response = _get_rekognition().detect_labels(
             Image={"S3Object": {"Bucket": S3_BUCKET_IMAGES, "Name": s3_key}},
             MaxLabels=REKOGNITION_MAX_LABELS,
             MinConfidence=REKOGNITION_MIN_CONFIDENCE,
@@ -103,7 +125,7 @@ def build_grading_prompt(item_metadata: dict, rekognition_labels: list[str]) -> 
 
 
 def call_bedrock_vision(s3_key: str, prompt: str) -> dict:
-    image_bytes = s3_client.get_object(Bucket=S3_BUCKET_IMAGES, Key=s3_key)[
+    image_bytes = _get_s3().get_object(Bucket=S3_BUCKET_IMAGES, Key=s3_key)[
         "Body"
     ].read()
 
@@ -118,9 +140,6 @@ def call_bedrock_vision(s3_key: str, prompt: str) -> dict:
     else:
         image_format = "jpeg"
 
-    # Nova Lite native format via InvokeModel API:
-    # - bytes field must be Base64-encoded string (not raw bytes)
-    # - uses inferenceConfig (not max_tokens), no anthropic_version
     b64_image = base64.b64encode(image_bytes).decode()
 
     body = {
@@ -141,21 +160,21 @@ def call_bedrock_vision(s3_key: str, prompt: str) -> dict:
         "inferenceConfig": {"maxTokens": 1024},
     }
 
+    bedrock = _get_bedrock()
     try:
-        response = bedrock_client.invoke_model(
+        response = bedrock.invoke_model(
             modelId=BEDROCK_MODEL_GRADING,
             body=json.dumps(body),
         )
-    except bedrock_client.exceptions.ThrottlingException:
+    except bedrock.exceptions.ThrottlingException:
         logger.warning("Bedrock throttled — retrying in 2s")
         _time.sleep(2)
-        response = bedrock_client.invoke_model(
+        response = bedrock.invoke_model(
             modelId=BEDROCK_MODEL_GRADING,
             body=json.dumps(body),
         )
 
     response_body = json.loads(response["body"].read())
-    # Nova Lite response shape: {"output": {"message": {"content": [{"text": "..."}]}}}
     raw_text = response_body["output"]["message"]["content"][0]["text"]
     return extract_json_from_response(raw_text)
 
