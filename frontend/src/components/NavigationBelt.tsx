@@ -27,7 +27,7 @@ export default function NavigationBelt({
 
   const navLinks = [
     { label: 'Fresh', cat: 'Appliances' },
-    { label: 'Marketplace 🆕', isMarketplaceTrigger: true },
+    { label: 'Marketplace ', isMarketplaceTrigger: true },
     { label: 'MX Player', cat: 'Electronics' },
     { label: 'Sell', cat: 'Amazon Brands' },
     { label: 'Bestsellers', cat: 'All' },

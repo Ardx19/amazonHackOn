@@ -121,7 +121,7 @@ export default function MarketplaceView({
           price: d.current_sale_price_inr,
           rating: 4.0 + Math.random() * 1.0,
           reviewCount: Math.floor(Math.random() * 500 + 50),
-          description: `Ring ${d.ring_index} — ${d.current_hub_name || 'In Transit'}. ${d.discount_pct.toFixed(0)}% off. Available within ${d.radius_km.toFixed(0)}km.`,
+          description: `Get it by: ${Math.abs((d.listing_id || '').split('').reduce((s, c) => s + c.charCodeAt(0), 0)) % 25}h`,
           glowAccent: d.discount_pct > 40 ? '#00ff9d' : d.discount_pct > 30 ? '#fffc00' : '#ff5c00',
           ring_index: d.ring_index,
           hub_name: d.current_hub_name,
@@ -463,25 +463,13 @@ export default function MarketplaceView({
       <div className="bg-white border-3 border-black p-6 md:p-8 mb-8 shadow-[8px_8px_0px_rgba(0,0,0,1)] relative overflow-hidden transition-all">
         {/* Background visual graphics */}
         <div className="absolute top-0 right-0 w-32 h-full bg-[#fffc40] border-l-3 border-black opacity-10 hidden md:block transform skew-x-12" />
-        <div className="absolute top-4 right-4 bg-[#ff5c00] border-2 border-black text-white font-black text-[9px] px-2 py-0.5 uppercase tracking-wider rotate-[4deg]">
-          Noida Hub
-        </div>
-
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="bg-[#00ff9d] border-2 border-black text-xs text-black font-black px-2.5 py-0.5 uppercase tracking-wider shadow-[2px_2px_0px_#000]">
-                Modern Brutalist
-              </span>
-              <span className="text-xs text-black uppercase tracking-widest font-mono font-bold">
-                ⚡ BETA trading matrix ⚡
-              </span>
-            </div>
             <h1 className="text-4xl md:text-5xl font-black text-black tracking-tighter uppercase leading-none">
               Amazon <span className="underline decoration-[#fffc40] decoration-6">Marketplace</span>
             </h1>
             <p className="text-xs md:text-sm text-gray-700 font-mono font-bold mt-2 max-w-2xl leading-relaxed">
-              Skip traditional routes. Grab factory-graded inventory via <span className="text-emerald-600 font-black">FLOAT</span> returns or swap second-hand products on the <span className="text-amber-600 font-black">RELIST</span> directory.
+              Skip traditional routes. Grab factory-graded inventory via <span className="text-emerald-600 font-black">FLOAT</span> returns or preowned products on the <span className="text-amber-600 font-black">RELIST</span> directory.
             </p>
           </div>
 
@@ -547,8 +535,8 @@ export default function MarketplaceView({
             <ShoppingBag className="w-5 h-5 text-black" />
           </div>
           <div className="flex flex-col items-start leading-none text-left">
-            <span className="uppercase text-sm md:text-lg font-black tracking-tight">ReList Peer</span>
-            <span className="text-[10px] font-bold text-gray-500 hidden md:block mt-0.5">Community Classifieds</span>
+            <span className="uppercase text-sm md:text-lg font-black tracking-tight">ReList </span>
+            <span className="text-[10px] font-bold text-gray-500 hidden md:block mt-0.5">Preowned Items</span>
           </div>
 
           {activeTab === 'relist' && (
@@ -958,11 +946,7 @@ export default function MarketplaceView({
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#00ff9d] animate-ping" />
                   <span className="font-bold text-[#00ff9d]">LIVE ORDERS:</span>
-                  <span className="text-gray-300">Noida Hub &mdash; Real-Time Transit Feed</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-[#fffc40] font-bold">
-                  <Clock className="w-4 h-4" />
-                  <span>Clears every 24 Hours</span>
+                  <span className="text-gray-300"> Real-Time Transit Feed</span>
                 </div>
               </div>
 
@@ -1025,20 +1009,15 @@ export default function MarketplaceView({
                             <SustainabilityBadge />
                           </div>
 
-                          {/* Active Transit Indicator Overlay */}
-                          <div className="absolute bottom-3 left-3 bg-black/90 text-white border border-black px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_rgba(0,0,0,0.5)]">
-                            <Clock className="w-3.5 h-3.5 text-[#00ff9d] animate-pulse" />
-                            <span>Transit Status: Returned by customer</span>
+                          {/* Clear timer — random per listing */}
+                          <div className="absolute bottom-3 right-3 bg-[#fffc40] text-black border border-black px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-wider shadow-[2px_2px_0px_rgba(0,0,0,0.3)]">
+                            Clears in {(() => { const h = Math.abs((item.id || '').split('').reduce((s: number, c: string) => s + c.charCodeAt(0), 0)) % 24 + 1; return h; })()}h
                           </div>
                         </div>
 
                         {/* Text and stats */}
                         <div className="p-5 flex-grow flex flex-col justify-between text-left space-y-4">
                           <div>
-                            <span className="inline-block bg-[#ff5c00] text-white text-[9px] font-black px-2 py-0.5 uppercase tracking-wider mb-2 font-mono border border-black">
-                              {item.brand} • RETURN IN TRANSIT
-                            </span>
-                            
                             <h3 className="text-sm font-black text-black group-hover:underline line-clamp-2 uppercase tracking-wide leading-tight">
                               {item.name}
                             </h3>
@@ -1071,7 +1050,7 @@ export default function MarketplaceView({
                               className="w-full mt-4 bg-[#00ff9d] hover:bg-[#00e08b] text-black border-2 border-black font-black text-xs py-3 rounded-none shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider"
                             >
                               <Tag className="w-4 h-4 text-black" />
-                              <span>Capture item into basket</span>
+                              <span>Add to Cart</span>
                             </button>
                           </div>
 
@@ -1127,9 +1106,9 @@ export default function MarketplaceView({
                       className="bg-[#ff5c00] text-white border-3 border-black p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 cursor-pointer flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all"
                     >
                       <div className="text-left font-mono">
-                        <h3 className="text-2xl font-black uppercase leading-none tracking-tight">Got idle appliances or electronics in Noida?</h3>
+                        <h3 className="text-2xl font-black uppercase leading-none tracking-tight">Got idle appliances or electronics?</h3>
                         <p className="text-xs text-orange-100 font-bold mt-1 max-w-2xl leading-relaxed">
-                          Relist them here effortlessly! Upload snaps, quote your custom price, specify condition grading, and connect offline with buyers securely at public lockers.
+                          Relist them here effortlessly! Upload snaps, quote your custom price, specify condition grading, and connect with buyers securely.
                         </p>
                       </div>
 
@@ -1140,7 +1119,7 @@ export default function MarketplaceView({
                     </div>
 
                     <div className="bg-black text-white px-4 py-2 font-mono text-[11px] uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_#000] flex justify-between">
-                      <span>Live Noida Classifieds Feed</span>
+                      <span>Live Feed</span>
                       <span className="text-[#ff5c00] font-black">{filteredRelistItems.length} Available Listings</span>
                     </div>
 
@@ -1267,7 +1246,7 @@ export default function MarketplaceView({
                                 </div>
                                 {item.originalPrice > 0 && (
                                   <div className="text-right">
-                                    <span className="block text-[8px] text-gray-400 uppercase font-mono">Orig. Retail</span>
+                                    <span className="block text-[8px] text-gray-400 uppercase font-mono">Orig. Price</span>
                                     <span className="text-[10px] text-gray-500 line-through font-mono">₹{item.originalPrice.toLocaleString('en-IN')}</span>
                                   </div>
                                 )}
@@ -1635,12 +1614,12 @@ export default function MarketplaceView({
                                   {isAnalyzingAI ? (
                                     <>
                                       <span className="w-3.5 h-3.5 border-2 border-dashed border-[#fffc40] rounded-full animate-spin" />
-                                      <span>Passing assets to Amazon AI Grader model (Backend placeholder)...</span>
+                                      <span>Sending to our AI-grader...</span>
                                     </>
                                   ) : (
                                     <>
                                       <Sparkles className="w-4.5 h-4.5" />
-                                      <span>Pass to Backend AI model and generate Health Card</span>
+                                      <span>Generate Health Card</span>
                                     </>
                                   )}
                                 </button>
@@ -1733,16 +1712,12 @@ export default function MarketplaceView({
                           />
                         </div>
 
-                        <div className="bg-slate-50 border-2 border-dashed border-black p-3 text-[10.5px] text-gray-700 leading-normal font-mono">
-                          <strong>⚠️ PEER LISTING AGREEMENT:</strong> By posting, your classified listing is linked to {session.name || 'Your User Profile'}. Fraudulent listings will restrict your account access.
-                        </div>
-
                         <button
                           type="submit"
                           disabled={isSubmitListing}
                           className="w-full bg-[#ff5c00] text-white border-3 border-black font-black py-4 select-none shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer text-center text-xs uppercase tracking-widest font-mono"
                         >
-                          {isSubmitListing ? 'Disseminating classified blocks...' : '✦ POST RELIST OFFERING TO DATABASE ✦'}
+                          {isSubmitListing ? 'Disseminating classified blocks...' : '✦ RELIST ✦'}
                         </button>
 
                       </form>
