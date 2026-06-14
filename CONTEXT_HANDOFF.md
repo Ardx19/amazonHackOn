@@ -1,13 +1,13 @@
 # ReRoute — Agent Context Handoff
 ### Amazon HackOn '26 · Theme 3: Products Without a Second Chance
-*Last updated: 14 June 2026 — Seller Accountability System built (Phase 3)*
+*Last updated: 14 June 2026 — Green Credits, UI cleanup, chat removed, ReList → Add to Cart*
 **Git branch: `main`**
 
 ---
 
 ## 1. Current State Summary
 
-**Backend fully working. Frontend merged (Vite+React Amazon clone). All 3 demo flows wired.**
+**Backend fully working. Frontend merged (Vite+React Amazon clone). All 3 demo flows wired. Chat removed. ReList items add to cart like normal products.**
 
 | Area | Status |
 |---|---|
@@ -23,11 +23,15 @@
 | Admin Review Queue | ✅ GET/PATCH /api/admin/review-queue + AdminReviewView.tsx |
 | Transaction Rating | ✅ POST /api/transactions/{id}/rate |
 | Seller Trust Score | ✅ trust_score + trust_score_count on Items, shown in HealthCardView + AdminReviewView |
+| **Green Credits + Sustainability Badge** | ✅ GreenCreditsCard (credits, CO₂ saved, tier badge) + SustainabilityBadge (♻ Eco Choice on all marketplace cards) |
+| **Purchased items removed from marketplace** | ✅ Float + ReList items both disappear from marketplace after checkout |
+| **Chat system** | ❌ Removed — Negotiate Peer Deal, chat modal, triggerSellerChat, all gone |
+| **ReList → Add to Cart** | ✅ ReList items now add to cart normally (handlePurchaseRelistItem), secured by existing checkout flow |
+| **UI cleanup** | ✅ No surplus/escrow/discount stickers. LIVE ORDERS. Clean brutalist modern style |
+| **Secure Locker Swap** | ❌ Removed |
 | `/card/[uuid]` public page | ❌ No frontend route yet |
 | Compatibility check (S3) | ⚠️ Backend route exists, frontend not wired |
 | Demo video | ❌ Not recorded |
-
-**The old Next.js frontend (`ReRoute/frontend/`) has been replaced with the Vite+React Amazon clone.** The Next.js files were deleted. Four key ReRoute components (`GradingCard.tsx`, `HealthCardView.tsx`, `lib/api.ts`, `lib/types.ts`) were ported to Tailwind and placed in `src/`.
 
 ---
 
@@ -92,13 +96,17 @@
 ## 4. API Endpoints
 
 | Method | Path | Notes |
-|---|---|---|
+|---|---|---|---|
 | GET | `/` | Health check |
 | POST | `/api/grade` | Multipart: `images` (File[]), `item_id`, `original_price_inr`, `category`, `product_name`, `flow` ("return" or "relist") |
 | POST | `/api/evaluate-route` | JSON: `{ item_id, original_price_inr, category, current_location: { hub_id, distance_to_home_warehouse_km }, ring_index? }` |
 | GET | `/api/deals` | Query: `?hub_id=` (optional filter) |
 | POST | `/api/health-card` | JSON: `{ item_id, seller_id, seller_name, seller_city, seller_usage_description? }` |
 | GET | `/api/health-card/{uuid}` | Path param — returns stored health card |
+| POST | `/api/returns/submit` | Return item → evaluate route |
+| GET | `/api/admin/review-queue` | Admin: list pending reviews |
+| PATCH | `/api/admin/review-queue/{card_uuid}` | Admin: approve/reject |
+| POST | `/api/transactions/{id}/rate` | Rate seller trust score |
 
 ---
 
@@ -128,6 +136,8 @@
 | USER_MEERA | Meera Nair | Returner | High return rate (18%) — borderline, not flagged |
 | USER_KARAN | Karan Malhotra | Buyer | Power buyer — 3 completed transactions |
 | USER_SNEHA | Sneha Deshmukh | Seller | C2C queen — 4 listings (Puma, boAt, PE shirt, blazer) |
+| USER_ANANYA | Ananya Patel | Buyer | Andheri East buyer — proximity-based deal proof |
+| USER_ISHAAN | Ishaan Kapoor | Power Seller | Default persona — 3 relist items, 2 orders |
 
 ---
 
@@ -215,20 +225,24 @@ frontend/
 │   ├── data/
 │   │   └── products.ts          # INITIAL_PRODUCTS (17), CATEGORY_IMAGE_MAP, CAROUSEL_BANNERS
 │   └── components/
-│       ├── Header.tsx            # Amazon nav bar
+│       ├── Header.tsx            # Amazon nav bar (with subtle Admin link)
 │       ├── HeroCarousel.tsx      # Promo banners
 │       ├── BentoContainer.tsx    # Category card grid
 │       ├── NavigationBelt.tsx    # Category ribbon
 │       ├── SearchResultsView.tsx # Product catalog
 │       ├── ProductDetailModal.tsx# Detail view
-│       ├── CartDrawer.tsx        # Cart/checkout
+│       ├── CartDrawer.tsx        # Cart/checkout (includes GreenCreditsCard on success)
 │       ├── MockSignIn.tsx        # Mock auth
 │       ├── AmazonPayModal.tsx    # Wallet
 │       ├── YourOrdersView.tsx    # Orders + ReRoute intercept modal
 │       ├── YourAccountView.tsx   # Profile + seller
-│       ├── MarketplaceView.tsx   # Float Deals + ReList tabs (API-wired)
+│       ├── MarketplaceView.tsx   # Float Deals + ReList tabs (API-wired, chat removed, Add to Cart)
 │       ├── GradingCard.tsx       # Tailwind-adapted from ReRoute
-│       └── HealthCardView.tsx    # Tailwind-adapted from ReRoute
+│       ├── HealthCardView.tsx    # Tailwind-adapted from ReRoute (QR code + trust score)
+│       ├── AdminReviewView.tsx   # Admin review queue (approve/reject)
+│       ├── GreenCreditsCard.tsx  # Green credits earned + CO₂ saved + tier badge
+│       ├── SustainabilityBadge.tsx # ♻ Eco Choice on all marketplace listing cards
+│       └── SimulationView.tsx    # Float simulation controls
 └── node_modules/
 ```
 
@@ -379,3 +393,5 @@ Everything runs from WSL — never run `npm install` from PowerShell (installs W
 | CORS errors | Vite proxy handles `/api/*` → no CORS in dev. In production, backend CORS middleware allows all origins |
 | Admin view has no auth | Demo only. Add auth middleware before production. #TODO in admin.py |
 | New DB columns not in seed_demo.json | New columns (review_status, trust_score, etc.) have sensible defaults in model. Seed data still works. Run `python -m app.db.seed_demo --reset` for updated schema |
+| Chat / Negotiate Peer Deal | Removed entirely. ReList items now use "Add to Cart" via handlePurchaseRelistItem. Chat modal, triggerSellerChat, handleSendChatMessage all removed. |
+| Purchased items remain in marketplace | Fixed. Float and ReList items both removed from marketplace view after checkout (excludePurchaseIds prop flows from App.tsx handlePlaceOrder). |

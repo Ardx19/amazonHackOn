@@ -1,6 +1,0 @@
-{
-  "name": "Amazon.in Clone",
-  "description": "Interactive high-fidelity clone of Amazon India with feature-rich header, department deals, location picker, slider banners, responsive product bento grids, search engine, detail viewer, and active shopping cart.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

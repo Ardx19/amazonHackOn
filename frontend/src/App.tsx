@@ -52,6 +52,7 @@ export default function App() {
 
   // Track the last item the current user returned — excluded from their Float view
   const [lastReturnedItemId, setLastReturnedItemId] = useState<string | null>(null);
+  const [purchasedFloatDealIds, setPurchasedFloatDealIds] = useState<string[]>([]);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   // Session-bound placement tracker
@@ -83,6 +84,17 @@ export default function App() {
     };
 
     setOrders((prev) => [newOrder, ...prev]);
+
+    const floatIds = items
+      .filter(item => item.product.name.startsWith('[Marketplace Float]'))
+      .map(item => item.product.id);
+    const relistIds = items
+      .filter(item => item.product.name.startsWith('[ReList]'))
+      .map(item => item.product.id);
+    const allIds = [...floatIds, ...relistIds];
+    if (allIds.length > 0) {
+      setPurchasedFloatDealIds(prev => [...prev, ...allIds]);
+    }
 
     if (paymentMethod.toLowerCase().includes('balance') || paymentMethod.toLowerCase().includes('pay')) {
       setWalletBalance((prev) => Math.max(0, prev - amount));
@@ -319,6 +331,7 @@ export default function App() {
             setRelistItems={setRelistItems}
             initialTab="float"
             excludeItemId={lastReturnedItemId}
+            excludePurchaseIds={purchasedFloatDealIds}
           />
         ) : currentView === 'marketplace-relist' ? (
           /* Marketplace opened directly on ReList tab — from "List New Item" */
@@ -331,6 +344,7 @@ export default function App() {
             setRelistItems={setRelistItems}
             initialTab="relist"
             excludeItemId={lastReturnedItemId}
+            excludePurchaseIds={purchasedFloatDealIds}
           />
         ) : currentView === 'simulation' ? (
           /* Float Simulation — manual checkpoint advancement for demo */

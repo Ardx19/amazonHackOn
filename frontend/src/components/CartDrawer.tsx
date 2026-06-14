@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Trash2, Plus, Minus, ShoppingBag, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import GreenCreditsCard from './GreenCreditsCard';
 import { CartItem } from '../types';
 
 interface CartDrawerProps {
@@ -235,6 +236,11 @@ export default function CartDrawer({
               <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
                 Thank you for trying out our Amazon.in UI Clone! Your order has been registered in local browser state.
               </p>
+
+              {/* Green Credits Card */}
+              <div className="mt-6 max-w-sm mx-auto">
+                <GreenCreditsCard weightKg={0.5} />
+              </div>
 
               {/* Order specifications sheet */}
               <div className="mt-8 border text-left rounded-lg bg-gray-50 overflow-hidden text-xs">

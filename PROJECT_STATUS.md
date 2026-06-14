@@ -1,41 +1,42 @@
 # ReRoute — Project Status
 
-> **Last updated**: Session 3 complete — 14 June 2026
-> **State**: Backend fully working end-to-end. All 3 demo flows tested live. 89 tests green.
-> New UI (Amazon clone) incoming from teammates — backend is integration-ready.
+> **Last updated**: Session 4 — 14 June 2026
+> **State**: Backend fully working. Frontend (Vite+React Amazon clone) integrated. Chat removed. ReList → Add to Cart. Green Credits built. 89 tests green.
+> Marketplace items auto-removed after checkout. UI cleaned (no surplus/escrow/discount stickers).
 
 ---
 
 ## CURRENT RUNNABLE STATE
 
-```powershell
-# Terminal 1 — Backend
-cd d:\amazonHackOn\backend
-$env:DATABASE_URL="postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute"
-$env:AWS_DEFAULT_REGION="ap-south-1"
-$env:PYTHONPATH="d:\amazonHackOn\backend"
-python -m uvicorn app.main:app --reload --port 8000
+```bash
+# Terminal 1 — Backend (WSL)
+cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
+export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
+export AWS_ACCESS_KEY_ID="AKIA2PUYQN2ROMPXSFPD"
+export AWS_SECRET_ACCESS_KEY="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"
+export AWS_DEFAULT_REGION="ap-south-1"
+export PYTHONPATH="$(pwd)"
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-# Terminal 2 — Frontend (skeletal test UI, being replaced by Amazon clone)
-cd d:\amazonHackOn\frontend
+# Terminal 2 — Frontend (WSL)
+cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/frontend
 npm run dev   # → http://localhost:3000
 
 # Run tests
-cd d:\amazonHackOn\backend
-$env:PYTHONPATH="d:\amazonHackOn\backend"
+cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
+export AWS_DEFAULT_REGION="ap-south-1"
+export PYTHONPATH="$(pwd)"
 python -m pytest tests/ -v --tb=short   # 89/89 expected
 
-# Reseed with full demo data (30 products, 8 personas, 10 trajectories, 12 health cards)
-cd d:\amazonHackOn\backend
-$env:DATABASE_URL="..."
-$env:PYTHONPATH="d:\amazonHackOn\backend"
+# Reseed with full demo data (30 products, 10 personas, 10 trajectories, 12 health cards)
+cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
+export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
+export AWS_ACCESS_KEY_ID="AKIA2PUYQN2ROMPXSFPD"
+export AWS_SECRET_ACCESS_KEY="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"
+export AWS_DEFAULT_REGION="ap-south-1"
+export PYTHONPATH="$(pwd)"
 python -m app.db.seed_demo --reset
-
-# Legacy seed (10 products, 3 personas — simpler)
-python -m app.db.seed --reset
 ```
-
-**Python on this machine:** Use `python` (maps to C:\Python313 — Python 3.13, all deps installed here)
 
 ---
 
@@ -67,22 +68,21 @@ python -m app.db.seed --reset
 
 ---
 
-## FRONTEND FILE STATUS (skeletal test UI — being replaced)
+## FRONTEND FILE STATUS (Vite+React 19 Amazon.in clone — integrated)
 
-| File | Status | Session 3 Changes |
+| File | Status | Changes This Session |
 |---|---|---|
-| `lib/types.ts` | ✅ | Added `condition_summary`, `usage_estimate`, `care_recommendation`, `seller_usage_description` to `HealthCard`. Added `mrp_inr`, `cogs_inr`, `discount_pct`, `sale_case` to `RoutingResult` |
-| `lib/api.ts` | ✅ | Unchanged |
-| `components/GradingCard.tsx` | ✅ | Route suggestion box now hidden when `recommended_route` is empty (so it doesn't show on ReList flow) |
-| `components/HealthCardView.tsx` | ✅ | Shows dual trust signals: Seller says (yellow) + Amazon AI assessed (blue). Visual wear level instead of fake month estimate |
-| `components/RoutingResult.tsx` | ✅ | Unchanged |
-| `components/DealCard.tsx` | ✅ | Unchanged |
-| `app/page.tsx` | ✅ | Return Center — tested working |
-| `app/deals/page.tsx` | ✅ | Deals marketplace — tested working |
-| `app/relist/page.tsx` | ✅ | Added `flow=relist` form field. Added `sellerUsage` input. ReList flow tested end-to-end |
-| `.env.local` | ✅ | Points to `http://localhost:8000` |
-
-> Note: This frontend is a skeletal test UI only. A full Amazon-clone UI is being built separately and will integrate via the same backend API. The backend is clean and integration-ready.
+| `src/lib/types.ts` | ✅ | Pydantic-matched TS interfaces (DealItem, GradingReport, HealthCard, etc.) |
+| `src/lib/api.ts` | ✅ | 5 endpoint wrappers (grade, evaluateRoute, getDeals, generateHealthCard, getHealthCard) |
+| `src/components/MarketplaceView.tsx` | ✅ | **Major rewrite**: Chat/negotiate removed. ReList → Add to Cart. Green credits on relist success. Sustainability badge on all cards. Purchased items removed post-checkout. UI cleanup (no surplus/escrow/discount stickers). LIVE ORDERS. |
+| `src/components/GreenCreditsCard.tsx` | ✅ NEW | Green credits + CO₂ saved + tier badge + Amazon Climate Pledge footer |
+| `src/components/SustainabilityBadge.tsx` | ✅ NEW | ♻ Eco Choice pill with tooltip on all marketplace cards |
+| `src/components/GradingCard.tsx` | ✅ | Tailwind-adapted. Route box hidden when no route |
+| `src/components/HealthCardView.tsx` | ✅ | Tailwind-adapted. QR code + trust score |
+| `src/components/AdminReviewView.tsx` | ✅ | Approve/reject review queue |
+| `src/components/CartDrawer.tsx` | ✅ | GreenCreditsCard shown on checkout success |
+| `src/App.tsx` | ✅ | View router. handlePlaceOrder extracts Float+ReList purchased IDs, passed as excludePurchaseIds |
+| `src/index.css` | ✅ | Tailwind v4 @theme with Amazon brand colors |
 
 ---
 
@@ -166,11 +166,12 @@ Price rises toward RC, radius shrinks. Amazon never loses — net = MRP − D_re
 
 | Task | Priority | Notes |
 |---|---|---|
-| Integrate new Amazon-clone UI | HIGH | Backend API is ready. Set `NEXT_PUBLIC_API_URL=http://localhost:8000` |
-| Deploy backend (App Runner) | MEDIUM | Awaiting Unstop instructions on where to deploy |
-| Deploy frontend | MEDIUM | Awaiting Unstop instructions |
-| `/card/[uuid]` public page | LOW | Backend GET endpoint exists. Needs frontend route `app/card/[uuid]/page.tsx` |
-| Demo video | LAST | 3-minute script in `amazon_reroute_context_handoff.md` |
+| Deploy backend (App Runner) | HIGH | Dockerfile + apprunner.yaml needed |
+| Deploy frontend (Amplify) | HIGH | amplify.yml needed |
+| Record demo video | HIGH | 3-minute script ready. Covers all 3 flows |
+| `/card/[uuid]` public page | MEDIUM | Backend GET endpoint exists. Needs frontend route |
+| Replace dummyjson images with Amazon CDN | LOW | `CATEGORY_IMAGE_MAP` uses dummyjson — swap to m.media-amazon.com |
+| Deploy cron Lambda | LOW | Ring progression Lambda built, not deployed to AWS |
 
 ---
 
@@ -198,38 +199,25 @@ Price rises toward RC, radius shrinks. Amazon never loses — net = MRP − D_re
 
 ---
 
-## SESSION 4 — New Frontend Integration (amazon.in-clone)
+## SESSION 4 — Complete Frontend Integration & UI Polish
 
-The skeletal Next.js test UI is superseded by `amazon.in-clone/` — a Vite + React 19 Amazon.in clone. The backend was wired in WITHOUT changing any backend logic and WITHOUT changing the clone's UI/markup/styling.
+The skeletal Next.js test UI has been fully replaced by the Vite + React 19 Amazon.in clone. All ReRoute features are wired.
 
-### What the clone is
-- Vite + React 19 + Tailwind 4 + Framer Motion. Dev on port 3000 (`npm run dev`).
-- All ReRoute features live in `src/components/MarketplaceView.tsx`:
-  - **FLOAT tab** = floating-discount deals
-  - **RELIST tab** = C2C listings + AI Health Card grader (in create-listing form)
+### What changed this session
 
-### Integration changes (frontend — surgical, data-layer only)
-| File | Change |
+| Area | Changes |
 |---|---|
-| `src/api.ts` | NEW — fetch client: `gradeProduct()` (POST /api/grade, multipart), `getDeals()` (GET /api/deals). Base URL from `VITE_API_URL` |
-| `.env` | NEW — `VITE_API_URL=http://localhost:8000` |
-| `src/components/MarketplaceView.tsx` | `simulateMediaUpload()` now opens a real OS file picker; `handleRealFileSelect()` stores real File objects; `triggerAIEvaluation()` calls the backend (was setTimeout+random mock); FLOAT tab fetches live `/api/deals` via `useEffect` (falls back to static mock if backend down); added hidden `<input type=file>` + small grader-error display. No markup/styling/layout changes. |
-
-### Backend changes for integration
-- **NONE to code.** One data row added to RDS `items`: `RELIST_SCRATCH` — the FK anchor for ReList gradings (a new C2C listing has no catalogue item_id; grading persists against this anchor; safe because /api/grade does delete-before-insert).
-
-### Data-shape mappings
-- GradingReport → grader card: `score=confidence×100`, `grade=condition_grade`, `functionality`=defects summary, `diagnostics`=Nova/completeness summary, `suggestedPrice`=resale-band midpoint.
-- Deal → FLOAT card: deals carry no image/brand/category, so category is guessed from product name, image is a category fallback stock photo, rating/reviewCount defaulted. Prices/discounts/names are real from the backend.
+| Green Credits | New `GreenCreditsCard` + `SustainabilityBadge` components. Credits/CO₂/tier badge shown on relist success + purchase confirmation |
+| Chat removed | Negotiate Peer Deal, chat modal, triggerSellerChat, handleSendChatMessage all deleted. `MessageCircle` and `Send` removed from imports |
+| ReList → Add to Cart | New `handlePurchaseRelistItem` maps relist items to Product type. Both detail page and listing cards show "Add to Cart" |
+| Secure Locker Swap | Removed from detail page |
+| Purchased item removal | Float AND ReList items disappear from marketplace after checkout. `purchasedFloatDealIds` in App.tsx handles both prefixes |
+| UI cleanup | No surplus/escrow/discount stickers. "LIVE BROADCAST MATRIX" → "LIVE ORDERS". "Surplus Clearance Matrix" → "Live Transit Deals". "Clean space. Stack paper." removed. Escrow ID removed. TRANSIT CLAUSE removed |
+| Brutalist modern style | Header now reads "Modern Brutalist — BETA trading matrix — Noida Hub" |
 
 ### Verified
-- `npm install`, `npm run lint` (tsc), `npm run build` — all clean.
-- `GET /api/deals` → 11 live deals.
-- `POST /api/grade` with `RELIST_SCRATCH` + `flow=relist` + real image → genuine Nova grade, no FK crash, no route leak.
-
-### Run the clone
-```powershell
-cd d:\amazonHackOn\amazon.in-clone
-npm install      # first time
-npm run dev      # → http://localhost:3000  (backend must be on :8000)
-```
+- `npm run lint` (tsc --noEmit) — clean
+- All 3 demo flows unchanged (backend was never touched)
+- Green Credits appear on relist success + cart checkout success
+- SustainabilityBadge on every Float and ReList card
+- Purchased items removed from both Float and ReList views after checkout

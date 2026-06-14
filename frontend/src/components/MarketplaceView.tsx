@@ -9,9 +9,7 @@ import {
   BadgePercent, 
   User, 
   PlusCircle, 
-  MessageCircle, 
   X, 
-  Send, 
   CheckCircle,
   Clock,
   MapPin,
@@ -33,6 +31,8 @@ import type { DealItem } from '../lib/types';
 import { CATEGORY_IMAGE_MAP } from '../data/products';
 import GradingCard from './GradingCard';
 import HealthCardView from './HealthCardView';
+import GreenCreditsCard from './GreenCreditsCard';
+import SustainabilityBadge from './SustainabilityBadge';
 
 interface MarketplaceViewProps {
   onAddToCart: (product: any, color?: string, size?: string) => void;
@@ -43,6 +43,7 @@ interface MarketplaceViewProps {
   setRelistItems: React.Dispatch<React.SetStateAction<any[]>>;
   initialTab?: 'float' | 'relist';
   excludeItemId?: string | null;
+  excludePurchaseIds?: string[];
 }
 
 // Hardcoded fallback (replaced by API data via getDeals())
@@ -71,6 +72,7 @@ export default function MarketplaceView({
   setRelistItems,
   initialTab = 'float',
   excludeItemId,
+  excludePurchaseIds = [],
 }: MarketplaceViewProps) {
   // Navigation tabs: 'float' or 'relist'
   const [activeTab, setActiveTab] = useState<'float' | 'relist'>(initialTab);
@@ -152,16 +154,6 @@ export default function MarketplaceView({
   const [itemDescription, setItemDescription] = useState('');
   const [isSubmitListing, setIsSubmitListing] = useState(false);
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
-
-  // Quick Chat state with a specific Relist seller
-  const [selectedChatSeller, setSelectedChatSeller] = useState<{
-    id: string;
-    name: string;
-    productName: string;
-    price: number;
-    messages: { sender: 'seller' | 'user'; text: string; time: string }[];
-  } | null>(null);
-  const [typedMessage, setTypedMessage] = useState('');
 
   // Image slider for the ReList detail page
   const [sliderIdx, setSliderIdx] = React.useState(0);
@@ -356,52 +348,6 @@ export default function MarketplaceView({
     setRelistItems((prev) => prev.filter(item => item.id !== id));
   };
 
-  // Setup simulated chat triggers
-  const triggerSellerChat = (item: typeof relistItems[0], e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedChatSeller({
-      id: item.id,
-      name: item.listedBy,
-      productName: item.name,
-      price: item.askingPrice,
-      messages: [
-        { 
-          sender: 'seller', 
-          text: `Hi! Thanks for inquiring about my "${item.name}". It's currently still available for pick-up in ${item.location}. Are you around Noida to meet up?`, 
-          time: '12:05 PM' 
-        }
-      ]
-    });
-  };
-
-  const handleSendChatMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!typedMessage.trim() || !selectedChatSeller) return;
-
-    const userMsg = typedMessage;
-    // Append user message
-    setSelectedChatSeller(prev => prev ? {
-      ...prev,
-      messages: [...prev.messages, { sender: 'user', text: userMsg, time: 'Just Now' }]
-    } : null);
-    setTypedMessage('');
-
-    // Preformed smart automatic reply simulation
-    setTimeout(() => {
-      let replyText = "I see! That works for me. If you would like to arrange a hand-off exchange, please click 'Complete Deal' to reserve it.";
-      if (userMsg.toLowerCase().includes('discount') || userMsg.toLowerCase().includes('cheap') || userMsg.toLowerCase().includes('price')) {
-        replyText = `Yeah, I listed it at ₹${selectedChatSeller.price} to move it quickly. I could perhaps do down to ${Math.round(selectedChatSeller.price * 0.9)} if you can do pick-up this evening!`;
-      } else if (userMsg.toLowerCase().includes('condition') || userMsg.toLowerCase().includes('scratches') || userMsg.toLowerCase().includes('working')) {
-        replyText = "The item is fully functional. Feel free to run complete audits in person before completing peer-payment. Let me know!";
-      }
-
-      setSelectedChatSeller(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, { sender: 'seller', text: replyText, time: 'Just Now' }]
-      } : null);
-    }, 1200);
-  };
-
   const handlePurchaseFloatItem = (item: typeof FLOAT_ITEMS[0]) => {
     // Inject the discounted product representation to the global shopping basket
     const discountProductRepresentation: Product = {
@@ -416,12 +362,34 @@ export default function MarketplaceView({
       reviewCount: item.reviewCount,
       imageUrl: item.imageUrl,
       description: item.description,
-      features: ['Marketplace Inspected', 'Heavy Discount', 'Verified surplus'],
+      features: ['Marketplace Inspected', 'Verified Second-Life'],
       inStock: true,
       brand: item.brand
     };
 
     onAddToCart(discountProductRepresentation, 'Standard Premium', 'Regular Pack');
+    setAddCartNotification(item.name);
+    setTimeout(() => setAddCartNotification(null), 3500);
+  };
+
+  const handlePurchaseRelistItem = (item: typeof relistItems[0]) => {
+    const listingProduct: Product = {
+      id: item.id,
+      name: `[ReList] ${item.name}`,
+      category: item.category,
+      categoryKey: 'appliances',
+      subCategoryKey: 'marketplace',
+      price: item.askingPrice,
+      originalPrice: item.originalPrice || item.askingPrice,
+      rating: 4.5,
+      reviewCount: 1,
+      imageUrl: item.imageUrl,
+      description: item.description || 'Peer-listed item.',
+      features: ['Peer Verified', 'Second-Life'],
+      inStock: true,
+      brand: item.category || 'ReList'
+    };
+    onAddToCart(listingProduct, 'Standard', 'Regular');
     setAddCartNotification(item.name);
     setTimeout(() => setAddCartNotification(null), 3500);
   };
@@ -437,6 +405,7 @@ export default function MarketplaceView({
     if (floatSearch && !item.name?.toLowerCase().includes(floatSearch) &&
         !item.hub_name?.toLowerCase().includes(floatSearch) &&
         !item.category?.toLowerCase().includes(floatSearch)) return false;
+    if (excludePurchaseIds.includes(item.id)) return false;
     return true;
   });
 
@@ -453,8 +422,8 @@ export default function MarketplaceView({
     if (underPriceFilter && item.askingPrice > 15000) return false;
     if (relistSearch && !item.name?.toLowerCase().includes(relistSearch) &&
         !item.category?.toLowerCase().includes(relistSearch) &&
-        !item.listedBy?.toLowerCase().includes(relistSearch) &&
         !item.location?.toLowerCase().includes(relistSearch)) return false;
+    if (excludePurchaseIds.includes(item.id)) return false;
     return true;
   });
 
@@ -484,7 +453,7 @@ export default function MarketplaceView({
             <div>
               <p className="font-black text-xs uppercase tracking-wider">Acquired via Basket!</p>
               <p className="text-[11px] font-bold line-clamp-1 mt-0.5">{addCartNotification}</p>
-              <p className="text-red-650 font-black mt-1 text-[10px] uppercase">90%+ Clearance Discount Lock!</p>
+              <p className="text-red-650 font-black mt-1 text-[10px] uppercase">Second-Life Savings Locked!</p>
             </div>
           </motion.div>
         )}
@@ -495,7 +464,7 @@ export default function MarketplaceView({
         {/* Background visual graphics */}
         <div className="absolute top-0 right-0 w-32 h-full bg-[#fffc40] border-l-3 border-black opacity-10 hidden md:block transform skew-x-12" />
         <div className="absolute top-4 right-4 bg-[#ff5c00] border-2 border-black text-white font-black text-[9px] px-2 py-0.5 uppercase tracking-wider rotate-[4deg]">
-          Noida Hub v2
+          Noida Hub
         </div>
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -512,7 +481,7 @@ export default function MarketplaceView({
               Amazon <span className="underline decoration-[#fffc40] decoration-6">Marketplace</span>
             </h1>
             <p className="text-xs md:text-sm text-gray-700 font-mono font-bold mt-2 max-w-2xl leading-relaxed">
-              Skip traditional routes. Snatch genuine factory-graded surplus in <span className="text-emerald-600 font-black">FLOAT</span> or swap pristine second-hand products on the <span className="text-amber-600 font-black">RELIST</span> directory. High-fidelity Noida locker escrow active.
+              Skip traditional routes. Grab factory-graded inventory via <span className="text-emerald-600 font-black">FLOAT</span> returns or swap second-hand products on the <span className="text-amber-600 font-black">RELIST</span> directory.
             </p>
           </div>
 
@@ -553,7 +522,7 @@ export default function MarketplaceView({
           </div>
           <div className="flex flex-col items-start leading-none text-left">
             <span className="uppercase text-sm md:text-lg font-black tracking-tight">Float Deals</span>
-            <span className="text-[10px] font-bold text-gray-500 hidden md:block mt-0.5">Surplus Clearance Matrix</span>
+            <span className="text-[10px] font-bold text-gray-500 hidden md:block mt-0.5">Live Transit Deals</span>
           </div>
 
           {activeTab === 'float' && (
@@ -665,10 +634,13 @@ export default function MarketplaceView({
       </div>
 
       {showSubmitSuccess && (
-        <div className="bg-[#00ff9d] border-3 border-black text-black p-4 mb-6 shadow-[4px_4px_0px_rgba(0,0,0,1)] text-sm font-bold flex items-start gap-2 animate-bounce">
-          <CheckCircle className="w-5 h-5 mt-0.5" />
-          <div>
-            RELIST SUCCESSFUL: Your second-hand item has been registered in the Noida community grid ledger. Scroll down to see it listed!
+        <div className="mb-6 space-y-4">
+          <GreenCreditsCard weightKg={0.5} />
+          <div className="bg-emerald-50 border-3 border-emerald-400 text-emerald-900 p-3 shadow-[4px_4px_0px_rgba(16,185,129,0.25)] text-xs font-bold flex items-start gap-2">
+            <CheckCircle className="w-4 h-4 mt-0.5" />
+            <div>
+              Your second-hand item has been registered in the Noida community grid ledger. Scroll down to see it listed!
+            </div>
           </div>
         </div>
       )}
@@ -809,9 +781,6 @@ export default function MarketplaceView({
                       <div className="space-y-1.5 text-[11px] text-gray-700 font-sans font-medium leading-relaxed">
                         <p>{selectedDetailItem.item.description}</p>
                         <p>This item is currently being routed under standard Amazon Return Transit logistics from the original buyer back to our central hub. Restock allocation has been canceled, making this unit immediately available for locker bypass checkout.</p>
-                        <p className="bg-yellow-50 p-2 border border-yellow-300 font-mono text-[10px] text-yellow-850">
-                          <strong>🔄 TRANSIT CLAUSE:</strong> Eligible for instant contract reservation discount. Save up to 40% immediately.
-                        </p>
                       </div>
                     ) : (
                       <div className="space-y-1.5 text-gray-700 font-sans font-medium">
@@ -891,7 +860,7 @@ export default function MarketplaceView({
                     <div className="bg-slate-50 border-2 border-black p-4 space-y-3 text-left">
                       <h4 className="font-mono text-xs font-black uppercase text-black tracking-wider flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-slate-700" />
-                        <span>Transit Escrow Sequence Stream</span>
+                        <span>Transit Logistics Timeline</span>
                       </h4>
                       <div className="relative pl-6 space-y-4 font-mono text-[10.5px]">
                         {/* Line */}
@@ -951,34 +920,19 @@ export default function MarketplaceView({
                           <span>Assign transit item to retail basket</span>
                         </button>
                       ) : (
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          {!selectedDetailItem.item.isUserListing ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                triggerSellerChat(selectedDetailItem.item, e);
-                              }}
-                              className="flex-1 bg-[#fffc40] hover:bg-[#e0de34] text-black border-2 border-black font-black text-xs py-3.5 shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider"
-                            >
-                              <MessageCircle className="w-4 h-4 text-black" />
-                              <span>Negotiate Peer Deal</span>
-                            </button>
-                          ) : (
-                            <div className="flex-1 bg-[#ff5c00]/10 border-2 border-[#ff5c00] text-[#ff5c00] font-black text-[11px] py-3.5 text-center uppercase tracking-wider">
-                              ✦ Active Relisting Upload ✦
-                            </div>
-                          )}
-                          
+                        !selectedDetailItem.item.isUserListing ? (
                           <button
-                            onClick={() => {
-                              alert(`PEER SECURE DEAL INITIALIZED! Standard Noida physical locker reserved for item: "${selectedDetailItem.item.name}". Pay your peer safely after checking condition in locker box storage.`);
-                            }}
-                            className="flex-1 bg-[#ff5c00] hover:bg-[#d64e00] text-white border-2 border-black font-black text-xs py-3.5 shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-1.5 uppercase tracking-wider"
+                            onClick={(e) => { e.stopPropagation(); handlePurchaseRelistItem(selectedDetailItem.item); }}
+                            className="w-full bg-[#fffc40] hover:bg-[#e0de34] text-black border-2 border-black font-black text-xs py-3.5 shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider"
                           >
-                            <PackageCheck className="w-4 h-4" />
-                            <span>Secure Locker Swap</span>
+                            <ShoppingBag className="w-4 h-4 text-black" />
+                            <span>Add to Cart</span>
                           </button>
-                        </div>
+                        ) : (
+                          <div className="w-full bg-[#ff5c00]/10 border-2 border-[#ff5c00] text-[#ff5c00] font-black text-[11px] py-3.5 text-center uppercase tracking-wider">
+                            ✦ Active Relisting Upload ✦
+                          </div>
+                        )
                       )}
                     </div>
                   </div>
@@ -1003,8 +957,8 @@ export default function MarketplaceView({
               <div className="bg-black/95 text-white p-3.5 border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row justify-between items-center gap-2 font-mono text-xs uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#00ff9d] animate-ping" />
-                  <span className="font-bold text-[#00ff9d]">LIVE BROADCAST MATRIX:</span>
-                  <span className="text-gray-300">Noida Physical Locker Surplus Storage Active</span>
+                  <span className="font-bold text-[#00ff9d]">LIVE ORDERS:</span>
+                  <span className="text-gray-300">Noida Hub &mdash; Real-Time Transit Feed</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs text-[#fffc40] font-bold">
                   <Clock className="w-4 h-4" />
@@ -1057,14 +1011,6 @@ export default function MarketplaceView({
                         className="bg-white border-3 border-black flex flex-col relative overflow-hidden group shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-0 active:translate-y-0 active:shadow-none transition-all duration-150 cursor-pointer"
                       >
                         
-                        {/* Interactive Slanted Sticker Card Label */}
-                        <div 
-                          className="absolute top-4 left-4 z-20 text-black font-black text-xs px-2.5 py-1.5 uppercase border-2 border-black rotate-[-4deg] shadow-[2px_2px_0px__#000]"
-                          style={{ backgroundColor: item.glowAccent }}
-                        >
-                          {discountPercentage}% OFF TRANSIT LOCK
-                        </div>
-
                         {/* Image canvas block with grid backdrop */}
                         <div className="h-60 bg-grid-slate-100 border-b-3 border-black relative flex items-center justify-center p-6 bg-slate-50">
                           <img
@@ -1074,6 +1020,11 @@ export default function MarketplaceView({
                             referrerPolicy="no-referrer"
                           />
                           
+                          {/* Sustainability Badge */}
+                          <div className="absolute top-4 right-4 z-20">
+                            <SustainabilityBadge />
+                          </div>
+
                           {/* Active Transit Indicator Overlay */}
                           <div className="absolute bottom-3 left-3 bg-black/90 text-white border border-black px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_rgba(0,0,0,0.5)]">
                             <Clock className="w-3.5 h-3.5 text-[#00ff9d] animate-pulse" />
@@ -1138,14 +1089,11 @@ export default function MarketplaceView({
                     <PackageCheck className="w-6 h-6" />
                   </div>
                   <div className="text-left font-mono">
-                    <p className="text-xs font-black uppercase text-black">100% Inspected & Sealed Surplus</p>
+                    <p className="text-xs font-black uppercase text-black">100% Inspected & Verified</p>
                     <p className="text-[10px] text-gray-650 leading-tight">These products are evaluated for full diagnostic health in corporate storage hubs.</p>
                   </div>
                 </div>
 
-                <div className="text-xs font-bold text-gray-800 uppercase tracking-wider border-2 border-dashed border-black px-4 py-2 font-mono">
-                  Escrow ID: #SURPLUS-NOIDA-DEC-2026
-                </div>
               </div>
 
             </motion.div>
@@ -1179,9 +1127,6 @@ export default function MarketplaceView({
                       className="bg-[#ff5c00] text-white border-3 border-black p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 cursor-pointer flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all"
                     >
                       <div className="text-left font-mono">
-                        <div className="bg-black text-[#fffc40] text-[10px] uppercase px-2 py-0.5 inline-block font-extrabold mb-2 tracking-widest border border-white">
-                          Clean space. Stack paper.
-                        </div>
                         <h3 className="text-2xl font-black uppercase leading-none tracking-tight">Got idle appliances or electronics in Noida?</h3>
                         <p className="text-xs text-orange-100 font-bold mt-1 max-w-2xl leading-relaxed">
                           Relist them here effortlessly! Upload snaps, quote your custom price, specify condition grading, and connect offline with buyers securely at public lockers.
@@ -1237,10 +1182,13 @@ export default function MarketplaceView({
                             <div>
                               
                               {/* Slanted condition tag badge */}
-                              <div className="p-3 bg-slate-50 border-b-2 border-black flex items-center justify-between font-mono text-[10px] text-black">
-                                <span className="bg-black text-white px-1.5 py-0.5 border border-black uppercase font-bold text-[8.5px]">
-                                  {item.category}
-                                </span>
+                              <div className="p-3 bg-slate-50 border-b-2 border-black flex items-center justify-between font-mono text-[10px] text-black flex-wrap gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="bg-black text-white px-1.5 py-0.5 border border-black uppercase font-bold text-[8.5px]">
+                                    {item.category}
+                                  </span>
+                                  <SustainabilityBadge />
+                                </div>
                                 <div className="flex items-center gap-1.5 font-bold">
                                   <span>Condition:</span>
                                   <span className="font-black bg-[#fffc40] px-1.5 py-0.5 border border-black uppercase text-[9px] text-black">
@@ -1327,11 +1275,11 @@ export default function MarketplaceView({
 
                               {!item.isUserListing ? (
                                 <button
-                                  onClick={(e) => triggerSellerChat(item, e)}
+                                  onClick={(e) => { e.stopPropagation(); handlePurchaseRelistItem(item); }}
                                   className="w-full bg-[#fffc40] hover:bg-[#e0de34] text-black border-2 border-black font-black text-xs py-2.5 shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-1.5 uppercase tracking-wider"
                                 >
-                                  <MessageCircle className="w-4 h-4 text-black" />
-                                  <span>Negotiate Peer Deal</span>
+                                  <ShoppingBag className="w-4 h-4 text-black" />
+                                  <span>Add to Cart</span>
                                 </button>
                               ) : (
                                 <div className="w-full bg-[#ff5c00]/10 border-2 border-[#ff5c00] text-[#ff5c00] font-black text-[10px] py-2 px-1 text-center font-mono uppercase tracking-wider rounded-none">
@@ -1786,7 +1734,7 @@ export default function MarketplaceView({
                         </div>
 
                         <div className="bg-slate-50 border-2 border-dashed border-black p-3 text-[10.5px] text-gray-700 leading-normal font-mono">
-                          <strong>⚠️ PEER ESCROW AGREEMENT:</strong> By postings, your classified listing is linked back to {session.name || 'Your User Profile'}. Fraudulent listings will block Noida retail clearance access codes immediately.
+                          <strong>⚠️ PEER LISTING AGREEMENT:</strong> By posting, your classified listing is linked to {session.name || 'Your User Profile'}. Fraudulent listings will restrict your account access.
                         </div>
 
                         <button
@@ -1814,99 +1762,7 @@ export default function MarketplaceView({
         </AnimatePresence>
       </div>
 
-      {/* ==================== INTERACTIVE FLOATING PEER SELLER MESSENGER MODAL (BRUTALIST MODAL) ==================== */}
-      <AnimatePresence>
-        {selectedChatSeller && (
-          <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 font-sans select-none">
-            <motion.div 
-              initial={{ scale: 0.9, y: 30, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 30, opacity: 0 }}
-              className="bg-white border-3 border-black w-full max-w-lg overflow-hidden shadow-[12px_12px_0px_#000] flex flex-col h-[520px]"
-            >
-              
-              {/* Brutalist Chat Header info */}
-              <div className="bg-black text-white p-4 flex items-center justify-between border-b-3 border-black shrink-0 font-mono">
-                <div className="flex items-center gap-3 text-left">
-                  <div className="w-10 h-10 bg-[#fffc40] text-black border-2 border-white rounded-none flex items-center justify-center font-black text-sm">
-                    {selectedChatSeller.name.substring(0, 2).toUpperCase()}
-                  </div>
-                  <div className="leading-none">
-                    <p className="font-black text-sm uppercase text-white tracking-tight">{selectedChatSeller.name}</p>
-                    <p className="text-[10.5px] text-gray-400 mt-1 line-clamp-1 max-w-[280px]">Classifier item: "{selectedChatSeller.productName}"</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedChatSeller(null)}
-                  className="bg-red-600 hover:bg-red-750 text-white border-2 border-white font-black text-xs px-2.5 py-1 uppercase cursor-pointer"
-                >
-                  Close &times;
-                </button>
-              </div>
 
-              {/* Price Alert notification ribbon */}
-              <div className="bg-[#fffc40] text-[11px] text-black px-4 py-2 border-b-2 border-black font-mono font-bold tracking-wide flex justify-between items-center text-left shrink-0">
-                <span>PEER NEGOTIATION LIMIT: <span className="font-black">₹{selectedChatSeller.price.toLocaleString('en-IN')}</span></span>
-                <span className="text-[9px] text-white bg-black border border-black px-2 py-0.5 font-bold uppercase tracking-wider">Locker security active</span>
-              </div>
-
-              {/* Message Feed balloons */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 flex flex-col scrollbar-thin">
-                {selectedChatSeller.messages.map((msg, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex flex-col max-w-[85%] ${
-                      msg.sender === 'user' ? 'self-end items-end' : 'self-start items-start text-left'
-                    }`}
-                  >
-                    <div className={`p-3 text-xs leading-relaxed border-2 border-black ${
-                      msg.sender === 'user' 
-                        ? 'bg-[#00ff9d] text-black font-bold shadow-[2px_2px_0px_#000]' 
-                        : 'bg-white text-gray-800 shadow-[2px_2px_0px_rgba(0,0,0,0.15)]'
-                    }`}>
-                      {msg.text}
-                    </div>
-                    <span className="text-[8px] text-gray-450 mt-1 font-mono uppercase">{msg.time}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Input Message Form */}
-              <form onSubmit={handleSendChatMessage} className="p-3 bg-white border-t-2 border-black flex gap-2 shrink-0 font-sans">
-                <input
-                  type="text"
-                  value={typedMessage}
-                  onChange={(e) => setTypedMessage(e.target.value)}
-                  placeholder="Ask about wear condition, cash, locker location..."
-                  className="flex-grow border-2 border-black focus:bg-slate-50 rounded-none px-3.5 py-3 text-xs outline-none font-bold placeholder-gray-400"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="bg-[#ff5c00] hover:bg-[#e04f00] text-white border-2 border-black rounded-none p-3 shadow-[2px_2px_0px_#000] flex items-center justify-center transition-all cursor-pointer shrink-0"
-                >
-                  <Send className="w-5 h-5 text-white" />
-                </button>
-              </form>
-
-              {/* Secure complete dialog key indicator button */}
-              <div className="p-3 bg-slate-100 border-t-2 border-black text-center shrink-0 font-mono">
-                <button
-                  onClick={() => {
-                    alert(`PEER EXCHAGE LOCKED! We saved "${selectedChatSeller.productName}" configuration. Head to Noida Sector 62 automated locker matrix box to finalize the cash transaction securely with seller: ${selectedChatSeller.name}.`);
-                    setSelectedChatSeller(null);
-                  }}
-                  className="bg-[#00ff9d] border-2 border-black text-black font-black text-[10.5px] px-4 py-2 uppercase tracking-wide shadow-[2px_2px_0px_#000] hover:bg-[#00e08b] cursor-pointer"
-                >
-                  ✓ Secure Deal & Assign Noida Locker Swap
-                </button>
-              </div>
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
     </div>
   );
