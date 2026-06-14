@@ -169,3 +169,40 @@ export async function advanceRing(itemId: string, category: string): Promise<Adv
   const data = await resp.json();
   return data as AdvanceRingResult;
 }
+
+// ─── Admin Review Queue ─────────────────────────────────────────────────────
+
+export async function fetchReviewQueue(): Promise<any[]> {
+  const resp = await fetch(`${BASE_URL}/api/admin/review-queue`);
+  if (!resp.ok) throw new Error(`Review queue fetch failed: ${resp.status}`);
+  const data = await resp.json();
+  return data.items || [];
+}
+
+export async function submitReviewDecision(cardUuid: string, decision: string, note?: string): Promise<any> {
+  const resp = await fetch(`${BASE_URL}/api/admin/review-queue/${encodeURIComponent(cardUuid)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ decision, note }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+    throw new Error(err.detail || `Review decision failed: ${resp.status}`);
+  }
+  return resp.json();
+}
+
+// ─── Transaction Rating ─────────────────────────────────────────────────────
+
+export async function rateTransaction(transactionId: string, rating: number): Promise<any> {
+  const resp = await fetch(`${BASE_URL}/api/transactions/${encodeURIComponent(transactionId)}/rate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rating }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+    throw new Error(err.detail || `Rating failed: ${resp.status}`);
+  }
+  return resp.json();
+}

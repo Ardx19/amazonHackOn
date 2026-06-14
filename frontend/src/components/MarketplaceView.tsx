@@ -66,7 +66,7 @@ export default function MarketplaceView({
   const [activeTab, setActiveTab] = useState<'float' | 'relist'>('float');
   
   // Controls ReList multi-page state: 'feed' or 'create-listing'
-  const [relistPage, setRelistPage] = useState<'feed' | 'create-listing'>('feed');
+  const [relistPage, setRelistPage] = useState<'feed' | 'identity' | 'declaration' | 'create-listing'>('feed');
 
   // Multi-page state for showing a product in detail: either FLOAT or RELIST
   const [selectedDetailItem, setSelectedDetailItem] = useState<{ item: any; source: 'float' | 'relist' } | null>(null);
@@ -150,6 +150,20 @@ export default function MarketplaceView({
   // Float notifications state
   const [addCartNotification, setAddCartNotification] = useState<string | null>(null);
 
+  // ── Identity verification gate ─────────────────────────────────────
+  const [identityVerified, setIdentityVerified] = useState(
+    () => sessionStorage.getItem('reroute_verified') === 'true'
+  );
+  const [identityLoading, setIdentityLoading] = useState(false);
+  const [idForm, setIdForm] = useState({ fullName: '', aadhaar: '', phone: '', confirm: false });
+
+  // ── Seller declaration form ────────────────────────────────────────
+  const [declarationChecked, setDeclarationChecked] = useState({
+    functional: false, neverRepaired: false, noHiddenDefects: false,
+    allAccessories: false, misrepresentation: false,
+  });
+  const [declarationSubmitted, setDeclarationSubmitted] = useState(false);
+
   // Handle Tab Switch smoothly
   const handleTabSwitch = (tab: 'float' | 'relist') => {
     setActiveTab(tab);
@@ -157,6 +171,36 @@ export default function MarketplaceView({
     setSelectedCategory('All');
     setMinRatingFilter(false);
     setUnderPriceFilter(false);
+  };
+
+  // ── Identity verification submit ──────────────────────────────────
+  const handleIdentitySubmit = () => {
+    if (!idForm.fullName || idForm.aadhaar.length !== 12 || idForm.phone.length !== 10 || !idForm.confirm) return;
+    setIdentityLoading(true);
+    setTimeout(() => {
+      setIdentityLoading(false);
+      setIdentityVerified(true);
+      sessionStorage.setItem('reroute_verified', 'true');
+      setRelistPage('declaration');
+    }, 1500);
+  };
+
+  // ── Declaration form submit ───────────────────────────────────────
+  const allDeclarationChecked = Object.values(declarationChecked).every(Boolean);
+
+  const handleDeclarationSubmit = () => {
+    if (!allDeclarationChecked) return;
+    setDeclarationSubmitted(true);
+    setRelistPage('create-listing');
+  };
+
+  // ── Open listing flow (with identity check) ──────────────────────
+  const openListingFlow = () => {
+    if (identityVerified) {
+      setRelistPage(declarationSubmitted ? 'create-listing' : 'declaration');
+    } else {
+      setRelistPage('identity');
+    }
   };
 
   const simulateMediaUpload = () => {
@@ -555,7 +599,7 @@ export default function MarketplaceView({
           <div className="shrink-0 self-end md:self-auto">
             {relistPage === 'feed' ? (
               <button
-                onClick={() => setRelistPage('create-listing')}
+                onClick={() => openListingFlow()}
                 className="bg-[#ff5c00] hover:bg-[#e04f00] text-white font-extrabold text-xs px-4 py-2.5 border-2 border-black shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider"
               >
                 <PlusCircle className="w-4 h-4" />
@@ -1020,7 +1064,7 @@ export default function MarketplaceView({
                     
                     {/* Big brutalist banner card linking to list-form inside ReList */}
                     <div 
-                      onClick={() => setRelistPage('create-listing')}
+                      onClick={() => openListingFlow()}
                       className="bg-[#ff5c00] text-white border-3 border-black p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 cursor-pointer flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all"
                     >
                       <div className="text-left font-mono">
@@ -1170,6 +1214,121 @@ export default function MarketplaceView({
                       </div>
                     )}
 
+                  </motion.div>
+                )}
+
+                {/* PAGE 2a: IDENTITY VERIFICATION GATE */}
+                {relistPage === 'identity' && (
+                  <motion.div
+                    key="identity-gate"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-lg mx-auto bg-white border-2 border-black p-6 shadow-[4px_4px_0px_#000]"
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <ShieldAlert className="w-5 h-5 text-amzn-orange" />
+                      <h2 className="text-lg font-black uppercase">Seller Identity Verification</h2>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-5">
+                      Amazon requires identity verification before you can list products on ReList.
+                      Your Aadhaar will be used only for seller accountability — not shared publicly.
+                    </p>
+
+                    <div className="space-y-3 mb-5">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Full Name (as on Aadhaar)</label>
+                        <input type="text" value={idForm.fullName} onChange={e => setIdForm(p => ({...p, fullName: e.target.value}))}
+                          className="w-full border-2 border-black p-2 text-sm font-mono"
+                          placeholder="Rahul Mehta" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Aadhaar Number (12 digits)</label>
+                        <input type="text" maxLength={12} value={idForm.aadhaar}
+                          onChange={e => setIdForm(p => ({...p, aadhaar: e.target.value.replace(/\D/g,'').slice(0,12)}))}
+                          className="w-full border-2 border-black p-2 text-sm font-mono"
+                          placeholder="1234 5678 9012" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Phone Linked to Aadhaar</label>
+                        <input type="text" maxLength={10} value={idForm.phone}
+                          onChange={e => setIdForm(p => ({...p, phone: e.target.value.replace(/\D/g,'').slice(0,10)}))}
+                          className="w-full border-2 border-black p-2 text-sm font-mono"
+                          placeholder="9876543210" />
+                      </div>
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" checked={idForm.confirm}
+                          onChange={e => setIdForm(p => ({...p, confirm: e.target.checked}))}
+                          className="mt-0.5" />
+                        <span className="text-[11px] text-gray-700 leading-relaxed">
+                          I confirm this is my real identity. I understand that false information may result in permanent account suspension.
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button onClick={() => setRelistPage('feed')}
+                        className="flex-1 bg-gray-100 border-2 border-black text-xs font-bold py-2.5 hover:bg-gray-200 transition-colors">
+                        Cancel
+                      </button>
+                      <button onClick={handleIdentitySubmit}
+                        disabled={identityLoading || !idForm.fullName || idForm.aadhaar.length !== 12 || idForm.phone.length !== 10 || !idForm.confirm}
+                        className="flex-1 bg-amzn-yellow border-2 border-black text-xs font-bold py-2.5 hover:bg-amzn-orange disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                        {identityLoading ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</>
+                        ) : (
+                          'Verify Identity'
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* PAGE 2b: SELLER DECLARATION FORM */}
+                {relistPage === 'declaration' && (
+                  <motion.div
+                    key="declaration-form"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-lg mx-auto bg-white border-2 border-black p-6 shadow-[4px_4px_0px_#000]"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      <span className="text-[11px] text-emerald-700 font-bold">Identity Verified</span>
+                    </div>
+                    <h2 className="text-lg font-black uppercase mb-1 mt-1">Seller Declaration</h2>
+                    <p className="text-xs text-gray-600 mb-5">
+                      Before listing, you must confirm these statements. Your declaration is legally binding
+                      and will be recorded with timestamp.
+                    </p>
+
+                    <div className="space-y-3 mb-5">
+                      {[
+                        { key: 'functional' as const, text: 'The product is fully functional — all features work as expected' },
+                        { key: 'neverRepaired' as const, text: 'The product has never been repaired or serviced by a third party' },
+                        { key: 'noHiddenDefects' as const, text: 'There are no defects beyond what will appear in my uploaded photos' },
+                        { key: 'allAccessories' as const, text: 'The product is complete — all original accessories are present' },
+                        { key: 'misrepresentation' as const, text: 'I understand that misrepresentation may result in account suspension and chargeback of sale proceeds to Amazon' },
+                      ].map(item => (
+                        <label key={item.key} className="flex items-start gap-2 cursor-pointer p-2 border-2 border-gray-200 hover:border-black transition-colors">
+                          <input type="checkbox" checked={declarationChecked[item.key]}
+                            onChange={e => setDeclarationChecked(prev => ({...prev, [item.key]: e.target.checked}))}
+                            className="mt-0.5 shrink-0" />
+                          <span className="text-[12px] text-gray-800 leading-relaxed">{item.text}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button onClick={() => setRelistPage('feed')}
+                        className="flex-1 bg-gray-100 border-2 border-black text-xs font-bold py-2.5 hover:bg-gray-200 transition-colors">
+                        Cancel
+                      </button>
+                      <button onClick={handleDeclarationSubmit}
+                        disabled={!allDeclarationChecked}
+                        className="flex-1 bg-emerald-500 border-2 border-black text-white text-xs font-bold py-2.5 hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        I Confirm — Continue to Listing
+                      </button>
+                    </div>
                   </motion.div>
                 )}
 
@@ -1437,6 +1596,39 @@ export default function MarketplaceView({
                               )}
                             </div>
                           )}
+
+                        {/* ─── Real API Health Card + Review Status ─── */}
+                        {apiHealthCard && (
+                          <div className="mt-4 space-y-3">
+                            <HealthCardView card={apiHealthCard} qrBase64={apiHealthCard.qr_code_base64} />
+                            
+                            {/* Review status banner */}
+                            {apiHealthCard.review_status === 'pending_review' && (
+                              <div className="bg-amber-50 border-2 border-amber-400 p-3 text-xs font-bold text-amber-800">
+                                Your listing is under review. Our team will verify within 24 hours.
+                                {apiHealthCard.review_reason && (
+                                  <span className="block text-[11px] font-normal mt-1 text-amber-700">{apiHealthCard.review_reason}</span>
+                                )}
+                              </div>
+                            )}
+                            {apiHealthCard.review_status === 'auto_approved' && (
+                              <div className="bg-emerald-50 border-2 border-emerald-400 p-3 text-xs font-bold text-emerald-800">
+                                Listed successfully! AI confidence: {Math.round(apiHealthCard.confidence * 100)}%.
+                                Your declaration has been recorded and is legally binding.
+                              </div>
+                            )}
+                            {apiHealthCard.review_status === 'reviewed_approved' && (
+                              <div className="bg-emerald-50 border-2 border-emerald-400 p-3 text-xs font-bold text-emerald-800">
+                                Admin approved! Your listing is now live on ReList.
+                              </div>
+                            )}
+                            {apiHealthCard.review_status === 'reviewed_rejected' && (
+                              <div className="bg-red-50 border-2 border-red-400 p-3 text-xs font-bold text-red-800">
+                                Listing rejected by admin. Reason: {apiHealthCard.review_reason || 'Not specified'}.
+                              </div>
+                            )}
+                          </div>
+                        )}
                         </div>
 
                         <div>

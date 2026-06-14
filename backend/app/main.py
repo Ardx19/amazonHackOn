@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import grade, routing, health_card, returns
+from app.api.routes.admin import router as admin_router, TRUST_ROUTER
 
 app = FastAPI(
     title="ReRoute API",
@@ -24,6 +25,8 @@ app.include_router(grade.router)
 app.include_router(routing.router)
 app.include_router(health_card.router)
 app.include_router(returns.router)
+app.include_router(admin_router)
+app.include_router(TRUST_ROUTER)
 
 
 @app.get("/")

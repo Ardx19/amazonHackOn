@@ -77,4 +77,11 @@ export interface HealthCard {
   usage_estimate?: string | null;
   care_recommendation?: string | null;
   seller_usage_description?: string | null;
+  // ── Seller accountability (Phase 3) ──
+  review_status?: string;
+  review_reason?: string | null;
+  declaration_timestamp?: string | null;
+  declaration_all_checked?: boolean;
+  seller_trust_score?: number | null;
+  seller_trust_count?: number;
 }

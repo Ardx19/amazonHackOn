@@ -13,6 +13,7 @@ import YourOrdersView from './components/YourOrdersView';
 import YourAccountView from './components/YourAccountView';
 import MarketplaceView from './components/MarketplaceView';
 import SimulationView from './components/SimulationView';
+import AdminReviewView from './components/AdminReviewView';
 
 import { INITIAL_PRODUCTS } from './data/products';
 import { Product, CartItem, UserSession, Order } from './types';
@@ -34,7 +35,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
-  const [currentView, setCurrentView] = useState<'landing' | 'search' | 'orders' | 'account' | 'marketplace' | 'simulation'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'search' | 'orders' | 'account' | 'marketplace' | 'simulation' | 'admin'>('landing');
 
   // Shared Relist items state
   const [relistItems, setRelistItems] = useState<any[]>([
@@ -338,6 +339,7 @@ export default function App() {
           onOpenOrders={() => { setCurrentView('orders'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           onOpenAccount={() => { setCurrentView('account'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           onOpenMarketplace={() => { setCurrentView('marketplace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onOpenAdmin={() => setCurrentView('admin')}
         />
 
         {/* 2. Secondary Navigation category band */}
@@ -399,6 +401,9 @@ export default function App() {
         ) : currentView === 'simulation' ? (
           /* Float Simulation — manual checkpoint advancement for demo */
           <SimulationView onGoHome={() => setCurrentView('marketplace')} />
+        ) : currentView === 'admin' ? (
+          /* Internal Admin Review Queue */
+          <AdminReviewView />
         ) : (
           /* Landing page index: Slides, grids, categorizers */
           <>

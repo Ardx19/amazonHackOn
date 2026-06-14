@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.services.health_card_service import generate_health_card, generate_qr_code
 from app.services.routing_service import load_grading_report
-from app.db.models import HealthCard as HealthCardORM
+from app.db.models import HealthCard as HealthCardORM, Item
 from app.db.database import get_db
 from app.schemas.schemas import HealthCard, HealthCardRequest, Defect
 
@@ -33,6 +33,24 @@ def create_health_card(body: HealthCardRequest, db: Session = Depends(get_db)):
             seller_usage_description=body.seller_usage_description,
         )
 
+        # ── Seller accountability: confidence threshold → human review ─────
+        review_status = "auto_approved"
+        review_reason = None
+        if grading_report.confidence < 0.85 or grading_report.manual_review_recommended:
+            review_status = "pending_review"
+            review_reason = (
+                f"AI confidence {grading_report.confidence:.0%} — below 85% threshold"
+            )
+
+        # ── Load seller trust score ──────────────────────────────────────
+        seller_trust = None
+        seller_trust_count = 0
+        if body.seller_id:
+            seller_row = db.query(Item).filter_by(item_id=body.seller_id).first()
+            if seller_row and seller_row.trust_score is not None:
+                seller_trust = round(seller_row.trust_score, 1)
+                seller_trust_count = seller_row.trust_score_count or 0
+
         db_card = HealthCardORM(
             card_uuid=card.card_uuid,
             item_id=card.item_id,
@@ -53,9 +71,16 @@ def create_health_card(body: HealthCardRequest, db: Session = Depends(get_db)):
             care_recommendation=card.care_recommendation,
             seller_usage_description=card.seller_usage_description,
             qr_code_base64=card.qr_code_base64,
+            review_status=review_status,
+            review_reason=review_reason,
         )
         db.merge(db_card)  # merge = upsert, so re-generating a card won't crash
         db.commit()
+
+        card.review_status = review_status
+        card.review_reason = review_reason
+        card.seller_trust_score = seller_trust
+        card.seller_trust_count = seller_trust_count
 
         return HealthCardResponse(card=card)
 
@@ -70,7 +95,9 @@ def get_health_card(card_uuid: str, db: Session = Depends(get_db)):
     render the tamper-proof card by its ID."""
     row = db.query(HealthCardORM).filter_by(card_uuid=card_uuid).first()
     if row is None:
-        raise HTTPException(status_code=404, detail=f"Health card not found: {card_uuid}")
+        raise HTTPException(
+            status_code=404, detail=f"Health card not found: {card_uuid}"
+        )
 
     defects = [Defect(**d) for d in (row.defects or [])]
     card = HealthCard(
@@ -93,5 +120,11 @@ def get_health_card(card_uuid: str, db: Session = Depends(get_db)):
         usage_estimate=row.usage_estimate,
         care_recommendation=row.care_recommendation,
         seller_usage_description=row.seller_usage_description,
+        review_status=row.review_status or "auto_approved",
+        review_reason=row.review_reason,
+        declaration_timestamp=row.declaration_timestamp,
+        declaration_all_checked=row.declaration_all_checked or False,
+        seller_trust_score=None,
+        seller_trust_count=0,
     )
     return HealthCardResponse(card=card)

@@ -39,6 +39,8 @@ class Item(Base):
     is_trajectory_product = Column(Boolean, default=False)
     trajectory_id = Column(String)
     record_type = Column(String)  # 'persona' for persona records
+    trust_score = Column(Float, nullable=True)  # null = new seller
+    trust_score_count = Column(Integer, default=0)
 
     grading_reports = relationship("GradingReport", back_populates="item")
     floating_discounts = relationship("FloatingDiscount", back_populates="item")
@@ -132,6 +134,13 @@ class HealthCard(Base):
     care_recommendation = Column(Text)
     seller_usage_description = Column(Text)
     qr_code_base64 = Column(Text, nullable=True)
+    # ── Seller accountability (Phase 3) ──
+    review_status = Column(
+        String, default="auto_approved"
+    )  # auto_approved | pending_review | reviewed_approved | reviewed_rejected
+    review_reason = Column(Text, nullable=True)
+    declaration_timestamp = Column(DateTime, nullable=True)
+    declaration_all_checked = Column(Boolean, default=False)
 
     item = relationship("Item", back_populates="health_cards")
 
