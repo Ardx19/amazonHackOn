@@ -1,6 +1,7 @@
 # ReRoute — Agent Context Handoff
 ### Amazon HackOn '26 · Theme 3: Products Without a Second Chance
-*Last updated: 14 June 2026 — Frontend merged, all API connections live*
+*Last updated: 14 June 2026 — Seller Accountability System built (Phase 3)*
+**Git branch: `main`**
 
 ---
 
@@ -10,15 +11,18 @@
 
 | Area | Status |
 |---|---|
-| Backend — 6 endpoints | ✅ 100% working, all live-tested |
+| Backend — 13 endpoints | ✅ 100% working, all live-tested |
 | Database — 136 seed rows | ✅ RDS seeded, all FK relationships intact |
 | AWS Bedrock (Nova) | ✅ Live grading + health card prose |
 | AWS Rekognition | ✅ Live CV labels |
 | S3 image storage | ✅ UUID-keyed, delete-before-insert |
-| Frontend — Amazon.in clone UI | ✅ Vite+React 19, Tailwind v4, 15 components |
+| Frontend — Amazon.in clone UI | ✅ Vite+React 19, Tailwind v4, 17 components |
 | Frontend → Backend wiring | ✅ Float Deals (GET /api/deals), ReList grading (POST /api/grade), ReRoute intercept modal (POST /api/evaluate-route) |
 | Health Card in frontend | ✅ GradingCard + HealthCardView components in Tailwind |
-| Vite proxy | ✅ `/api → localhost:8000` configured |
+| **Seller Accountability System** | ✅ Phase 3 built — identity gate, declaration form, confidence threshold review, seller trust score |
+| Admin Review Queue | ✅ GET/PATCH /api/admin/review-queue + AdminReviewView.tsx |
+| Transaction Rating | ✅ POST /api/transactions/{id}/rate |
+| Seller Trust Score | ✅ trust_score + trust_score_count on Items, shown in HealthCardView + AdminReviewView |
 | `/card/[uuid]` public page | ❌ No frontend route yet |
 | Compatibility check (S3) | ⚠️ Backend route exists, frontend not wired |
 | Demo video | ❌ Not recorded |
@@ -277,13 +281,101 @@ frontend/
 
 ---
 
-## 10. Known Issues / Quick Fixes
+## 10. Seller Accountability System (Phase 3 — Built)
+
+### Overview
+
+The ReList flow now has a seller accountability pipeline: identity verification → declaration → grading → confidence gate → admin review queue. Every seller is scored on trust.
+
+### ReList Flow (Updated)
+
+```
+1. User clicks "ReList Peer" tab → sees feed
+2. Clicks "List Product" → IDENTITY VERIFICATION GATE
+   - Full name, Aadhaar (12 digits), phone (10 digits), confirm checkbox
+   - 1.5s spinner → sessionStorage.setItem('reroute_verified', 'true')
+   - Persists across browser tabs in same session
+3. SELLER DECLARATION FORM (5 mandatory checkboxes):
+   - Product is fully functional
+   - Never repaired/serviced by third party
+   - No hidden defects beyond photos
+   - All original accessories present
+   - Misrepresentation = account suspension + chargeback
+   - All 5 must be checked to proceed
+4. Standard listing form (name, category, price, condition, photos)
+5. "Analyze with AI" → POST /api/grade → POST /api/health-card
+6. CONFIDENCE GATE in backend health_card.py:
+   - If confidence < 85% OR manual_review_recommended:
+     → review_status = "pending_review"
+     → review_reason = "AI confidence X% — below 85% threshold"
+     → Item enters admin review queue
+   - Else: review_status = "auto_approved"
+7. Frontend shows review_status banner:
+   - Amber: "Under review. Team will verify within 24 hours"
+   - Green: "Listed successfully! AI confidence: X%"
+   - "Submit Listing" button locked if pending_review
+8. Admin clicks subtle "Admin" link in header → AdminReviewView
+   - Table: Product, Seller, Trust, Confidence, Condition, Reason, Action
+   - Approve/Reject buttons → PATCH /api/admin/review-queue/{card_uuid}
+9. After approval: listing goes live on ReList feed
+
+### New Backend Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/admin/review-queue` | List all health_cards where review_status = "pending_review" |
+| PATCH | `/api/admin/review-queue/{card_uuid}` | Body: `{ decision: "approved" | "rejected", note?: str }` → updates review_status |
+| POST | `/api/transactions/{transaction_id}/rate` | Body: `{ rating: 1.0-5.0 }` → updates seller trust_score as rolling average |
+
+### New Database Columns
+
+**health_cards table:**
+| Column | Type | Default | Purpose |
+|---|---|---|---|
+| review_status | VARCHAR | auto_approved | auto_approved / pending_review / reviewed_approved / reviewed_rejected |
+| review_reason | TEXT | NULL | e.g. "AI confidence 78% — below 85% threshold" |
+| declaration_timestamp | TIMESTAMP | NULL | When seller submitted the 5-checkbox form |
+| declaration_all_checked | BOOLEAN | FALSE | All 5 declaration checkboxes were checked |
+
+**items table (personas only):**
+| Column | Type | Default | Purpose |
+|---|---|---|---|
+| trust_score | FLOAT | NULL | Rolling average of ratings (null = new seller) |
+| trust_score_count | INT | 0 | Number of ratings received |
+
+### New Frontend Components
+
+| File | Purpose |
+|---|---|
+| `src/components/AdminReviewView.tsx` | Internal ops: pending review queue table, approve/reject, trust score column |
+| `MarketplaceView.tsx` (updated) | Identity gate (`relistPage = 'identity'`), declaration form (`relistPage = 'declaration'`), review_status banner after health card |
+| `HealthCardView.tsx` (updated) | Seller trust score display: ⭐ rating + count, or "NEW SELLER" badge |
+| `Header.tsx` (updated) | Subtle gray "Admin" link between Marketplace and Returns |
+| `App.tsx` (updated) | `currentView = 'admin'` routing, onOpenAdmin prop |
+
+### Seller Trust Score
+
+- Stored on `items` table (persona-type rows): `trust_score` (float, null), `trust_score_count` (int)
+- Updated via `POST /api/transactions/{id}/rate`
+- Formula: `new_score = ((old_score * count) + rating) / (count + 1)`
+- Displayed in HealthCardView as: ⭐ 4.3 (12 ratings) or amber "NEW SELLER" badge
+- Displayed in AdminReviewView table alongside seller name; null-score rows flagged as higher risk
+
+### How to Run (unchanged from Section 7)
+
+Everything runs from WSL — never run `npm install` from PowerShell (installs Windows binaries incompatible with WSL).
+
+---
+
+## 11. Known Issues / Quick Fixes
 
 | Issue | Fix |
 |---|---|
 | `DATABASE_URL` with `!` breaks in bash | Always use single quotes: `export DATABASE_URL='...'` |
-| Vite `Bus error` on WSL | `rm -rf node_modules package-lock.json && npm install` |
+| Vite `Bus error` / rollup missing binary on WSL | `npm install` from PowerShell installs Windows binaries incompatible with WSL. Delete node_modules from PowerShell: `Remove-Item -Recurse -Force node_modules`, then `npm install` from WSL only |
 | Frontend images not loading for Float deals | `CATEGORY_IMAGE_MAP` uses dummyjson CDN — replace with real Amazon.in CDN URLs |
 | ReList form requires file upload | Must select actual image files; the form doesn't allow text-only grading |
 | Bedrock Nova rate limits | Nova Lite has 5 RPM — slow down consecutive grading requests |
 | CORS errors | Vite proxy handles `/api/*` → no CORS in dev. In production, backend CORS middleware allows all origins |
+| Admin view has no auth | Demo only. Add auth middleware before production. #TODO in admin.py |
+| New DB columns not in seed_demo.json | New columns (review_status, trust_score, etc.) have sensible defaults in model. Seed data still works. Run `python -m app.db.seed_demo --reset` for updated schema |
