@@ -1,0 +1,15 @@
+# Agent directory - contains agent.py and meta-files
+.agent/
+
+# Hackathon state directory
+.hackstate/
+
+.brainstorming/
+
+passwords.txt
+
+.env
+
+amazonHackOn\ReRoute\frontend\Dnpm-cache
+
+amazonHackOn\ReRoute\frontend\node_modules
