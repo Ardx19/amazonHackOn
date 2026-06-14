@@ -1,13 +1,13 @@
 # ReRoute — Agent Context Handoff
 ### Amazon HackOn '26 · Theme 3: Products Without a Second Chance
-*Last updated: 14 June 2026 — Green Credits, UI cleanup, chat removed, ReList → Add to Cart*
+*Last updated: 15 June 2026 — Persistent C2C listings, S3 presigned URLs, seeded marketplace*
 **Git branch: `main`**
 
 ---
 
 ## 1. Current State Summary
 
-**Backend fully working. Frontend merged (Vite+React Amazon clone). All 3 demo flows wired. Chat removed. ReList items add to cart like normal products.**
+**Backend fully working. Frontend merged (Vite+React Amazon clone). All 3 demo flows wired. C2C listings persisted in DB. S3 images served via presigned URLs. ReList items add to cart.**
 
 | Area | Status |
 |---|---|
@@ -23,14 +23,16 @@
 | Admin Review Queue | ✅ GET/PATCH /api/admin/review-queue + AdminReviewView.tsx |
 | Transaction Rating | ✅ POST /api/transactions/{id}/rate |
 | Seller Trust Score | ✅ trust_score + trust_score_count on Items, shown in HealthCardView + AdminReviewView |
-| **Green Credits + Sustainability Badge** | ✅ GreenCreditsCard (credits, CO₂ saved, tier badge) + SustainabilityBadge (♻ Eco Choice on all marketplace cards) |
-| **Purchased items removed from marketplace** | ✅ Float + ReList items both disappear from marketplace after checkout |
-| **Chat system** | ❌ Removed — Negotiate Peer Deal, chat modal, triggerSellerChat, all gone |
-| **ReList → Add to Cart** | ✅ ReList items now add to cart normally (handlePurchaseRelistItem), secured by existing checkout flow |
-| **UI cleanup** | ✅ No surplus/escrow/discount stickers. LIVE ORDERS. Clean brutalist modern style |
-| **Secure Locker Swap** | ❌ Removed |
+| **C2C Listings (DB-persistent)** | ✅ New `c2c_listings` table (15 seeded rows). `GET /api/listings` + `POST /api/listings`. Survives refresh. Shared marketplace across all personas. |
+| **S3 Presigned URLs** | ✅ Images stored as raw S3 keys. Presigned URLs (7-day expiry) generated on read. |
+| **s3_keys in GradeResponse** | ✅ `POST /api/grade` returns `s3_keys` + `s3_urls` so frontend can persist actual S3 references. |
+| Green Credits + Sustainability Badge | ✅ GreenCreditsCard (credits, CO₂ saved, tier badge) + SustainabilityBadge (♻ Eco Choice on all marketplace cards) |
+| Purchased items removed from marketplace | ✅ Float + ReList items both disappear from marketplace after checkout |
+| Chat system | ❌ Removed — Negotiate Peer Deal, chat modal, triggerSellerChat, all gone |
+| ReList → Add to Cart | ✅ ReList items add to cart normally (handlePurchaseRelistItem) |
+| UI cleanup | ✅ No surplus/escrow/discount stickers. LIVE ORDERS. Clean brutalist style |
+| Secure Locker Swap | ❌ Removed |
 | `/card/[uuid]` public page | ❌ No frontend route yet |
-| Compatibility check (S3) | ⚠️ Backend route exists, frontend not wired |
 | Demo video | ❌ Not recorded |
 
 ---
@@ -107,6 +109,8 @@
 | GET | `/api/admin/review-queue` | Admin: list pending reviews |
 | PATCH | `/api/admin/review-queue/{card_uuid}` | Admin: approve/reject |
 | POST | `/api/transactions/{id}/rate` | Rate seller trust score |
+| GET | `/api/listings` | Fetch all C2C listings with health card hydration + presigned image URLs |
+| POST | `/api/listings` | Create C2C listing. Stores raw S3 keys (extracted from full URLs). |
 
 ---
 
@@ -119,6 +123,7 @@
 | floating_discounts | 10 |
 | hub_checkpoints | 40 |
 | health_cards | 12 |
+| c2c_listings | 15 (10 with health cards, 5 without) |
 | transactions | 6 |
 | abuse_flags | 0 |
 
@@ -357,6 +362,25 @@ The ReList flow now has a seller accountability pipeline: identity verification 
 | trust_score | FLOAT | NULL | Rolling average of ratings (null = new seller) |
 | trust_score_count | INT | 0 | Number of ratings received |
 
+**c2c_listings table (new — persistent ReList marketplace):**
+| Column | Type | Purpose |
+|---|---|---|
+| id | VARCHAR PK | Listing ID (seed-xxx or user-list-xxx) |
+| name | VARCHAR | Product name |
+| category | VARCHAR | Category |
+| listed_by | VARCHAR | Seller display name |
+| location | VARCHAR | Seller city/area |
+| asking_price | FLOAT | Listed sale price |
+| original_price | FLOAT | Original retail price |
+| condition | VARCHAR | Like New / Good / Fair / Poor |
+| years_used | VARCHAR | e.g. "6 months" |
+| image_url | VARCHAR | Raw S3 key (presigned URL generated on read) |
+| uploaded_images | JSON | Array of raw S3 keys |
+| video_url | VARCHAR | Optional |
+| description | TEXT | Seller description |
+| health_card_uuid | VARCHAR | FK to health_cards.card_uuid (nullable) |
+| created_at | TIMESTAMP | Listing creation time |
+
 ### New Frontend Components
 
 | File | Purpose |
@@ -395,3 +419,5 @@ Everything runs from WSL — never run `npm install` from PowerShell (installs W
 | New DB columns not in seed_demo.json | New columns (review_status, trust_score, etc.) have sensible defaults in model. Seed data still works. Run `python -m app.db.seed_demo --reset` for updated schema |
 | Chat / Negotiate Peer Deal | Removed entirely. ReList items now use "Add to Cart" via handlePurchaseRelistItem. Chat modal, triggerSellerChat, handleSendChatMessage all removed. |
 | Purchased items remain in marketplace | Fixed. Float and ReList items both removed from marketplace view after checkout (excludePurchaseIds prop flows from App.tsx handlePlaceOrder). |
+| ReList listings not persistent | Fixed. New `c2c_listings` table + `GET/POST /api/listings`. 15 seeded rows. Listings survive refresh. SESSION_LISTINGS removed. |
+| User-uploaded images not persistent | Fixed. `POST /api/grade` returns `s3_keys`. Frontend stores raw S3 keys in listing. `GET /api/listings` generates presigned URLs (7-day expiry). |

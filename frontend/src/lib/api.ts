@@ -8,7 +8,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // ─── Grading ──────────────────────────────────────────────────────────────────
 
-export async function gradeProduct(formData: FormData): Promise<GradingReport> {
+export async function gradeProduct(formData: FormData): Promise<{ report: import('./types').GradingReport; s3_urls: string[] }> {
   const resp = await fetch(`${BASE_URL}/api/grade`, {
     method: "POST",
     body: formData,
@@ -18,7 +18,7 @@ export async function gradeProduct(formData: FormData): Promise<GradingReport> {
     throw new Error(err.detail || `Grade failed: ${resp.status}`);
   }
   const data = await resp.json();
-  return data.report as GradingReport;
+  return { report: data.report, s3_urls: data.s3_urls || [] };
 }
 
 // ─── Routing ─────────────────────────────────────────────────────────────────
@@ -206,6 +206,46 @@ export async function rateTransaction(transactionId: string, rating: number): Pr
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ detail: resp.statusText }));
     throw new Error(err.detail || `Rating failed: ${resp.status}`);
+  }
+  return resp.json();
+}
+
+// ─── C2C Listings ─────────────────────────────────────────────────────────────
+
+export async function getC2CListings(): Promise<{ count: number; listings: import('./types').C2CListing[] }> {
+  const resp = await fetch(`${BASE_URL}/api/listings`);
+  if (!resp.ok) {
+    throw new Error(`Listings fetch failed: ${resp.status}`);
+  }
+  return resp.json();
+}
+
+export interface C2CListingPayload {
+  id: string;
+  name: string;
+  category: string;
+  listed_by: string;
+  location: string;
+  asking_price: number;
+  original_price?: number;
+  condition: string;
+  years_used?: string;
+  image_url?: string;
+  uploaded_images?: string[];
+  video_url?: string | null;
+  description?: string;
+  health_card_uuid?: string | null;
+}
+
+export async function createC2CListing(payload: C2CListingPayload): Promise<{ status: string; listing: import('./types').C2CListing }> {
+  const resp = await fetch(`${BASE_URL}/api/listings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+    throw new Error(err.detail || `Create listing failed: ${resp.status}`);
   }
   return resp.json();
 }

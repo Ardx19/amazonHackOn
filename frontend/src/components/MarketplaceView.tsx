@@ -26,7 +26,7 @@ import {
   Search,
 } from 'lucide-react';
 import { Product } from '../types';
-import { getDeals, gradeProduct, generateHealthCard } from '../lib/api';
+import { getDeals, gradeProduct, generateHealthCard, getC2CListings, createC2CListing } from '../lib/api';
 import type { DealItem } from '../lib/types';
 import { CATEGORY_IMAGE_MAP } from '../data/products';
 import GradingCard from './GradingCard';
@@ -57,11 +57,6 @@ const RELIST_IMAGE_OPTIONS = [
   { label: '🧥 Jacket / Clothing', url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&auto=format&fit=crop&q=60' },
   { label: '📚 Books / Novels', url: 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=400&auto=format&fit=crop&q=60' }
 ];
-
-// ── Session-scoped shared listing store ──────────────────────────────────────
-// Listings created in this browser session are visible to ALL personas.
-// This is a simple module-level array — no backend persistence needed for demo.
-const SESSION_LISTINGS: any[] = [];
 
 export default function MarketplaceView({ 
   onAddToCart, 
@@ -95,16 +90,50 @@ export default function MarketplaceView({
     suggestedPrice: number;
   } | null>(null);
 
-  // ─── API-backed state ──────────────────────────────────────────────────
+  // ── API-backed state ──────────────────────────────────────────────────
   const [apiDeals, setApiDeals] = useState<any[]>([]);
   const [apiDealsLoading, setApiDealsLoading] = useState(false);
   const [apiDealsError, setApiDealsError] = useState<string | null>(null);
+  const [apiC2CListings, setApiC2CListings] = useState<any[]>([]);
+  const [apiC2CLoading, setApiC2CLoading] = useState(false);
   const [apiGradingReport, setApiGradingReport] = useState<any>(null);
   const [apiHealthCard, setApiHealthCard] = useState<any>(null);
   const [apiGradingError, setApiGradingError] = useState<string | null>(null);
   const [apiGradingLoading, setApiGradingLoading] = useState(false);
+  const [gradingS3Urls, setGradingS3Urls] = useState<string[]>([]);
   const [relistUploadedFiles, setRelistUploadedFiles] = useState<File[]>([]);
   const relistFileRef = useRef<HTMLInputElement>(null);
+
+  // Fetch C2C listings from API on mount
+  useEffect(() => {
+    setApiC2CLoading(true);
+    getC2CListings()
+      .then((data) => {
+        const mapped = data.listings.map((l) => ({
+          id: l.id,
+          name: l.name,
+          category: l.category,
+          listedBy: l.listed_by,
+          location: l.location,
+          originalPrice: l.original_price || 0,
+          askingPrice: l.asking_price,
+          condition: l.condition,
+          yearsUsed: l.years_used || '',
+          imageUrl: l.image_url || l.uploaded_images?.[0] || '',
+          uploadedImages: l.uploaded_images || [],
+          videoUrl: l.video_url,
+          aiHealthCard: null,
+          fullHealthCard: l.health_card || null,
+          description: l.description || '',
+          likes: 0,
+          isUserListing: l.listed_by === (session?.name || ''),
+          verifiedSeller: false,
+        }));
+        setApiC2CListings(mapped);
+      })
+      .catch(() => setApiC2CListings([]))
+      .finally(() => setApiC2CLoading(false));
+  }, [session?.name]);
 
   // Fetch Float deals from API on mount (filtered by user's pincode, excluding own returned items)
   useEffect(() => {
@@ -260,8 +289,9 @@ export default function MarketplaceView({
         formData.append('images', relistUploadedFiles[i]);
       }
 
-      const report = await gradeProduct(formData);
+      const { report, s3_urls } = await gradeProduct(formData);
       setApiGradingReport(report);
+      setGradingS3Urls(s3_urls);
 
       const card = await generateHealthCard({
         item_id: report.item_id,
@@ -298,49 +328,66 @@ export default function MarketplaceView({
 
     setIsSubmitListing(true);
 
-    setTimeout(() => {
-      const newListing = {
-        id: `user-list-${Date.now()}`,
-        name: itemName,
-        category: itemCategory,
-        listedBy: session.name || 'You',
-        location: `${session.city || 'Sector 62, Noida'}`,
-        originalPrice: Number(itemOriginalPrice) || 0,
-        askingPrice: Number(itemAskingPrice),
-        condition: itemCondition,
-        yearsUsed: itemYearsUsed,
-        imageUrl: uploadedImages[0] || itemImageUrl,
-        uploadedImages: uploadedImages.length > 0 ? [...uploadedImages] : [itemImageUrl],
-        videoUrl: uploadedVideo,
-        aiHealthCard: aiHealthCard ? { ...aiHealthCard } : null,
-        // Full HealthCard from the API — shown in the detail page
-        fullHealthCard: apiHealthCard ? { ...apiHealthCard } : null,
-        description: itemDescription || 'No description supplied. Contact owner for further snaps.',
-        likes: 0,
-        isUserListing: true,
-        verifiedSeller: session.isVerifiedSeller || false,
-      };
+    const listingId = `user-list-${Date.now()}`;
+    const listingPayload = {
+      id: listingId,
+      name: itemName,
+      category: itemCategory,
+      listed_by: session.name || 'You',
+      location: `${session.city || 'Noida'}`,
+      asking_price: Number(itemAskingPrice),
+      original_price: Number(itemOriginalPrice) || 0,
+      condition: itemCondition,
+      years_used: itemYearsUsed,
+      image_url: gradingS3Urls[0] || uploadedImages[0] || itemImageUrl,
+      uploaded_images: gradingS3Urls.length > 0 ? [...gradingS3Urls] : (uploadedImages.length > 0 ? [...uploadedImages] : []),
+      video_url: uploadedVideo || null,
+      description: itemDescription || 'No description supplied.',
+      health_card_uuid: (apiHealthCard as any)?.card_uuid || null,
+    };
 
-      // Push to the shared session store so all personas see it
-      SESSION_LISTINGS.unshift(newListing);
-      setRelistItems((prev) => [newListing, ...prev]);
-      setIsSubmitListing(false);
-      setShowSubmitSuccess(true);
+    // Post to backend API
+    createC2CListing(listingPayload as any)
+      .then((res) => {
+        const newListing = {
+          id: res.listing.id,
+          name: res.listing.name,
+          category: res.listing.category,
+          listedBy: res.listing.listed_by,
+          location: res.listing.location,
+          originalPrice: res.listing.original_price || 0,
+          askingPrice: res.listing.asking_price,
+          condition: res.listing.condition,
+          yearsUsed: res.listing.years_used || '',
+          imageUrl: res.listing.image_url || (res.listing.uploaded_images || [])[0] || '',
+          uploadedImages: res.listing.uploaded_images || [],
+          videoUrl: res.listing.video_url,
+          aiHealthCard: aiHealthCard ? { ...aiHealthCard } : null,
+          fullHealthCard: res.listing.health_card || null,
+          description: res.listing.description || '',
+          likes: 0,
+          isUserListing: true,
+          verifiedSeller: session.isVerifiedSeller || false,
+        };
+        setRelistItems((prev) => [newListing, ...prev]);
+        setApiC2CListings((prev) => [newListing, ...prev]);
+        setIsSubmitListing(false);
+        setShowSubmitSuccess(true);
 
-      // Clean form inputs & media
-      setItemName('');
-      setItemAskingPrice('');
-      setItemOriginalPrice('');
-      setItemDescription('');
-      setUploadedImages([]);
-      setUploadedVideo(null);
-      setAiHealthCard(null);
+        setItemName('');
+        setItemAskingPrice('');
+        setItemOriginalPrice('');
+        setItemDescription('');
+        setUploadedImages([]);
+        setUploadedVideo(null);
+        setAiHealthCard(null);
 
-      // Return to feed page
-      setRelistPage('feed');
-
-      setTimeout(() => setShowSubmitSuccess(false), 4000);
-    }, 1200);
+        setRelistPage('feed');
+        setTimeout(() => setShowSubmitSuccess(false), 4000);
+      })
+      .catch(() => {
+        setIsSubmitListing(false);
+      });
   };
 
   const handleDeleteUserListing = (id: string, e: React.MouseEvent) => {
@@ -409,11 +456,11 @@ export default function MarketplaceView({
     return true;
   });
 
-  // Merge persona's own listings with session-created listings (visible to all personas).
-  // Deduplicate by id so persona's own items don't double-up.
+  // Merge API-persisted C2C listings with persona local listings.
+  // Deduplicate by id so persisted items don't double-up with persona defaults.
   const allRelistItems = [
-    ...SESSION_LISTINGS,
-    ...relistItems.filter(item => !SESSION_LISTINGS.find(s => s.id === item.id)),
+    ...apiC2CListings,
+    ...relistItems.filter(item => !apiC2CListings.find(a => a.id === item.id)),
   ];
 
   const filteredRelistItems = allRelistItems.filter(item => {

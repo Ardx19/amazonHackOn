@@ -145,6 +145,26 @@ class HealthCard(Base):
     item = relationship("Item", back_populates="health_cards")
 
 
+class C2CListing(Base):
+    __tablename__ = "c2c_listings"
+
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    category = Column(String, nullable=False)
+    listed_by = Column(String, nullable=False)
+    location = Column(String, nullable=False)
+    asking_price = Column(Float, nullable=False)
+    original_price = Column(Float, default=0.0)
+    condition = Column(String, nullable=False)
+    years_used = Column(String)
+    image_url = Column(String)
+    uploaded_images = Column(JSON, default=list)
+    video_url = Column(String)
+    description = Column(Text)
+    health_card_uuid = Column(String)  # FK to health_cards.card_uuid — nullable
+    created_at = Column(DateTime, nullable=False)
+
+
 class Transaction(Base):
     __tablename__ = "transactions"
 

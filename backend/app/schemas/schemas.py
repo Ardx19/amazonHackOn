@@ -192,3 +192,41 @@ class RoutingResponse(BaseModel):
 
 def generate_card_uuid(city_code: str = "MUM") -> str:
     return f"HC-2026-{city_code}-{uuid4().hex[:8].upper()}"
+
+
+# ─── C2C Listing ───────────────────────────────────────────────────────────────
+
+
+class C2CListingRequest(BaseModel):
+    id: Optional[str] = None
+    name: str
+    category: str
+    listed_by: str
+    location: str
+    asking_price: float
+    original_price: float = 0.0
+    condition: str
+    years_used: str = ""
+    image_url: str = ""
+    uploaded_images: list[str] = []
+    video_url: Optional[str] = None
+    description: str = ""
+    health_card_uuid: Optional[str] = None
+
+
+class C2CListingResponse(BaseModel):
+    id: str
+    name: str
+    category: str
+    listed_by: str
+    location: str
+    asking_price: float
+    original_price: float
+    condition: str
+    years_used: Optional[str] = None
+    image_url: Optional[str] = None
+    uploaded_images: list[str] = []
+    video_url: Optional[str] = None
+    description: Optional[str] = None
+    health_card: Optional[HealthCard] = None
+    created_at: datetime

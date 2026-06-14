@@ -85,3 +85,21 @@ export interface HealthCard {
   seller_trust_score?: number | null;
   seller_trust_count?: number;
 }
+
+export interface C2CListing {
+  id: string;
+  name: string;
+  category: string;
+  listed_by: string;
+  location: string;
+  asking_price: number;
+  original_price: number;
+  condition: string;
+  years_used: string | null;
+  image_url: string | null;
+  uploaded_images: string[];
+  video_url: string | null;
+  description: string | null;
+  health_card: HealthCard | null;
+  created_at: string;
+}

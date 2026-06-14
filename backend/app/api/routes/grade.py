@@ -23,6 +23,7 @@ s3_client = boto3.client("s3", region_name=AWS_REGION)
 class GradeResponse(BaseModel):
     status: str = "ok"
     report: GradingReport
+    s3_urls: list[str] = []
 
 
 @router.post("/grade", response_model=GradeResponse)
@@ -67,15 +68,18 @@ async def grade_product(
         # Auto-create the item row if it doesn't exist (C2C listings use
         # dynamic IDs like C2C-DEMO-xxx that aren't in the seeded items table).
         from app.db.models import Item as ItemORM
+
         if not db.query(ItemORM).filter_by(item_id=item_id).first():
-            db.add(ItemORM(
-                item_id=item_id,
-                name=product_name,
-                category=category,
-                brand=None,
-                original_price_inr=original_price_inr,
-                is_trajectory_product=False,
-            ))
+            db.add(
+                ItemORM(
+                    item_id=item_id,
+                    name=product_name,
+                    category=category,
+                    brand=None,
+                    original_price_inr=original_price_inr,
+                    is_trajectory_product=False,
+                )
+            )
             db.flush()
 
         # Delete any previous grading report for this item before inserting.
@@ -101,7 +105,12 @@ async def grade_product(
         db.add(db_report)
         db.commit()
 
-        return GradeResponse(report=report)
+        s3_urls = [
+            f"https://{S3_BUCKET_IMAGES}.s3.{AWS_REGION}.amazonaws.com/{k}"
+            for k in s3_keys
+        ]
+
+        return GradeResponse(report=report, s3_urls=s3_urls)
 
     except Exception as e:
         db.rollback()

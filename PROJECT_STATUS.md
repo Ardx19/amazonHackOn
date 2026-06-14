@@ -1,8 +1,7 @@
 # ReRoute — Project Status
 
-> **Last updated**: Session 4 — 14 June 2026
-> **State**: Backend fully working. Frontend (Vite+React Amazon clone) integrated. Chat removed. ReList → Add to Cart. Green Credits built. 89 tests green.
-> Marketplace items auto-removed after checkout. UI cleaned (no surplus/escrow/discount stickers).
+> **Last updated**: Session 5 — 15 June 2026
+> **State**: Backend fully working. Frontend integrated. C2C listings persisted in DB. S3 images via presigned URLs. Shared marketplace. 89 tests green.
 
 ---
 
@@ -72,11 +71,11 @@ python -m app.db.seed_demo --reset
 
 | File | Status | Changes This Session |
 |---|---|---|
-| `src/lib/types.ts` | ✅ | Pydantic-matched TS interfaces (DealItem, GradingReport, HealthCard, etc.) |
-| `src/lib/api.ts` | ✅ | 5 endpoint wrappers (grade, evaluateRoute, getDeals, generateHealthCard, getHealthCard) |
-| `src/components/MarketplaceView.tsx` | ✅ | **Major rewrite**: Chat/negotiate removed. ReList → Add to Cart. Green credits on relist success. Sustainability badge on all cards. Purchased items removed post-checkout. UI cleanup (no surplus/escrow/discount stickers). LIVE ORDERS. |
-| `src/components/GreenCreditsCard.tsx` | ✅ NEW | Green credits + CO₂ saved + tier badge + Amazon Climate Pledge footer |
-| `src/components/SustainabilityBadge.tsx` | ✅ NEW | ♻ Eco Choice pill with tooltip on all marketplace cards |
+| `src/lib/types.ts` | ✅ | Added `C2CListing` interface |
+| `src/lib/api.ts` | ✅ | Added `getC2CListings()`, `createC2CListing()`. `gradeProduct()` now returns `{ report, s3_urls }`. |
+| `src/components/MarketplaceView.tsx` | ✅ | Fetches listings from `GET /api/listings` on mount. Posts new listings via `POST /api/listings`. `SESSION_LISTINGS` removed. Image URLs from S3 keys. NULL health cards handled. |
+| `src/components/GreenCreditsCard.tsx` | ✅ | Green credits + CO₂ saved + tier badge + Amazon Climate Pledge footer |
+| `src/components/SustainabilityBadge.tsx` | ✅ | ♻ Eco Choice pill with tooltip on all marketplace cards |
 | `src/components/GradingCard.tsx` | ✅ | Tailwind-adapted. Route box hidden when no route |
 | `src/components/HealthCardView.tsx` | ✅ | Tailwind-adapted. QR code + trust score |
 | `src/components/AdminReviewView.tsx` | ✅ | Approve/reject review queue |
@@ -168,9 +167,9 @@ Price rises toward RC, radius shrinks. Amazon never loses — net = MRP − D_re
 |---|---|---|
 | Deploy backend (App Runner) | HIGH | Dockerfile + apprunner.yaml needed |
 | Deploy frontend (Amplify) | HIGH | amplify.yml needed |
-| Record demo video | HIGH | 3-minute script ready. Covers all 3 flows |
+| Record demo video | HIGH | 3-minute script ready. Covers all 3 flows + persistent listings |
 | `/card/[uuid]` public page | MEDIUM | Backend GET endpoint exists. Needs frontend route |
-| Replace dummyjson images with Amazon CDN | LOW | `CATEGORY_IMAGE_MAP` uses dummyjson — swap to m.media-amazon.com |
+| Replace dummyjson images with Amazon CDN | LOW | `CATEGORY_IMAGE_MAP` uses dummyjson — swap to m.media-amazon.com for Float Deals |
 | Deploy cron Lambda | LOW | Ring progression Lambda built, not deployed to AWS |
 
 ---
@@ -221,3 +220,32 @@ The skeletal Next.js test UI has been fully replaced by the Vite + React 19 Amaz
 - Green Credits appear on relist success + cart checkout success
 - SustainabilityBadge on every Float and ReList card
 - Purchased items removed from both Float and ReList views after checkout
+
+---
+
+## SESSION 5 — Persistent C2C Listings + S3 Presigned URLs
+
+ReList listings are now fully persistent: stored in PostgreSQL via a new `c2c_listings` table, fetched on mount, posted on submit. S3 image URLs work via presigned URLs. All personas share one marketplace. `SESSION_LISTINGS` removed.
+
+### What changed this session
+
+| Area | Changes |
+|---|---|
+| DB persistence | New `c2c_listings` table (14 columns). 15 seeded rows (10 with health cards, 5 without). Survives refresh. |
+| API endpoints | `GET /api/listings` — fetch all with health card hydration + presigned image URLs. `POST /api/listings` — create listing with S3 key extraction. |
+| Schema | `C2CListingRequest` + `C2CListingResponse` Pydantic models. `GradeResponse` extended with `s3_keys` + `s3_urls`. |
+| Seed data | 15 listings seeded in `seed_demo.json` (Priya 2, Rahul 4, Sneha 4, Vikram 1, Ishaan 1, shared 3). |
+| S3 presigned URLs | Images stored as raw S3 keys. `list_c2c()` generates 7-day presigned GET URLs on every read. Non-S3 URLs (unsplash, blob) pass through unchanged. |
+| `POST /api/grade` | Now returns `s3_keys` (UUID/filename) + `s3_urls` (full HTTPS). Frontend uses S3 keys for listing persistence. |
+| Frontend API | `getC2CListings()` + `createC2CListing()` added to `lib/api.ts`. `gradeProduct()` returns `{ report, s3_urls }`. |
+| MarketplaceView | Fetches listings from API on mount. Posts via API on submit. `allRelistItems` merges API data + persona fallback. `SESSION_LISTINGS` removed. |
+| Image persistence fix | `handleAddNewListing` sends S3 keys (from `gradingS3Urls`) as `image_url` + `uploaded_images` instead of blob URLs. |
+
+### Verified
+- `python -m pytest tests/` — 89/89 pass
+- `npm run lint` (tsc --noEmit) — clean
+- `GET /api/listings` returns all 15 seeded listings with presigned image URLs
+- `POST /api/listings` stores raw S3 keys, returns presigned URL in response
+- Listings survive browser refresh
+- All 10 personas see all listings in shared marketplace
+- Existing Float Deals, grading, routing all unchanged

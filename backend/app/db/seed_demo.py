@@ -9,7 +9,7 @@
 #
 # FK order enforced:
 #   items → grading_reports → floating_discounts → hub_checkpoints
-#   → health_cards → transactions → abuse_flags
+#   → health_cards → c2c_listings → transactions → abuse_flags
 
 import json
 import sys
@@ -24,6 +24,7 @@ from app.db.models import (
     FloatingDiscount,
     HubCheckpoint,
     HealthCard,
+    C2CListing,
     Transaction,
     AbuseFlag,
 )
@@ -37,6 +38,7 @@ TABLE_ORDER = [
     "floating_discounts",
     "hub_checkpoints",
     "health_cards",
+    "c2c_listings",
     "transactions",
     "abuse_flags",
 ]
@@ -183,6 +185,26 @@ def _build_transaction(row):
     )
 
 
+def _build_c2c_listing(row):
+    return C2CListing(
+        id=row["id"],
+        name=row["name"],
+        category=row["category"],
+        listed_by=row["listed_by"],
+        location=row["location"],
+        asking_price=row["asking_price"],
+        original_price=row.get("original_price", 0.0),
+        condition=row["condition"],
+        years_used=row.get("years_used"),
+        image_url=row.get("image_url"),
+        uploaded_images=row.get("uploaded_images", []),
+        video_url=row.get("video_url"),
+        description=row.get("description"),
+        health_card_uuid=row.get("health_card_uuid"),
+        created_at=_parse_iso(row.get("created_at", datetime.now(IST).isoformat())),
+    )
+
+
 def _build_abuse_flag(row):
     return AbuseFlag(
         account_id=row["account_id"],
@@ -197,6 +219,7 @@ _BUILDERS = {
     "floating_discounts": _build_floating_discount,
     "hub_checkpoints": _build_hub_checkpoint,
     "health_cards": _build_health_card,
+    "c2c_listings": _build_c2c_listing,
     "transactions": _build_transaction,
     "abuse_flags": _build_abuse_flag,
 }
@@ -207,6 +230,7 @@ _MODEL_BY_TABLE = {
     "floating_discounts": FloatingDiscount,
     "hub_checkpoints": HubCheckpoint,
     "health_cards": HealthCard,
+    "c2c_listings": C2CListing,
     "transactions": Transaction,
     "abuse_flags": AbuseFlag,
 }
@@ -228,9 +252,8 @@ def reset_all(db):
     # TRUNCATE CASCADE handles FK dependencies cleanly.
     try:
         from sqlalchemy import text
-        tables_csv = ", ".join(
-            _MODEL_BY_TABLE[t].__tablename__ for t in TABLE_ORDER
-        )
+
+        tables_csv = ", ".join(_MODEL_BY_TABLE[t].__tablename__ for t in TABLE_ORDER)
         db.execute(text(f"TRUNCATE TABLE {tables_csv} CASCADE"))
         db.commit()
         print(f"  Truncated all tables (CASCADE)")
