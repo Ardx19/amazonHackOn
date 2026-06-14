@@ -68,10 +68,8 @@ class TestGenerateHealthCard:
         report.completeness = "complete"
         return report
 
-    @patch("app.services.health_card_service._get_bedrock")
-    def test_card_uuid_format(self, mock_get_bedrock):
-        mock_bedrock = MagicMock()
-        mock_get_bedrock.return_value = mock_bedrock
+    @patch("app.services.health_card_service.bedrock_client")
+    def test_card_uuid_format(self, mock_bedrock):
         mock_response = MagicMock()
         mock_response["body"].read.return_value = (
             b'{"output": {"message": {"content": [{"text": "{\\"condition_summary\\": \\"Good item.\\", '
@@ -87,10 +85,8 @@ class TestGenerateHealthCard:
         assert card.card_uuid.startswith("HC-2026-MUM-")
         assert len(card.card_uuid) == len("HC-2026-MUM-") + 8
 
-    @patch("app.services.health_card_service._get_bedrock")
-    def test_card_amazon_guarantee_always_true(self, mock_get_bedrock):
-        mock_bedrock = MagicMock()
-        mock_get_bedrock.return_value = mock_bedrock
+    @patch("app.services.health_card_service.bedrock_client")
+    def test_card_amazon_guarantee_always_true(self, mock_bedrock):
         mock_response = MagicMock()
         mock_response["body"].read.return_value = (
             b'{"output": {"message": {"content": [{"text": "{\\"condition_summary\\": \\"OK.\\", '
@@ -105,10 +101,8 @@ class TestGenerateHealthCard:
         )
         assert card.amazon_guarantee is True
 
-    @patch("app.services.health_card_service._get_bedrock")
-    def test_card_url_contains_uuid(self, mock_get_bedrock):
-        mock_bedrock = MagicMock()
-        mock_get_bedrock.return_value = mock_bedrock
+    @patch("app.services.health_card_service.bedrock_client")
+    def test_card_url_contains_uuid(self, mock_bedrock):
         mock_response = MagicMock()
         mock_response["body"].read.return_value = (
             b'{"output": {"message": {"content": [{"text": "{\\"condition_summary\\": \\"Good.\\", '

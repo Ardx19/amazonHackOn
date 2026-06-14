@@ -164,9 +164,9 @@ class HealthCardRequest(BaseModel):
     seller_id: str
     seller_name: str
     seller_city: str
-    seller_usage_description: Optional[str] = (
-        None  # free-text from seller: "used 6 months, works perfectly"
-    )
+    seller_usage_description: Optional[str] = None
+    declaration_all_checked: bool = False
+    declaration_timestamp: Optional[datetime] = None
 
 
 class RoutingResponse(BaseModel):

@@ -612,6 +612,30 @@ export const PERSONAS: Record<string, PersonaData> = {
     walletBalance: 6200,
   },
 
+  // ── Ananya Patel — Buyer, Andheri East (same area as Priya) ─────────────
+  USER_ANANYA: {
+    id: 'USER_ANANYA',
+    session: {
+      isLoggedIn: true,
+      name: 'Ananya Patel',
+      email: 'ananya.patel@gmail.com',
+      pincode: '400069',           // Same as Priya — Andheri East
+      city: 'Mumbai (Andheri East)',
+      isVerifiedSeller: false,
+      verifiedPhone: '',
+      verifiedIdType: 'Aadhaar Card',
+      verifiedIdNum: '',
+    },
+    orders: [
+      makeOrder('AMZN-IN-A001', 'Philips Avent Digital Baby Monitor', 2499,
+        '2026-06-10T12:00:00+05:30',
+        '201, Silver Oaks, Andheri East, Mumbai 400069',
+        'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=400&auto=format&fit=crop&q=60'),
+    ],
+    relistItems: [...SHARED_RELIST_ITEMS],
+    walletBalance: 2200,
+  },
+
   // ── Ishaan (default/admin persona) ───────────────────────────────────────
   USER_ISHAAN: {
     id: 'USER_ISHAAN',
@@ -667,13 +691,14 @@ export const PERSONAS: Record<string, PersonaData> = {
 
 // Ordered list for the persona switcher UI
 export const PERSONA_LIST = [
-  { id: 'USER_PRIYA',  label: 'Priya',  role: 'Returner',   emoji: '↩️' },
-  { id: 'USER_RAHUL',  label: 'Rahul',  role: 'C2C Seller', emoji: '🛒' },
-  { id: 'USER_ARUL',   label: 'Arul',   role: 'Buyer',      emoji: '🛍️' },
-  { id: 'USER_KAVYA',  label: 'Kavya',  role: 'Buyer',      emoji: '🍼' },
-  { id: 'USER_VIKRAM', label: 'Vikram', role: 'Seller',     emoji: '📱' },
-  { id: 'USER_MEERA',  label: 'Meera',  role: 'Returner',   emoji: '♻️' },
-  { id: 'USER_KARAN',  label: 'Karan',  role: 'Power Buyer',emoji: '⚡' },
-  { id: 'USER_SNEHA',  label: 'Sneha',  role: 'C2C Queen',  emoji: '👗' },
-  { id: 'USER_ISHAAN', label: 'Ishaan', role: 'Admin',      emoji: '🔧' },
+  { id: 'USER_PRIYA',   label: 'Priya',   role: 'Returner',    emoji: '↩️' },
+  { id: 'USER_RAHUL',   label: 'Rahul',   role: 'C2C Seller',  emoji: '🛒' },
+  { id: 'USER_ARUL',    label: 'Arul',    role: 'Buyer',       emoji: '🛍️' },
+  { id: 'USER_ANANYA',  label: 'Ananya',  role: 'Buyer (Andheri)', emoji: '📍' },
+  { id: 'USER_KAVYA',   label: 'Kavya',   role: 'Buyer',       emoji: '🍼' },
+  { id: 'USER_VIKRAM',  label: 'Vikram',  role: 'Seller',      emoji: '📱' },
+  { id: 'USER_MEERA',   label: 'Meera',   role: 'Returner',    emoji: '♻️' },
+  { id: 'USER_KARAN',   label: 'Karan',   role: 'Power Buyer', emoji: '⚡' },
+  { id: 'USER_SNEHA',   label: 'Sneha',   role: 'C2C Queen',   emoji: '👗' },
+  { id: 'USER_ISHAAN',  label: 'Ishaan',  role: 'Admin',       emoji: '🔧' },
 ];

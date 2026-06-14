@@ -197,10 +197,8 @@ class TestEvaluateRouteEndpoint:
 # ─── POST /api/health-card ────────────────────────────────────────────────────
 
 class TestHealthCardEndpoint:
-    @patch("app.services.health_card_service._get_bedrock")
-    def test_health_card_returns_200(self, mock_get_bedrock, client, seeded_db):
-        mock_bedrock = MagicMock()
-        mock_get_bedrock.return_value = mock_bedrock
+    @patch("app.services.health_card_service.bedrock_client")
+    def test_health_card_returns_200(self, mock_bedrock, client, seeded_db):
         mock_resp = MagicMock()
         mock_resp["body"].read.return_value = json.dumps({
             "output": {"message": {"content": [{"text": json.dumps({
@@ -220,10 +218,8 @@ class TestHealthCardEndpoint:
         resp = client.post("/api/health-card", json=payload)
         assert resp.status_code == 200
 
-    @patch("app.services.health_card_service._get_bedrock")
-    def test_health_card_uuid_format(self, mock_get_bedrock, client, seeded_db):
-        mock_bedrock = MagicMock()
-        mock_get_bedrock.return_value = mock_bedrock
+    @patch("app.services.health_card_service.bedrock_client")
+    def test_health_card_uuid_format(self, mock_bedrock, client, seeded_db):
         mock_resp = MagicMock()
         mock_resp["body"].read.return_value = json.dumps({
             "output": {"message": {"content": [{"text": json.dumps({

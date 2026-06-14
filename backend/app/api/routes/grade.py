@@ -64,9 +64,21 @@ async def grade_product(
             flow=flow,
         )
 
-        # Delete any previous grading report for this item before inserting the
-        # new one (item_id has a unique constraint). Re-grading the same item
-        # is valid — the latest result wins.
+        # Auto-create the item row if it doesn't exist (C2C listings use
+        # dynamic IDs like C2C-DEMO-xxx that aren't in the seeded items table).
+        from app.db.models import Item as ItemORM
+        if not db.query(ItemORM).filter_by(item_id=item_id).first():
+            db.add(ItemORM(
+                item_id=item_id,
+                name=product_name,
+                category=category,
+                brand=None,
+                original_price_inr=original_price_inr,
+                is_trajectory_product=False,
+            ))
+            db.flush()
+
+        # Delete any previous grading report for this item before inserting.
         db.query(GradingReportORM).filter_by(item_id=item_id).delete()
 
         db_report = GradingReportORM(

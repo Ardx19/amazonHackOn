@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingBag, 
@@ -57,6 +57,11 @@ const RELIST_IMAGE_OPTIONS = [
   { label: '📚 Books / Novels', url: 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=400&auto=format&fit=crop&q=60' }
 ];
 
+// ── Session-scoped shared listing store ──────────────────────────────────────
+// Listings created in this browser session are visible to ALL personas.
+// This is a simple module-level array — no backend persistence needed for demo.
+const SESSION_LISTINGS: any[] = [];
+
 export default function MarketplaceView({ 
   onAddToCart, 
   onGoHome, 
@@ -94,8 +99,10 @@ export default function MarketplaceView({
   const [apiDealsError, setApiDealsError] = useState<string | null>(null);
   const [apiGradingReport, setApiGradingReport] = useState<any>(null);
   const [apiHealthCard, setApiHealthCard] = useState<any>(null);
+  const [apiGradingError, setApiGradingError] = useState<string | null>(null);
   const [apiGradingLoading, setApiGradingLoading] = useState(false);
-  const [relistUploadedFiles, setRelistUploadedFiles] = useState<FileList | null>(null);
+  const [relistUploadedFiles, setRelistUploadedFiles] = useState<File[]>([]);
+  const relistFileRef = useRef<HTMLInputElement>(null);
 
   // Fetch Float deals from API on mount (filtered by user's pincode, excluding own returned items)
   useEffect(() => {
@@ -156,6 +163,9 @@ export default function MarketplaceView({
   } | null>(null);
   const [typedMessage, setTypedMessage] = useState('');
 
+  // Image slider for the ReList detail page
+  const [sliderIdx, setSliderIdx] = React.useState(0);
+
   // Float notifications state
   const [addCartNotification, setAddCartNotification] = useState<string | null>(null);
 
@@ -215,45 +225,37 @@ export default function MarketplaceView({
   };
 
   const simulateMediaUpload = () => {
-    // Generate 3 mock diagnostic images matching category
-    const categoryPics: Record<string, string[]> = {
-      'Home Essentials': [
-        'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=400&auto=format&fit=crop&q=60'
-      ],
-      'Electronics': [
-        'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&auto=format&fit=crop&q=60'
-      ],
-      'Fashion': [
-        'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1544923246-77307dd654cb?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=400&auto=format&fit=crop&q=60'
-      ],
-      'Sports': [
-        'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1530541930197-ff16ac917b0e?w=400&auto=format&fit=crop&q=60'
-      ]
-    };
+    // Open the real OS file picker — if user picks files those are used for
+    // grading. The stock-photo fallback only runs when no files are picked.
+    relistFileRef.current?.click();
+  };
 
-    const selCategory = itemCategory || 'Home Essentials';
-    const list = categoryPics[selCategory] || categoryPics['Electronics'];
-    setUploadedImages(list);
-    setUploadedVideo('https://www.w3schools.com/html/mov_bbb.mp4');
+  const handleRelistFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList || fileList.length === 0) return;
+    // Store actual File objects (not FileList which gets invalidated when input clears)
+    const files: File[] = [];
+    for (let i = 0; i < Math.min(fileList.length, 3); i++) {
+      const f = fileList.item(i);
+      if (f) files.push(f);
+    }
+    setRelistUploadedFiles(files);
+    // Show previews
+    setUploadedImages(files.map((f) => URL.createObjectURL(f)));
+    setUploadedVideo('placeholder-video');
+    e.target.value = '';
   };
 
   const triggerAIEvaluation = async () => {
-    if (!relistUploadedFiles || relistUploadedFiles.length === 0) {
-      setIsAnalyzingAI(false);
+    if (relistUploadedFiles.length === 0) {
+      setApiGradingError('No photos detected. Click a photo slot above and select an image.');
       return;
     }
     setIsAnalyzingAI(true);
     setAiHealthCard(null);
     setApiGradingReport(null);
     setApiHealthCard(null);
+    setApiGradingError(null);
 
     try {
       const formData = new FormData();
@@ -271,10 +273,12 @@ export default function MarketplaceView({
 
       const card = await generateHealthCard({
         item_id: report.item_id,
-        seller_id: session.isLoggedIn ? 'USER_DEMO' : 'USER_GUEST',
+        seller_id: session.isLoggedIn ? (session.email?.split('@')[0] || 'USER_DEMO') : 'USER_GUEST',
         seller_name: session.name || 'Demo Seller',
         seller_city: session.city || 'Mumbai',
         seller_usage_description: itemDescription || undefined,
+        declaration_all_checked: declarationSubmitted && allDeclarationChecked,
+        declaration_timestamp: declarationSubmitted ? new Date().toISOString() : undefined,
       });
       setApiHealthCard(card);
 
@@ -286,7 +290,9 @@ export default function MarketplaceView({
         suggestedPrice: report.suggested_resale_band_inr?.[0] || Math.round(Number(itemOriginalPrice || 2999) * 0.5),
       });
     } catch (err: any) {
-      console.error('AI evaluation failed:', err);
+      const msg = err?.message || String(err);
+      console.error('AI evaluation failed:', msg);
+      setApiGradingError(`AI grading failed: ${msg}`);
       setAiHealthCard(null);
     } finally {
       setIsAnalyzingAI(false);
@@ -306,21 +312,25 @@ export default function MarketplaceView({
         name: itemName,
         category: itemCategory,
         listedBy: session.name || 'You',
-        location: `${session.city || 'Sector 62, Noida'}, UP`,
+        location: `${session.city || 'Sector 62, Noida'}`,
         originalPrice: Number(itemOriginalPrice) || 0,
         askingPrice: Number(itemAskingPrice),
         condition: itemCondition,
         yearsUsed: itemYearsUsed,
         imageUrl: uploadedImages[0] || itemImageUrl,
-        uploadedImages: uploadedImages.length > 0 ? uploadedImages : [itemImageUrl],
+        uploadedImages: uploadedImages.length > 0 ? [...uploadedImages] : [itemImageUrl],
         videoUrl: uploadedVideo,
         aiHealthCard: aiHealthCard ? { ...aiHealthCard } : null,
+        // Full HealthCard from the API — shown in the detail page
+        fullHealthCard: apiHealthCard ? { ...apiHealthCard } : null,
         description: itemDescription || 'No description supplied. Contact owner for further snaps.',
         likes: 0,
         isUserListing: true,
         verifiedSeller: session.isVerifiedSeller || false,
       };
 
+      // Push to the shared session store so all personas see it
+      SESSION_LISTINGS.unshift(newListing);
       setRelistItems((prev) => [newListing, ...prev]);
       setIsSubmitListing(false);
       setShowSubmitSuccess(true);
@@ -430,7 +440,14 @@ export default function MarketplaceView({
     return true;
   });
 
-  const filteredRelistItems = relistItems.filter(item => {
+  // Merge persona's own listings with session-created listings (visible to all personas).
+  // Deduplicate by id so persona's own items don't double-up.
+  const allRelistItems = [
+    ...SESSION_LISTINGS,
+    ...relistItems.filter(item => !SESSION_LISTINGS.find(s => s.id === item.id)),
+  ];
+
+  const filteredRelistItems = allRelistItems.filter(item => {
     if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
     if (minRatingFilter && item.condition !== 'Like New') return false;
     if (underPriceFilter && item.askingPrice > 15000) return false;
@@ -444,7 +461,15 @@ export default function MarketplaceView({
   return (
     <div id="marketplace-page-portal" className="max-w-7xl mx-auto px-4 py-8 select-none font-sans text-left bg-slate-50 min-h-screen">
       
-      {/* Dynamic Floating Cart Notification Toast (Neo-Brutalist Alert) */}
+      {/* Hidden real file picker for ReList photo upload */}
+      <input
+        ref={relistFileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleRelistFileSelect}
+      />
       <AnimatePresence>
         {addCartNotification && (
           <motion.div 
@@ -693,23 +718,55 @@ export default function MarketplaceView({
                     )}
                   </div>
 
-                  {/* Extra images or media if RELIST has custom uploads */}
+                  {/* Extra images or media if RELIST has custom uploads — with slider */}
                   {selectedDetailItem.source === 'relist' && (
                     <div className="space-y-4 text-left">
-                      <h4 className="font-mono font-black uppercase text-xs text-black tracking-wider">Classified snaps & Verification Video</h4>
-                      <div className="grid grid-cols-3 gap-3">
-                        {(selectedDetailItem.item.uploadedImages || [selectedDetailItem.item.imageUrl]).map((img: string, idx: number) => (
-                          <div key={idx} className="border-2 border-black p-1 bg-white hover:bg-slate-100 cursor-pointer">
-                            <img src={img} className="h-16 w-full object-cover" alt={`Snapped page ${idx + 1}`} />
+                      {(() => {
+                        const imgs: string[] = selectedDetailItem.item.uploadedImages?.length
+                          ? selectedDetailItem.item.uploadedImages
+                          : [selectedDetailItem.item.imageUrl];
+                        return (
+                          <div className="space-y-2">
+                            {/* Main large image */}
+                            <div className="relative border-2 border-black bg-white h-64 flex items-center justify-center overflow-hidden">
+                              <img
+                                src={imgs[sliderIdx] || imgs[0]}
+                                className="max-h-full max-w-full object-contain"
+                                alt={`Photo ${sliderIdx + 1}`}
+                              />
+                              {imgs.length > 1 && (
+                                <>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setSliderIdx((sliderIdx - 1 + imgs.length) % imgs.length); }}
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 text-white w-7 h-7 flex items-center justify-center font-black text-sm cursor-pointer hover:bg-black"
+                                  >‹</button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setSliderIdx((sliderIdx + 1) % imgs.length); }}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 text-white w-7 h-7 flex items-center justify-center font-black text-sm cursor-pointer hover:bg-black"
+                                  >›</button>
+                                  <span className="absolute bottom-2 right-2 bg-black text-white text-[10px] font-mono font-bold px-1.5 py-0.5">
+                                    {sliderIdx + 1}/{imgs.length}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                            {/* Thumbnail strip */}
+                            {imgs.length > 1 && (
+                              <div className="flex gap-2">
+                                {imgs.map((img, idx) => (
+                                  <div
+                                    key={idx}
+                                    onClick={() => setSliderIdx(idx)}
+                                    className={`border-2 cursor-pointer h-14 w-14 flex-shrink-0 overflow-hidden ${sliderIdx === idx ? 'border-[#ff5c00]' : 'border-black hover:border-gray-500'}`}
+                                  >
+                                    <img src={img} className="w-full h-full object-cover" alt={`thumb ${idx + 1}`} />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                        {selectedDetailItem.item.videoUrl && (
-                          <div className="border-2 border-black p-2 bg-[#fffc40]/10 flex flex-col items-center justify-center text-center">
-                            <Video className="w-5 h-5 text-[#ff5c00] mb-1 animate-pulse" />
-                            <span className="text-[9px] font-mono leading-none font-bold uppercase">Seller Video loaded</span>
-                          </div>
-                        )}
-                      </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -767,8 +824,20 @@ export default function MarketplaceView({
                     )}
                   </div>
 
-                  {/* AI Health Report */}
+                  {/* AI Health Report — full card if available, compact fallback otherwise */}
                   {selectedDetailItem.source === 'relist' && (
+                    selectedDetailItem.item.fullHealthCard ? (
+                      <div>
+                        <h4 className="font-mono text-xs font-black uppercase text-black tracking-widest mb-2 flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-amzn-orange" />
+                          Amazon AI Verified Health Card
+                        </h4>
+                        <HealthCardView
+                          card={selectedDetailItem.item.fullHealthCard}
+                          qrBase64={selectedDetailItem.item.fullHealthCard.qr_code_base64}
+                        />
+                      </div>
+                    ) : (
                     <div className="bg-black text-white border-2 border-black p-4 relative overflow-hidden">
                       <div className="absolute top-0 right-0 bg-[#fffc40] text-black text-[9px] font-black px-2 py-0.5 uppercase tracking-wide rotate-12">
                         Amazon AI Verified
@@ -814,6 +883,7 @@ export default function MarketplaceView({
                         </div>
                       )}
                     </div>
+                    )
                   )}
 
                   {/* Float Transit Steps Progress Timeline */}
@@ -1159,7 +1229,7 @@ export default function MarketplaceView({
                         {filteredRelistItems.map((item) => (
                           <div 
                             key={item.id}
-                            onClick={() => setSelectedDetailItem({ item, source: 'relist' })}
+                            onClick={() => { setSelectedDetailItem({ item, source: 'relist' }); setSliderIdx(0); }}
                             className={`bg-white border-3 border-black flex flex-col justify-between overflow-hidden shadow-[5px_5px_0px_rgba(0,0,0,1)] hover:shadow-[9px_9px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 transition-all cursor-pointer ${
                               item.isUserListing ? 'bg-[#fffc40]/5 border-[#ff5c00]' : ''
                             }`}
@@ -1520,15 +1590,15 @@ export default function MarketplaceView({
                           <div className="flex justify-between items-center">
                             <h3 className="font-mono font-black uppercase text-xs text-black tracking-wider flex items-center gap-1.5">
                               <Camera className="w-4 h-4 text-orange-600" />
-                              <span>Required Classified Media (3 Images + 1 Video)</span>
+                              <span>Upload Product Photos (1–3)</span>
                             </h3>
-                            {uploadedImages.length < 3 && (
+                            {uploadedImages.length === 0 && (
                               <button
                                 type="button"
                                 onClick={simulateMediaUpload}
                                 className="bg-[#fffc40] hover:bg-[#e0de34] text-black border-2 border-black px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#000] cursor-pointer"
                               >
-                                ⚡ Auto-Snap 3 Angles & Video
+                                📷 Select Photos
                               </button>
                             )}
                           </div>
@@ -1547,19 +1617,26 @@ export default function MarketplaceView({
                                 >
                                   {imgUrl ? (
                                     <div className="relative w-full h-full">
-                                      <img src={imgUrl} className="w-full h-full object-cover" alt={`Angle ${index + 1}`} />
-                                      <span className="absolute bottom-1 right-1 bg-black text-white font-black text-[7.5px] px-1 uppercase leading-none">Angle {index + 1}</span>
+                                      <img src={imgUrl} className="w-full h-full object-cover" alt={`Photo ${index + 1}`} />
+                                      <span className="absolute bottom-1 right-1 bg-black text-white font-black text-[7.5px] px-1 uppercase leading-none">Photo {index + 1}</span>
                                     </div>
                                   ) : (
                                     <>
                                       <Camera className="w-5 h-5 text-gray-400 mb-1" />
-                                      <span className="text-[8px] font-mono leading-none font-bold uppercase text-gray-500">Angle {index + 1}<br/>Missing</span>
+                                      <span className="text-[8px] font-mono leading-none font-bold uppercase text-gray-500">
+                                        {uploadedImages.length > 0 ? <>Optional<br/>+ Add photo</> : <>Click to<br/>Upload</>}
+                                      </span>
                                     </>
                                   )}
                                 </div>
                               );
                             })}
                           </div>
+                          {uploadedImages.length > 0 && uploadedImages.length < 3 && (
+                            <p className="text-[10px] text-emerald-700 font-bold">
+                              ✓ {uploadedImages.length} photo{uploadedImages.length > 1 ? 's' : ''} ready — you can add up to {3 - uploadedImages.length} more, or proceed to grading.
+                            </p>
+                          )}
 
                           {/* Video uploader layout */}
                           <div>
@@ -1592,9 +1669,14 @@ export default function MarketplaceView({
                             )}
                           </div>
 
-                          {/* Connection to backend AI model placeholder/trigger */}
-                          {uploadedImages.length >= 3 && uploadedVideo && (
+                          {/* AI grading trigger — shows once any photo is uploaded */}
+                          {uploadedImages.length >= 1 && (
                             <div className="border-t-2 border-black pt-4">
+                              {apiGradingError && (
+                                <div className="mb-3 bg-red-100 border-2 border-red-500 text-red-700 text-[10px] font-mono font-bold p-2.5 uppercase tracking-wide leading-snug">
+                                  ⚠ {apiGradingError}
+                                </div>
+                              )}
                               {!aiHealthCard ? (
                                 <button
                                   type="button"

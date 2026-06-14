@@ -70,6 +70,8 @@ export interface HealthCardPayload {
   seller_name: string;
   seller_city: string;
   seller_usage_description?: string;
+  declaration_all_checked?: boolean;
+  declaration_timestamp?: string;
 }
 
 export async function generateHealthCard(payload: HealthCardPayload): Promise<HealthCard> {

@@ -73,6 +73,8 @@ def create_health_card(body: HealthCardRequest, db: Session = Depends(get_db)):
             qr_code_base64=card.qr_code_base64,
             review_status=review_status,
             review_reason=review_reason,
+            declaration_all_checked=body.declaration_all_checked,
+            declaration_timestamp=body.declaration_timestamp,
         )
         db.merge(db_card)  # merge = upsert, so re-generating a card won't crash
         db.commit()
@@ -99,6 +101,15 @@ def get_health_card(card_uuid: str, db: Session = Depends(get_db)):
             status_code=404, detail=f"Health card not found: {card_uuid}"
         )
 
+    # Hydrate seller trust score from items table
+    seller_trust = None
+    seller_trust_count = 0
+    if row.item_id:
+        seller_item = db.query(Item).filter_by(item_id=row.item_id).first()
+        if seller_item and seller_item.trust_score is not None:
+            seller_trust = round(seller_item.trust_score, 1)
+            seller_trust_count = seller_item.trust_score_count or 0
+
     defects = [Defect(**d) for d in (row.defects or [])]
     card = HealthCard(
         card_id=row.card_id,
@@ -124,7 +135,7 @@ def get_health_card(card_uuid: str, db: Session = Depends(get_db)):
         review_reason=row.review_reason,
         declaration_timestamp=row.declaration_timestamp,
         declaration_all_checked=row.declaration_all_checked or False,
-        seller_trust_score=None,
-        seller_trust_count=0,
+        seller_trust_score=seller_trust,
+        seller_trust_count=seller_trust_count,
     )
     return HealthCardResponse(card=card)
