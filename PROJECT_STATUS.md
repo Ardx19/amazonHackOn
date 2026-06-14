@@ -195,3 +195,41 @@ Price rises toward RC, radius shrinks. Amazon never loses — net = MRP − D_re
 | Claude use-case form error | `health_card_service.py` | S3 | Switched to Nova (already approved) |
 | Wrong radius/pricing model | `routing_service.py` | S3 | Full rewrite to logistics model |
 | Fake month estimate in health card | `health_card_service.py` | S3 | Changed to visual wear-level description |
+
+---
+
+## SESSION 4 — New Frontend Integration (amazon.in-clone)
+
+The skeletal Next.js test UI is superseded by `amazon.in-clone/` — a Vite + React 19 Amazon.in clone. The backend was wired in WITHOUT changing any backend logic and WITHOUT changing the clone's UI/markup/styling.
+
+### What the clone is
+- Vite + React 19 + Tailwind 4 + Framer Motion. Dev on port 3000 (`npm run dev`).
+- All ReRoute features live in `src/components/MarketplaceView.tsx`:
+  - **FLOAT tab** = floating-discount deals
+  - **RELIST tab** = C2C listings + AI Health Card grader (in create-listing form)
+
+### Integration changes (frontend — surgical, data-layer only)
+| File | Change |
+|---|---|
+| `src/api.ts` | NEW — fetch client: `gradeProduct()` (POST /api/grade, multipart), `getDeals()` (GET /api/deals). Base URL from `VITE_API_URL` |
+| `.env` | NEW — `VITE_API_URL=http://localhost:8000` |
+| `src/components/MarketplaceView.tsx` | `simulateMediaUpload()` now opens a real OS file picker; `handleRealFileSelect()` stores real File objects; `triggerAIEvaluation()` calls the backend (was setTimeout+random mock); FLOAT tab fetches live `/api/deals` via `useEffect` (falls back to static mock if backend down); added hidden `<input type=file>` + small grader-error display. No markup/styling/layout changes. |
+
+### Backend changes for integration
+- **NONE to code.** One data row added to RDS `items`: `RELIST_SCRATCH` — the FK anchor for ReList gradings (a new C2C listing has no catalogue item_id; grading persists against this anchor; safe because /api/grade does delete-before-insert).
+
+### Data-shape mappings
+- GradingReport → grader card: `score=confidence×100`, `grade=condition_grade`, `functionality`=defects summary, `diagnostics`=Nova/completeness summary, `suggestedPrice`=resale-band midpoint.
+- Deal → FLOAT card: deals carry no image/brand/category, so category is guessed from product name, image is a category fallback stock photo, rating/reviewCount defaulted. Prices/discounts/names are real from the backend.
+
+### Verified
+- `npm install`, `npm run lint` (tsc), `npm run build` — all clean.
+- `GET /api/deals` → 11 live deals.
+- `POST /api/grade` with `RELIST_SCRATCH` + `flow=relist` + real image → genuine Nova grade, no FK crash, no route leak.
+
+### Run the clone
+```powershell
+cd d:\amazonHackOn\amazon.in-clone
+npm install      # first time
+npm run dev      # → http://localhost:3000  (backend must be on :8000)
+```

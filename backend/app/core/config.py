@@ -123,3 +123,38 @@ AMAZON_FEE_PCT = 0.05
 
 S3_BUCKET_IMAGES = "reroute-item-images-720800607906"
 S3_BUCKET_HEALTH_CARDS = "reroute-health-cards-720800607906"
+
+# ─── Return Center (destination for all returns) ─────────────────────────────
+
+RETURN_CENTER = {
+    "hub_id": "RC_BHIWANDI",
+    "name": "Bhiwandi Return Center",
+    "city": "Mumbai",
+    "lat": 19.2813,
+    "lng": 73.0587,
+}
+
+# ─── Pincode → Approximate Coordinates (Mumbai/Noida demo set) ────────────────
+# Used to derive user location for radius-based deal filtering.
+
+PINCODE_COORDS: dict[str, tuple[float, float]] = {
+    # Mumbai
+    "400069": (19.1136, 72.8697),   # Andheri East
+    "400057": (19.1048, 72.8567),   # Vile Parle East
+    "400050": (19.0596, 72.8297),   # Bandra West
+    "400076": (19.1196, 72.9102),   # Powai
+    "400080": (19.1717, 72.9570),   # Mulund West
+    "400602": (19.2183, 72.9781),   # Thane West
+    "400028": (19.0178, 72.8478),   # Dadar West
+    "400063": (19.1663, 72.8526),   # Goregaon East
+    # Noida (for the Amazon clone's default city)
+    "110091": (28.5355, 77.3910),   # Noida Sec 62
+    "201301": (28.5855, 77.3100),   # Noida general
+    "201014": (28.6304, 77.3721),   # Indirapuram/Ghaziabad
+    # Default fallback
+    "000000": (19.0760, 72.8777),   # Mumbai central
+}
+
+# Default coords when pincode is unknown
+DEFAULT_USER_COORDS = (19.1136, 72.8697)  # Andheri East (demo default)
+

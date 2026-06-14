@@ -184,6 +184,8 @@ def create_floating_discount_listing(
         product_name=product_name,
         current_hub_id=current_location.get("hub_id", "RING_0"),
         current_hub_name=current_location.get("hub_name"),
+        hub_lat=current_location.get("lat"),
+        hub_lng=current_location.get("lng"),
         ring_index=ring_index,
         # original_price_inr holds the MRP ceiling — the "new unit" strike price
         # the discount is measured against.
@@ -211,6 +213,8 @@ def advance_to_next_ring(
     distance_to_rc_km: float,
     category: str,
     next_hub_name: str | None = None,
+    next_hub_lat: float | None = None,
+    next_hub_lng: float | None = None,
 ) -> dict:
     """Move an active listing to the next checkpoint. The remaining return cost
     shrinks, so the radius shrinks and the price RISES toward the MRP."""
@@ -231,6 +235,10 @@ def advance_to_next_ring(
     listing.current_hub_id = next_hub_id
     if next_hub_name is not None:
         listing.current_hub_name = next_hub_name
+    if next_hub_lat is not None:
+        listing.hub_lat = next_hub_lat
+    if next_hub_lng is not None:
+        listing.hub_lng = next_hub_lng
     listing.ring_index = next_ring
     listing.c_remaining_inr = round(D_remaining, 2)
     listing.mvsp_inr = round(sale_price, 2)

@@ -12,7 +12,6 @@ import AmazonPayModal from './components/AmazonPayModal';
 import YourOrdersView from './components/YourOrdersView';
 import YourAccountView from './components/YourAccountView';
 import MarketplaceView from './components/MarketplaceView';
-import SimulationView from './components/SimulationView';
 
 import { INITIAL_PRODUCTS } from './data/products';
 import { Product, CartItem, UserSession, Order } from './types';
@@ -34,7 +33,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
-  const [currentView, setCurrentView] = useState<'landing' | 'search' | 'orders' | 'account' | 'marketplace' | 'simulation'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'search' | 'orders' | 'account' | 'marketplace'>('landing');
 
   // Shared Relist items state
   const [relistItems, setRelistItems] = useState<any[]>([
@@ -105,44 +104,10 @@ export default function App() {
   ]);
   
   // Initial populated orders + session-tracked list
-  // The demo return order uses a low-value footwear item so it reliably enters
-  // the floating-discount flow (high return-cost ratio, below Renewed cutoff).
   const [orders, setOrders] = useState<Order[]>([
     {
       id: 'AMZN-IN-482910',
       orderDate: 'June 12, 2026',
-      items: [
-        {
-          product: {
-            id: 'DEMO_RETURN_SHOE',
-            name: 'Skechers Summits Slip-On Sneakers (Navy)',
-            category: 'Footwear',
-            categoryKey: 'fashion',
-            subCategoryKey: 'shoes',
-            price: 999,
-            originalPrice: 3499,
-            rating: 4.4,
-            reviewCount: 6210,
-            imageUrl: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=400&auto=format&fit=crop&q=60',
-            description: 'Slip-on walking sneakers with Air-Cooled Memory Foam insole and a flexible, lightweight sole.',
-            features: ['Air-Cooled Memory Foam', 'Slip-on design', 'Machine washable'],
-            inStock: true,
-            brand: 'Skechers',
-          },
-          quantity: 1,
-          selectedColor: 'Navy',
-          selectedSize: 'UK 8',
-        }
-      ],
-      subtotal: 999,
-      paymentMethod: 'Amazon Pay Balance',
-      shippingAddress: '304, Silver Oaks, Andheri East, Mumbai, 400069',
-      status: 'Delivered',
-      expectedDelivery: 'Delivered Yesterday',
-    },
-    {
-      id: 'AMZN-IN-482877',
-      orderDate: 'June 10, 2026',
       items: [
         {
           product: INITIAL_PRODUCTS[0],
@@ -267,14 +232,12 @@ export default function App() {
   };
 
   // Auth Operations
-  const handleLoginSuccess = (name: string, email: string, pincode?: string, city?: string) => {
-    setSession((prev: any) => ({
+  const handleLoginSuccess = (name: string, email: string) => {
+    setSession((prev) => ({
       ...prev,
       isLoggedIn: true,
       name,
       email,
-      ...(pincode && { pincode }),
-      ...(city && { city }),
     }));
   };
 
@@ -335,9 +298,9 @@ export default function App() {
           setSelectedCategory={setSelectedCategory}
           onTriggerSearch={handleTriggerSearch}
           onHomeClick={handleHomeClick}
-          onOpenOrders={() => { setCurrentView('orders'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          onOpenAccount={() => { setCurrentView('account'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          onOpenMarketplace={() => { setCurrentView('marketplace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onOpenOrders={() => setCurrentView('orders')}
+          onOpenAccount={() => setCurrentView('account')}
+          onOpenMarketplace={() => setCurrentView('marketplace')}
         />
 
         {/* 2. Secondary Navigation category band */}
@@ -347,9 +310,9 @@ export default function App() {
           onSelectCategory={handleSelectBeltCategory}
           onOpenSignIn={() => setActiveModal('signin')}
           onOpenCart={() => setCartOpen(true)}
-          onOpenOrders={() => { setCurrentView('orders'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          onOpenAccount={() => { setCurrentView('account'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          onOpenMarketplace={() => { setCurrentView('marketplace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onOpenOrders={() => setCurrentView('orders')}
+          onOpenAccount={() => setCurrentView('account')}
+          onOpenMarketplace={() => setCurrentView('marketplace')}
         />
       </div>
 
@@ -391,14 +354,10 @@ export default function App() {
           <MarketplaceView
             onAddToCart={(prod) => handleAddToCart(prod)}
             onGoHome={() => setCurrentView('landing')}
-            onOpenSimulation={() => setCurrentView('simulation')}
             session={session}
             relistItems={relistItems}
             setRelistItems={setRelistItems}
           />
-        ) : currentView === 'simulation' ? (
-          /* Float Simulation — manual checkpoint advancement for demo */
-          <SimulationView onGoHome={() => setCurrentView('marketplace')} />
         ) : (
           /* Landing page index: Slides, grids, categorizers */
           <>

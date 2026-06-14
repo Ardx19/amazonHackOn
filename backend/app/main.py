@@ -4,7 +4,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import grade, routing, health_card
+from app.api.routes import grade, routing, health_card, returns
 
 app = FastAPI(
     title="ReRoute API",
@@ -23,6 +23,7 @@ app.add_middleware(
 app.include_router(grade.router)
 app.include_router(routing.router)
 app.include_router(health_card.router)
+app.include_router(returns.router)
 
 
 @app.get("/")

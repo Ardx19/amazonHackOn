@@ -4,7 +4,7 @@ import { UserSession } from '../types';
 
 interface MockSignInProps {
   onClose: () => void;
-  onLoginSuccess: (name: string, email: string, pincode?: string, city?: string) => void;
+  onLoginSuccess: (name: string, email: string) => void;
 }
 
 export default function MockSignIn({ onClose, onLoginSuccess }: MockSignInProps) {
@@ -37,15 +37,12 @@ export default function MockSignIn({ onClose, onLoginSuccess }: MockSignInProps)
     onClose();
   };
 
-  const handleDemoLogin = (choice: 'ishaan' | 'priya' | 'arul' | 'rahul') => {
-    const profiles: Record<string, { name: string; email: string; pincode: string; city: string }> = {
-      ishaan: { name: 'Ishaan', email: 'ishaan@amazon.in', pincode: '110091', city: 'Noida' },
-      priya: { name: 'Priya Sharma', email: 'priya.sharma@gmail.com', pincode: '400069', city: 'Mumbai (Andheri East)' },
-      arul: { name: 'Arul Kumar', email: 'arul.kumar@gmail.com', pincode: '400057', city: 'Mumbai (Vile Parle)' },
-      rahul: { name: 'Rahul Mehta', email: 'rahul.mehta@gmail.com', pincode: '400602', city: 'Mumbai (Thane)' },
-    };
-    const p = profiles[choice];
-    onLoginSuccess(p.name, p.email, p.pincode, p.city);
+  const handleDemoLogin = (choice: 'ishaan' | 'priya') => {
+    if (choice === 'ishaan') {
+      onLoginSuccess('Ishaan', 'ishaan@amazon.in');
+    } else {
+      onLoginSuccess('Priya', 'priya@gmail.com');
+    }
     onClose();
   };
 
@@ -153,35 +150,17 @@ export default function MockSignIn({ onClose, onLoginSuccess }: MockSignInProps)
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => handleDemoLogin('priya')}
-              className="border p-2 rounded text-[10px] hover:bg-gray-50 text-left font-semibold text-gray-700"
-            >
-              <span className="text-orange-600 font-bold">Priya Sharma</span>
-              <span className="block text-[9px] text-gray-400">Returner · Mumbai Andheri</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoLogin('arul')}
-              className="border p-2 rounded text-[10px] hover:bg-gray-50 text-left font-semibold text-gray-700"
-            >
-              <span className="text-orange-600 font-bold">Arul Kumar</span>
-              <span className="block text-[9px] text-gray-400">Buyer · Mumbai Vile Parle</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoLogin('rahul')}
-              className="border p-2 rounded text-[10px] hover:bg-gray-50 text-left font-semibold text-gray-700"
-            >
-              <span className="text-orange-600 font-bold">Rahul Mehta</span>
-              <span className="block text-[9px] text-gray-400">C2C Seller · Mumbai Thane</span>
-            </button>
-            <button
-              type="button"
               onClick={() => handleDemoLogin('ishaan')}
               className="border p-2 rounded text-[10px] hover:bg-gray-50 text-left font-semibold text-gray-700"
             >
-              <span className="text-orange-600 font-bold">Ishaan Raj</span>
-              <span className="block text-[9px] text-gray-400">Buyer · Noida (far)</span>
+              Sign as <span className="text-orange-600">Ishaan Raj</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDemoLogin('priya')}
+              className="border p-2 rounded text-[10px] hover:bg-gray-50 text-left font-semibold text-gray-700"
+            >
+              Sign as <span className="text-orange-600">Priya Sharma</span>
             </button>
           </div>
 

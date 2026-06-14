@@ -86,6 +86,8 @@ class FloatingDiscount(Base):
     status = Column(String, default="active")
     product_name = Column(String)
     current_hub_name = Column(String)
+    hub_lat = Column(Float)
+    hub_lng = Column(Float)
     trajectory = Column(JSON)
 
     item = relationship("Item", back_populates="floating_discounts")
@@ -102,6 +104,8 @@ class HubCheckpoint(Base):
     arrived_at = Column(DateTime, nullable=False)
     c_remaining_inr = Column(Float, nullable=False)
     distance_to_warehouse_km = Column(Float, nullable=False)
+    lat = Column(Float)
+    lng = Column(Float)
 
     item = relationship("Item", back_populates="hub_checkpoints")
 

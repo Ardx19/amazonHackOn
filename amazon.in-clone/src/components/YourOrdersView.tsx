@@ -1,7 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { Search, ChevronDown, Package, Check, RotateCcw, MessageSquare, Clipboard, ExternalLink, RefreshCw, Camera } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, ChevronDown, Package, Check, RotateCcw, MessageSquare, Clipboard, ExternalLink, RefreshCw } from 'lucide-react';
 import { Order, CartItem } from '../types';
-import { initiateReturn } from '../lib/api';
 
 interface YourOrdersViewProps {
   orders: Order[];
@@ -29,84 +28,9 @@ export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturn
   const [isSubmitProcess, setIsSubmitProcess] = useState(false);
   const [returnSuccessMessage, setReturnSuccessMessage] = useState<string | null>(null);
 
-  // Image upload for return grading
-  const returnFileRef = useRef<HTMLInputElement>(null);
-  const [returnImages, setReturnImages] = useState<File[]>([]);
-
+  // Formats address cleanly
   const formatCompactAddress = (address: string) => {
-    return address.split(',')[0] + ', ' + (address.split(',')[1] || 'Noida');
-  };
-
-  const handleReturnFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = e.target.files;
-    if (!fileList) return;
-    const files: File[] = [];
-    for (let i = 0; i < Math.min(fileList.length, 3); i++) {
-      const f = fileList.item(i);
-      if (f) files.push(f);
-    }
-    setReturnImages(files);
-    e.target.value = '';
-  };
-
-  const handleReturnSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedReturnOrder) return;
-    if (returnImages.length === 0) {
-      setReturnSuccessMessage('Please upload at least one photo of the item.');
-      setTimeout(() => setReturnSuccessMessage(null), 4000);
-      return;
-    }
-    setIsSubmitProcess(true);
-
-    try {
-      const firstItem = selectedReturnOrder.items[0]?.product;
-
-      // Build FormData for the initiate-return endpoint
-      const formData = new FormData();
-      formData.append('item_id', firstItem?.id || selectedReturnOrder.id);
-      formData.append('product_name', firstItem?.name || 'Unknown Product');
-      // Map frontend category to backend category key
-      const catMap: Record<string, string> = {
-        'Appliances': 'electronics', 'Electronics': 'electronics',
-        'Fashion': 'clothing', 'Home Essentials': 'home_goods',
-        'Sports': 'home_goods', 'Footwear': 'footwear',
-      };
-      const rawCat = firstItem?.category || 'electronics';
-      formData.append('category', catMap[rawCat] || rawCat.toLowerCase());
-      formData.append('original_price_inr', String(selectedReturnOrder.subtotal));
-      formData.append('pincode', '400069'); // Priya's pincode (Andheri East)
-      returnImages.forEach(f => formData.append('images', f));
-
-      // This grades the product, generates the return path, and creates
-      // the floating discount listing — all in one call. Priya never sees
-      // the float pricing. Her refund is issued immediately.
-      await initiateReturn(formData);
-
-      const refundAmount = returnActionType === 'refund' ? selectedReturnOrder.subtotal : 0;
-      if (onReturnReplace) {
-        onReturnReplace(
-          selectedReturnOrder.id,
-          returnActionType === 'refund' ? 'Returned' : 'Replacement In-Transit',
-          refundAmount,
-        );
-      }
-
-      setIsSubmitProcess(false);
-      setSelectedReturnOrder(null);
-      setReturnImages([]);
-      setReturnSuccessMessage(
-        `Return approved! ₹${refundAmount.toLocaleString('en-IN')} refunded to Amazon Pay. ` +
-        `Your item is now listed on Float Deals for buyers nearby.`
-      );
-      setTimeout(() => setReturnSuccessMessage(null), 8000);
-    } catch (err: any) {
-      setIsSubmitProcess(false);
-      setSelectedReturnOrder(null);
-      setReturnImages([]);
-      setReturnSuccessMessage(`Return failed: ${err.message}`);
-      setTimeout(() => setReturnSuccessMessage(null), 8000);
-    }
+    return address.split(',')[0] + ', ' + address.split(',')[1] || 'Sector 62, Noida';
   };
 
   const handleCopyOrderId = (id: string) => {
@@ -125,6 +49,33 @@ export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturn
       setReviewText('');
       setRating(5);
     }, 2000);
+  };
+
+  const handleReturnSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedReturnOrder) return;
+    setIsSubmitProcess(true);
+
+    setTimeout(() => {
+      const statusValue = returnActionType === 'refund' ? 'Returned' : 'Replacement In-Transit';
+      const refundAmount = returnActionType === 'refund' ? selectedReturnOrder.subtotal : 0;
+
+      if (onReturnReplace) {
+        onReturnReplace(selectedReturnOrder.id, statusValue, refundAmount);
+      }
+
+      setIsSubmitProcess(false);
+      setSelectedReturnOrder(null);
+      setReturnSuccessMessage(`Successfully registered your request for Order #${selectedReturnOrder.id}! ${
+        returnActionType === 'refund'
+          ? `₹${refundAmount.toLocaleString('en-IN')} has been refunded instantly to your Amazon Pay balance.`
+          : 'Replacement dispatch initiated! An expedited replacement package was scheduled for Noida Sector 62.'
+      }`);
+
+      setTimeout(() => {
+        setReturnSuccessMessage(null);
+      }, 6000);
+    }, 1500);
   };
 
   // Filter orders based on tabs, search queries and filters
@@ -647,34 +598,6 @@ export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturn
                 </div>
               </div>
 
-              {/* Upload product photos for AI grading */}
-              <div>
-                <label className="block font-bold text-gray-800 mb-1.5 text-xs text-left">
-                  <Camera className="w-3.5 h-3.5 inline mr-1 text-amzn-orange" />
-                  Upload photos of the item (required for AI condition check)
-                </label>
-                <input
-                  ref={returnFileRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleReturnFileSelect}
-                  className="hidden"
-                />
-                <div
-                  onClick={() => returnFileRef.current?.click()}
-                  className="border-2 border-dashed border-gray-300 rounded p-3 text-center cursor-pointer hover:bg-gray-50 transition-colors"
-                >
-                  {returnImages.length > 0 ? (
-                    <p className="text-xs font-semibold text-emerald-700">
-                      ✓ {returnImages.length} photo{returnImages.length > 1 ? 's' : ''} selected — {returnImages.map(f => f.name).join(', ')}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-gray-500">Click to select 1-3 photos of the product</p>
-                  )}
-                </div>
-              </div>
-
               {/* Action layout selectors */}
               <div>
                 <label className="block font-bold text-gray-800 mb-2 text-xs text-left">Select shipment resolution:</label>
@@ -749,9 +672,6 @@ export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturn
           </div>
         </div>
       )}
-
-      {/* Return modal hidden file input */}
-      <input ref={returnFileRef} type="file" accept="image/*" multiple onChange={handleReturnFileSelect} className="hidden" />
 
     </div>
   );

@@ -1,18 +1,44 @@
 # backend/app/api/routes/routing.py
 # POST /api/evaluate-route — Cascade routing
-# GET /api/deals — Marketplace listings
+# GET /api/deals — Marketplace listings (with optional location filtering)
 
+import math
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.services.routing_service import evaluate_route
-from app.db.models import FloatingDiscount as FloatingDiscountORM
+from app.db.models import FloatingDiscount as FloatingDiscountORM, HubCheckpoint as HubCheckpointORM
 from app.db.database import get_db
 from app.schemas.schemas import RouteRequest, RoutingResponse
+from app.core.config import HUB_ZONES, RETURN_CENTER, PINCODE_COORDS, DEFAULT_USER_COORDS
 
 router = APIRouter(prefix="/api", tags=["routing"])
+
+
+def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(dlng / 2) ** 2
+    )
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _hub_coords(hub_id: str) -> tuple[float, float] | None:
+    """Get lat/lng for a hub_id from config or return center."""
+    if hub_id in HUB_ZONES:
+        h = HUB_ZONES[hub_id]
+        return (h["lat"], h["lng"])
+    if hub_id == RETURN_CENTER["hub_id"]:
+        return (RETURN_CENTER["lat"], RETURN_CENTER["lng"])
+    # For dynamic checkpoints (H0_USER, CP_x), look up from hub_checkpoints later
+    return None
 
 
 class RouteResult(BaseModel):
@@ -59,15 +85,29 @@ class DealsResponse(BaseModel):
 
 
 @router.get("/deals", response_model=DealsResponse)
-def list_deals(hub_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
+def list_deals(
+    hub_id: Optional[str] = Query(None),
+    lat: Optional[float] = Query(None),
+    lng: Optional[float] = Query(None),
+    pincode: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
     try:
         query = db.query(FloatingDiscountORM).filter_by(status="active")
         if hub_id:
             query = query.filter_by(current_hub_id=hub_id)
         results = query.order_by(FloatingDiscountORM.discount_pct.desc()).all()
 
-        deals = [
-            DealItem(
+        # Resolve user coords: explicit lat/lng > pincode > no filter
+        user_lat, user_lng = None, None
+        if lat is not None and lng is not None:
+            user_lat, user_lng = lat, lng
+        elif pincode:
+            user_lat, user_lng = PINCODE_COORDS.get(pincode, DEFAULT_USER_COORDS)
+
+        deals = []
+        for r in results:
+            deal = DealItem(
                 listing_id=r.listing_id,
                 item_id=r.item_id,
                 product_name=getattr(r, "product_name", None),
@@ -80,8 +120,23 @@ def list_deals(hub_id: Optional[str] = Query(None), db: Session = Depends(get_db
                 radius_km=r.radius_km,
                 status=r.status,
             )
-            for r in results
-        ]
+
+            # Location filter: only show if user is within the deal's radius
+            if user_lat is not None and user_lng is not None:
+                # Prefer the listing's stored coords (precise). Fall back to
+                # the hub registry for older/seeded listings.
+                hub_coords = None
+                if r.hub_lat is not None and r.hub_lng is not None:
+                    hub_coords = (r.hub_lat, r.hub_lng)
+                else:
+                    hub_coords = _hub_coords(r.current_hub_id)
+                if hub_coords:
+                    dist = _haversine_km(user_lat, user_lng, hub_coords[0], hub_coords[1])
+                    if dist > r.radius_km:
+                        continue  # User is outside the profitable radius
+                # If coords can't be resolved at all, include by default
+
+            deals.append(deal)
 
         return DealsResponse(count=len(deals), deals=deals)
     except Exception as e:

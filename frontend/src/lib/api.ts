@@ -50,10 +50,12 @@ export async function evaluateRoute(payload: RoutePayload): Promise<RoutingResul
 
 // ─── Deals ───────────────────────────────────────────────────────────────────
 
-export async function getDeals(hubId?: string): Promise<{ count: number; deals: DealItem[] }> {
-  const url = hubId
-    ? `${BASE_URL}/api/deals?hub_id=${encodeURIComponent(hubId)}`
-    : `${BASE_URL}/api/deals`;
+export async function getDeals(hubId?: string, pincode?: string): Promise<{ count: number; deals: DealItem[] }> {
+  const params = new URLSearchParams();
+  if (hubId) params.set('hub_id', hubId);
+  if (pincode) params.set('pincode', pincode);
+  const qs = params.toString();
+  const url = qs ? `${BASE_URL}/api/deals?${qs}` : `${BASE_URL}/api/deals`;
   const resp = await fetch(url, { cache: "no-store" });
   if (!resp.ok) throw new Error(`Deals fetch failed: ${resp.status}`);
   return resp.json();
@@ -91,4 +93,79 @@ export async function getHealthCardByUuid(cardUuid: string): Promise<HealthCard>
   }
   const data = await resp.json();
   return data.card as HealthCard;
+}
+
+// ─── Returns ─────────────────────────────────────────────────────────────────
+
+export interface InitiateReturnResult {
+  grading: {
+    condition_grade: string;
+    confidence: number;
+    defects: Array<{ defect_type: string; severity: string; location: string }>;
+  };
+  route: {
+    item_id: string;
+    final_route: string;
+    entered_reroute: boolean;
+    sale_price_inr: number;
+    profitable_radius_km: number;
+    discount_pct: number;
+    ring_index: number;
+    listing_id: string;
+    routing_reason: string;
+  };
+  trajectory_id: string;
+  checkpoints: Array<{
+    index: number;
+    hub_id: string;
+    hub_name: string;
+    lat: number;
+    lng: number;
+    remaining_distance_km: number;
+    hours_from_start: number;
+  }>;
+  total_distance_km: number;
+}
+
+/** POST /api/initiate-return — upload photos + initiate the full return pipeline */
+export async function initiateReturn(formData: FormData): Promise<InitiateReturnResult> {
+  const resp = await fetch(`${BASE_URL}/api/initiate-return`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+    throw new Error(err.detail || `Return initiation failed: ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data as InitiateReturnResult;
+}
+
+// ─── Simulation ──────────────────────────────────────────────────────────────
+
+export interface AdvanceRingResult {
+  item_id: string;
+  listing_id: string;
+  ring_index: number;
+  sale_price_inr: number;
+  radius_km: number;
+  discount_pct: number;
+  hub_id: string;
+  hub_name: string | null;
+  reached_rc: boolean;
+}
+
+/** POST /api/advance-ring — move the item to the next checkpoint */
+export async function advanceRing(itemId: string, category: string): Promise<AdvanceRingResult> {
+  const resp = await fetch(`${BASE_URL}/api/advance-ring`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ item_id: itemId, category }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+    throw new Error(err.detail || `Advance ring failed: ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data as AdvanceRingResult;
 }

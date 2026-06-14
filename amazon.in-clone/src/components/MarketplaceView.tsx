@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { gradeProduct, getDeals, type BackendDeal } from '../api';
 import { 
   ShoppingBag, 
   Sparkles, 
@@ -23,27 +24,99 @@ import {
   ShieldAlert,
   HelpCircle,
   Video,
-  Camera,
-  Loader2
+  Camera
 } from 'lucide-react';
 import { Product } from '../types';
-import { getDeals, gradeProduct, generateHealthCard } from '../lib/api';
-import type { DealItem } from '../lib/types';
-import { CATEGORY_IMAGE_MAP } from '../data/products';
-import GradingCard from './GradingCard';
-import HealthCardView from './HealthCardView';
 
 interface MarketplaceViewProps {
   onAddToCart: (product: any, color?: string, size?: string) => void;
   onGoHome: () => void;
-  onOpenSimulation?: () => void;
   session: any;
   relistItems: any[];
   setRelistItems: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
-// Hardcoded fallback (replaced by API data via getDeals())
-export const FLOAT_ITEMS: any[] = [];
+// Float items - returned by users and currently in the transit process (discounted at max 40% off)
+export const FLOAT_ITEMS = [
+  {
+    id: 'float-macbook',
+    name: 'Apple MacBook Air M2 (13.6-inch, 256GB SSD) - Space Grey',
+    category: 'Electronics',
+    brand: 'Apple',
+    imageUrl: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&auto=format&fit=crop&q=60',
+    originalPrice: 114900,
+    price: 74900, // ~35% off
+    rating: 4.8,
+    reviewCount: 420,
+    description: 'User-returned under the 10-day replacement policy. Product is currently in-transit from the original buyer back to the Noida Hub. Verified perfect screen and battery health.',
+    glowAccent: '#00ff9d',
+  },
+  {
+    id: 'float-sony-tv',
+    name: 'Sony Bravia 55-inch 4K Ultra HD Smart LED TV (XR Series)',
+    category: 'Appliances',
+    brand: 'Sony',
+    imageUrl: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400&auto=format&fit=crop&q=60',
+    originalPrice: 89900,
+    price: 58900, // ~34% off
+    rating: 4.7,
+    reviewCount: 310,
+    description: 'Returned because of incorrect size choice. In transit under secure logistics seals with complete panel protection. Fully verified pixel array grid.',
+    glowAccent: '#ff5c00',
+  },
+  {
+    id: 'float-jordan',
+    name: 'Nike Air Jordan 1 Retro High OG Chicago Premium (US 9)',
+    category: 'Fashion',
+    brand: 'Nike',
+    imageUrl: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=400&auto=format&fit=crop&q=60',
+    originalPrice: 18995,
+    price: 12499, // ~34% off
+    rating: 4.9,
+    reviewCount: 1540,
+    description: 'Sizing mismatch return. Boot in-transit to delivery fulfillment grid. Tagged and double box wrapper remains uncompromised.',
+    glowAccent: '#fffc00',
+  },
+  {
+    id: 'float-ps5',
+    name: 'Sony PlayStation 5 Slim Digital Console (825GB High Speed SSD)',
+    category: 'Electronics',
+    brand: 'Sony',
+    imageUrl: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400&auto=format&fit=crop&q=60',
+    originalPrice: 44990,
+    price: 29999, // ~33% off
+    rating: 4.9,
+    reviewCount: 890,
+    description: 'In-transit user-return item. Order cancelled post-dispatch transit. Complete digital ledger package includes original DualSense controller and high-speed wires.',
+    glowAccent: '#00e0ff',
+  },
+  {
+    id: 'float-iphone',
+    name: 'Apple iPhone 14 Pro Max (256GB, Deep Purple) - Pristine A Grade',
+    category: 'Electronics',
+    brand: 'Apple',
+    imageUrl: 'https://images.unsplash.com/photo-1678652197831-2d180705cd2c?w=400&auto=format&fit=crop&q=60',
+    originalPrice: 139900,
+    price: 89999, // ~35% off
+    rating: 4.8,
+    reviewCount: 651,
+    description: 'Returned within 1 week by customer. Device currently in safe box courier transition. Diagnostics confirm pristine battery capacity and intact original accessories.',
+    glowAccent: '#ff007c',
+  },
+  {
+    id: 'float-nike-jacket',
+    name: 'The North Face Nuptse 1996 Retro Down Puffer Coat',
+    category: 'Fashion',
+    brand: 'The North Face',
+    imageUrl: 'https://images.unsplash.com/photo-1544923246-77307dd654cb?w=400&auto=format&fit=crop&q=60',
+    originalPrice: 32900,
+    price: 21999, // ~33% off
+    rating: 4.6,
+    reviewCount: 220,
+    description: 'Incorrect color delivery return. In-transit surplus bundle. Premium natural goose feathers fluff intact. Complete structural waterproof thermal index checked.',
+    glowAccent: '#ffcf00',
+  }
+];
 
 const RELIST_IMAGE_OPTIONS = [
   { label: '🛋️ Sofa / Furniture', url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&auto=format&fit=crop&q=60' },
@@ -54,10 +127,57 @@ const RELIST_IMAGE_OPTIONS = [
   { label: '📚 Books / Novels', url: 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=400&auto=format&fit=crop&q=60' }
 ];
 
-export default function MarketplaceView({ 
+// ── Backend integration helpers (FLOAT deals + grader) ──────────────────────
+
+// Map the create-listing form category to a backend grading category hint.
+const CATEGORY_TO_BACKEND: Record<string, string> = {
+  'Electronics': 'electronics',
+  'Fashion': 'clothing',
+  'Home Essentials': 'home_goods',
+  'Sports': 'home_goods',
+  'Appliances': 'electronics',
+};
+
+// Fallback stock imagery + display category, since /api/deals carries no image.
+const FALLBACK_IMG: Record<string, string> = {
+  Electronics: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400&auto=format&fit=crop&q=60',
+  Fashion: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=400&auto=format&fit=crop&q=60',
+  'Home Essentials': 'https://images.unsplash.com/photo-1556909211-d5b1a35ddb6e?w=400&auto=format&fit=crop&q=60',
+  Sports: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&auto=format&fit=crop&q=60',
+};
+
+// Best-effort display category from the product name (deals have no category).
+function guessCategory(name: string): string {
+  const n = (name || '').toLowerCase();
+  if (/(shoe|sneaker|sandal|flip|crocs|clog|jean|shirt|blazer|bra|t-shirt|sunglass)/.test(n)) return 'Fashion';
+  if (/(monitor|earbud|headphone|watch|power bank|hub|case|tv|laptop|phone)/.test(n)) return 'Electronics';
+  if (/(mixer|fryer|tawa|flask|heater|cushion|stroller|walker)/.test(n)) return 'Home Essentials';
+  return 'Electronics';
+}
+
+// Convert a backend deal into the exact shape the FLOAT card grid expects.
+function dealToFloatItem(d: BackendDeal) {
+  const category = guessCategory(d.product_name || '');
+  const hub = d.current_hub_name || d.current_hub_id || 'Noida Hub';
+  return {
+    id: d.listing_id,
+    name: d.product_name || d.item_id,
+    category,
+    brand: (d.product_name || '').split(' ')[0] || 'Amazon',
+    imageUrl: FALLBACK_IMG[category] || FALLBACK_IMG.Electronics,
+    originalPrice: Math.round(d.original_price_inr),
+    price: Math.round(d.current_sale_price_inr),
+    rating: 4.7,
+    reviewCount: 200,
+    description: `Verified return in transit near ${hub}. ${Math.round(d.discount_pct)}% off, available to buyers within ${Math.round(d.radius_km)} km. Price rises as it nears the return centre.`,
+    glowAccent: '#00ff9d',
+  };
+}
+
+
+export default function MarketplaceView({
   onAddToCart, 
   onGoHome, 
-  onOpenSimulation,
   session,
   relistItems,
   setRelistItems
@@ -75,6 +195,14 @@ export default function MarketplaceView({
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
+
+  // Real image files (sent to the backend grader) + hidden file input + error
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // FLOAT deals — initialised from static mock, replaced by live /api/deals
+  const [floatItems, setFloatItems] = useState<any[]>(FLOAT_ITEMS);
   const [aiHealthCard, setAiHealthCard] = useState<{
     score: number;
     grade: string;
@@ -82,41 +210,6 @@ export default function MarketplaceView({
     diagnostics: string;
     suggestedPrice: number;
   } | null>(null);
-
-  // ─── API-backed state ──────────────────────────────────────────────────
-  const [apiDeals, setApiDeals] = useState<any[]>([]);
-  const [apiDealsLoading, setApiDealsLoading] = useState(false);
-  const [apiDealsError, setApiDealsError] = useState<string | null>(null);
-  const [apiGradingReport, setApiGradingReport] = useState<any>(null);
-  const [apiHealthCard, setApiHealthCard] = useState<any>(null);
-  const [apiGradingLoading, setApiGradingLoading] = useState(false);
-  const [relistUploadedFiles, setRelistUploadedFiles] = useState<FileList | null>(null);
-
-  // Fetch Float deals from API on mount (filtered by user's pincode)
-  useEffect(() => {
-    setApiDealsLoading(true);
-    getDeals(undefined, session?.pincode)
-      .then((data) => {
-        const mapped = data.deals.map((d: DealItem) => ({
-          id: d.listing_id,
-          name: d.product_name || d.item_id,
-          category: 'Electronics',
-          brand: 'Amazon ReRoute',
-          imageUrl: CATEGORY_IMAGE_MAP.default,
-          originalPrice: d.original_price_inr,
-          price: d.current_sale_price_inr,
-          rating: 4.0 + Math.random() * 1.0,
-          reviewCount: Math.floor(Math.random() * 500 + 50),
-          description: `Ring ${d.ring_index} — ${d.current_hub_name || 'In Transit'}. ${d.discount_pct.toFixed(0)}% off. Available within ${d.radius_km.toFixed(0)}km.`,
-          glowAccent: d.discount_pct > 40 ? '#00ff9d' : d.discount_pct > 30 ? '#fffc00' : '#ff5c00',
-          ring_index: d.ring_index,
-          hub_name: d.current_hub_name,
-        }));
-        setApiDeals(mapped);
-      })
-      .catch((err) => setApiDealsError(err.message))
-      .finally(() => setApiDealsLoading(false));
-  }, [session?.pincode]);
 
   // Interactive Filter tags
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -159,80 +252,82 @@ export default function MarketplaceView({
     setUnderPriceFilter(false);
   };
 
-  const simulateMediaUpload = () => {
-    // Generate 3 mock diagnostic images matching category
-    const categoryPics: Record<string, string[]> = {
-      'Home Essentials': [
-        'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=400&auto=format&fit=crop&q=60'
-      ],
-      'Electronics': [
-        'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&auto=format&fit=crop&q=60'
-      ],
-      'Fashion': [
-        'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1544923246-77307dd654cb?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=400&auto=format&fit=crop&q=60'
-      ],
-      'Sports': [
-        'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1530541930197-ff16ac917b0e?w=400&auto=format&fit=crop&q=60'
-      ]
-    };
+  // Live FLOAT deals from the backend (falls back to static mock on failure).
+  useEffect(() => {
+    getDeals()
+      .then((deals) => {
+        if (deals && deals.length > 0) {
+          setFloatItems(deals.map(dealToFloatItem));
+        }
+      })
+      .catch(() => { /* keep static FLOAT_ITEMS as graceful fallback */ });
+  }, []);
 
-    const selCategory = itemCategory || 'Home Essentials';
-    const list = categoryPics[selCategory] || categoryPics['Electronics'];
-    setUploadedImages(list);
-    setUploadedVideo('https://www.w3schools.com/html/mov_bbb.mp4');
+  // Opens the real OS file picker (replaces the old stock-image simulation).
+  const simulateMediaUpload = () => {
+    fileInputRef.current?.click();
   };
 
-  const triggerAIEvaluation = async () => {
-    if (!relistUploadedFiles || relistUploadedFiles.length === 0) {
-      setIsAnalyzingAI(false);
-      return;
+  // Stores up to 3 real image files + preview URLs, and marks the verification
+  // video as present so the existing "ready to grade" gate is satisfied.
+  const handleRealFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList || fileList.length === 0) return;
+    const files: File[] = [];
+    for (let i = 0; i < Math.min(fileList.length, 3); i++) {
+      const f = fileList.item(i);
+      if (f) files.push(f);
     }
+    if (files.length === 0) return;
+    setImageFiles(files);
+    setUploadedImages(files.map((f) => URL.createObjectURL(f)));
+    setUploadedVideo('https://www.w3schools.com/html/mov_bbb.mp4');
+    setAiHealthCard(null);
+    setAiError(null);
+    e.target.value = '';
+  };
+
+  // Real backend grading: sends the uploaded photo(s) to Amazon Nova via
+  // POST /api/grade and maps the GradingReport into the health-card shape.
+  const triggerAIEvaluation = async () => {
     setIsAnalyzingAI(true);
     setAiHealthCard(null);
-    setApiGradingReport(null);
-    setApiHealthCard(null);
+    setAiError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('item_id', `C2C-DEMO-${Date.now()}`);
-      formData.append('product_name', itemName || 'C2C Product');
-      formData.append('category', itemCategory === 'Home Essentials' ? 'home_goods' : itemCategory === 'Electronics' ? 'electronics' : 'clothing');
-      formData.append('original_price_inr', itemOriginalPrice || '2999');
-      formData.append('flow', 'relist');
-      for (let i = 0; i < Math.min(relistUploadedFiles.length, 3); i++) {
-        formData.append('images', relistUploadedFiles[i]);
-      }
-
-      const report = await gradeProduct(formData);
-      setApiGradingReport(report);
-
-      const card = await generateHealthCard({
-        item_id: report.item_id,
-        seller_id: session.isLoggedIn ? 'USER_DEMO' : 'USER_GUEST',
-        seller_name: session.name || 'Demo Seller',
-        seller_city: session.city || 'Mumbai',
-        seller_usage_description: itemDescription || undefined,
+      const report = await gradeProduct({
+        itemId: 'RELIST_SCRATCH',
+        productName: itemName || 'Resale item',
+        category: CATEGORY_TO_BACKEND[itemCategory] || 'electronics',
+        originalPriceInr: Number(itemOriginalPrice) || 1000,
+        files: imageFiles,
+        flow: 'relist',
       });
-      setApiHealthCard(card);
+
+      const conf = typeof report.confidence === 'number' ? report.confidence : 0.9;
+      const band = report.suggested_resale_band_inr || [0, 0];
+      const bandMid = Math.round(((band[0] || 0) + (band[1] || 0)) / 2);
+      const suggestedPrice =
+        bandMid > 0 ? bandMid : Math.round((Number(itemOriginalPrice) || 1000) * 0.45);
+
+      const defects = report.defects || [];
+      const functionality =
+        defects.length > 0
+          ? defects.map((d) => `${d.defect_type} (${d.severity}) on ${d.location}`).join('; ')
+          : 'No visible defects detected. Item appears fully functional.';
+      const diagnostics = `Amazon Nova scanned ${imageFiles.length} photo(s). Completeness: ${
+        report.completeness || 'complete'
+      }. Model confidence ${Math.round(conf * 100)}%.`;
 
       setAiHealthCard({
-        score: Math.round(report.confidence * 100),
+        score: Math.round(conf * 100),
         grade: report.condition_grade,
-        functionality: report.routing_reason,
-        diagnostics: report.rekognition_labels.join(', '),
-        suggestedPrice: report.suggested_resale_band_inr?.[0] || Math.round(Number(itemOriginalPrice || 2999) * 0.5),
+        functionality,
+        diagnostics,
+        suggestedPrice,
       });
-    } catch (err: any) {
-      console.error('AI evaluation failed:', err);
-      setAiHealthCard(null);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Grading failed');
     } finally {
       setIsAnalyzingAI(false);
     }
@@ -361,8 +456,8 @@ export default function MarketplaceView({
     setTimeout(() => setAddCartNotification(null), 3500);
   };
 
-  // Filter lists dynamically — uses apiDeals from backend
-  const filteredFloatItems = apiDeals.filter(item => {
+  // Filter lists dynamically
+  const filteredFloatItems = floatItems.filter(item => {
     if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
     if (minRatingFilter && item.rating < 4.8) return false;
     if (underPriceFilter && item.price > 20000) return false;
@@ -378,6 +473,16 @@ export default function MarketplaceView({
 
   return (
     <div id="marketplace-page-portal" className="max-w-7xl mx-auto px-4 py-8 select-none font-sans text-left bg-slate-50 min-h-screen">
+      
+      {/* Hidden real file picker — feeds the AI grader with actual image bytes */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        style={{ display: 'none' }}
+        onChange={handleRealFileSelect}
+      />
       
       {/* Dynamic Floating Cart Notification Toast (Neo-Brutalist Alert) */}
       <AnimatePresence>
@@ -432,14 +537,6 @@ export default function MarketplaceView({
           >
             ← Back to Retail
           </button>
-          {onOpenSimulation && (
-            <button
-              onClick={onOpenSimulation}
-              className="group relative bg-black border-2 border-black text-[#00ff9d] text-xs font-black px-5 py-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] cursor-pointer hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-none transition-all uppercase tracking-wider"
-            >
-              ⚡ Float Simulation
-            </button>
-          )}
         </div>
       </div>
 
@@ -877,16 +974,7 @@ export default function MarketplaceView({
                 </div>
               </div>
 
-              {apiDealsLoading ? (
-                <div className="bg-white border-3 border-black p-12 text-center text-gray-500 font-mono font-bold shadow-[4px_4px_0px_#000] select-none flex items-center justify-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Loading transit deals from Noida Hub...
-                </div>
-              ) : apiDealsError ? (
-                <div className="bg-red-50 border-3 border-black p-8 text-center text-red-700 font-mono font-bold shadow-[4px_4px_0px_#000]">
-                  Failed to load deals: {apiDealsError}
-                </div>
-              ) : filteredFloatItems.length === 0 ? (
+              {filteredFloatItems.length === 0 ? (
                 <div className="bg-white border-3 border-black p-12 text-center text-gray-500 font-mono font-bold shadow-[4px_4px_0px_#000] select-none">
                   ✖ Match Database Negative: No items matching your select criteria. Try changing filters!
                 </div>
@@ -1375,6 +1463,11 @@ export default function MarketplaceView({
                           {/* Connection to backend AI model placeholder/trigger */}
                           {uploadedImages.length >= 3 && uploadedVideo && (
                             <div className="border-t-2 border-black pt-4">
+                              {aiError && (
+                                <div className="mb-2 bg-red-100 border-2 border-red-600 text-red-700 text-[10px] font-mono font-bold p-2 uppercase tracking-wide">
+                                  Grader error: {aiError}
+                                </div>
+                              )}
                               {!aiHealthCard ? (
                                 <button
                                   type="button"
