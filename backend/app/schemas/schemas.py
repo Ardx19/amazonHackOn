@@ -101,9 +101,16 @@ class HealthCard(BaseModel):
     qr_code_base64: Optional[str] = None
     # AI-written (or templated) honest condition prose
     condition_summary: Optional[str] = None
-    usage_estimate: Optional[str] = None        # AI visual wear-level description
+    usage_estimate: Optional[str] = None  # AI visual wear-level description
     care_recommendation: Optional[str] = None
     seller_usage_description: Optional[str] = None  # seller's own declaration
+    # ── Seller accountability (Phase 3) ──
+    review_status: str = "auto_approved"  # auto_approved | pending_review | reviewed_approved | reviewed_rejected
+    review_reason: Optional[str] = None
+    declaration_timestamp: Optional[datetime] = None
+    declaration_all_checked: bool = False
+    seller_trust_score: Optional[float] = None
+    seller_trust_count: int = 0
 
 
 # ─── Transaction ──────────────────────────────────────────────────────────────
@@ -157,7 +164,9 @@ class HealthCardRequest(BaseModel):
     seller_id: str
     seller_name: str
     seller_city: str
-    seller_usage_description: Optional[str] = None  # free-text from seller: "used 6 months, works perfectly"
+    seller_usage_description: Optional[str] = (
+        None  # free-text from seller: "used 6 months, works perfectly"
+    )
 
 
 class RoutingResponse(BaseModel):

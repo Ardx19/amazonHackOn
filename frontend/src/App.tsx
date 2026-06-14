@@ -12,6 +12,7 @@ import AmazonPayModal from './components/AmazonPayModal';
 import YourOrdersView from './components/YourOrdersView';
 import YourAccountView from './components/YourAccountView';
 import MarketplaceView from './components/MarketplaceView';
+import AdminReviewView from './components/AdminReviewView';
 
 import { INITIAL_PRODUCTS } from './data/products';
 import { Product, CartItem, UserSession, Order } from './types';
@@ -33,7 +34,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
-  const [currentView, setCurrentView] = useState<'landing' | 'search' | 'orders' | 'account' | 'marketplace'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'search' | 'orders' | 'account' | 'marketplace' | 'admin'>('landing');
 
   // Shared Relist items state
   const [relistItems, setRelistItems] = useState<any[]>([
@@ -301,6 +302,7 @@ export default function App() {
           onOpenOrders={() => setCurrentView('orders')}
           onOpenAccount={() => setCurrentView('account')}
           onOpenMarketplace={() => setCurrentView('marketplace')}
+          onOpenAdmin={() => setCurrentView('admin')}
         />
 
         {/* 2. Secondary Navigation category band */}
@@ -358,6 +360,9 @@ export default function App() {
             relistItems={relistItems}
             setRelistItems={setRelistItems}
           />
+        ) : currentView === 'admin' ? (
+          /* Internal Admin Review Queue */
+          <AdminReviewView />
         ) : (
           /* Landing page index: Slides, grids, categorizers */
           <>

@@ -18,6 +18,7 @@ interface HeaderProps {
   onOpenOrders: () => void;
   onOpenAccount: () => void;
   onOpenMarketplace: () => void;
+  onOpenAdmin?: () => void;
 }
 
 export default function Header({
@@ -36,6 +37,7 @@ export default function Header({
   onOpenOrders,
   onOpenAccount,
   onOpenMarketplace,
+  onOpenAdmin,
 }: HeaderProps) {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [enteredPincode, setEnteredPincode] = useState(session.pincode);
@@ -347,6 +349,17 @@ export default function Header({
                 <span className="bg-red-600 text-[8px] text-white font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse scale-90">new</span>
               </span>
             </div>
+
+            {/* Admin (subtle) */}
+            {onOpenAdmin && (
+              <div
+                onClick={onOpenAdmin}
+                className="border border-transparent hover:border-white p-2 cursor-pointer transition-all rounded leading-tight flex flex-col text-left opacity-60 hover:opacity-100"
+              >
+                <span className="text-[9px] text-gray-500 font-light tracking-wider">INTERNAL</span>
+                <span className="text-[11px] font-bold text-gray-400 mt-0.5">Admin</span>
+              </div>
+            )}
 
             {/* Returns & Orders */}
             <div 

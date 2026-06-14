@@ -103,6 +103,22 @@ export default function HealthCardView({ card, qrBase64 }: Props) {
         <span>{card.seller_city}</span>
       </div>
 
+      {/* Seller Trust Score */}
+      <div className="flex gap-2 mb-1">
+        <span className="font-semibold min-w-[110px] text-gray-700">Seller Trust</span>
+        {(card as any).seller_trust_score != null && (card as any).seller_trust_score > 0 ? (
+          <span className="flex items-center gap-1 font-bold">
+            <span className="text-amber-500">⭐</span>
+            <span>{(card as any).seller_trust_score}</span>
+            <span className="text-gray-400 text-[11px]">({(card as any).seller_trust_count || 0} ratings)</span>
+          </span>
+        ) : (
+          <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 border border-amber-400 rounded">
+            NEW SELLER
+          </span>
+        )}
+      </div>
+
       <hr className="border-gray-100 my-2" />
 
       {/* Trust footer */}
