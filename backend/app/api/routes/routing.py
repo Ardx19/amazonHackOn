@@ -90,12 +90,15 @@ def list_deals(
     lat: Optional[float] = Query(None),
     lng: Optional[float] = Query(None),
     pincode: Optional[str] = Query(None),
+    exclude_item_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
     try:
         query = db.query(FloatingDiscountORM).filter_by(status="active")
         if hub_id:
             query = query.filter_by(current_hub_id=hub_id)
+        if exclude_item_id:
+            query = query.filter(FloatingDiscountORM.item_id != exclude_item_id)
         results = query.order_by(FloatingDiscountORM.discount_pct.desc()).all()
 
         # Resolve user coords: explicit lat/lng > pincode > no filter

@@ -197,15 +197,17 @@ class TestEvaluateRouteEndpoint:
 # ─── POST /api/health-card ────────────────────────────────────────────────────
 
 class TestHealthCardEndpoint:
-    @patch("app.services.health_card_service.bedrock_client")
-    def test_health_card_returns_200(self, mock_bedrock, client, seeded_db):
+    @patch("app.services.health_card_service._get_bedrock")
+    def test_health_card_returns_200(self, mock_get_bedrock, client, seeded_db):
+        mock_bedrock = MagicMock()
+        mock_get_bedrock.return_value = mock_bedrock
         mock_resp = MagicMock()
         mock_resp["body"].read.return_value = json.dumps({
-            "content": [{"text": json.dumps({
+            "output": {"message": {"content": [{"text": json.dumps({
                 "condition_summary": "Good item.",
-                "usage_estimate": "6",
+                "usage_estimate": "Light wear",
                 "care_recommendation": "Keep dry",
-            })}]
+            })}]}}
         }).encode()
         mock_bedrock.invoke_model.return_value = mock_resp
 
@@ -218,15 +220,17 @@ class TestHealthCardEndpoint:
         resp = client.post("/api/health-card", json=payload)
         assert resp.status_code == 200
 
-    @patch("app.services.health_card_service.bedrock_client")
-    def test_health_card_uuid_format(self, mock_bedrock, client, seeded_db):
+    @patch("app.services.health_card_service._get_bedrock")
+    def test_health_card_uuid_format(self, mock_get_bedrock, client, seeded_db):
+        mock_bedrock = MagicMock()
+        mock_get_bedrock.return_value = mock_bedrock
         mock_resp = MagicMock()
         mock_resp["body"].read.return_value = json.dumps({
-            "content": [{"text": json.dumps({
+            "output": {"message": {"content": [{"text": json.dumps({
                 "condition_summary": "Fine.",
                 "usage_estimate": None,
                 "care_recommendation": None,
-            })}]
+            })}]}}
         }).encode()
         mock_bedrock.invoke_model.return_value = mock_resp
 

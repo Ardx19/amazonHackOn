@@ -42,6 +42,7 @@ interface MarketplaceViewProps {
   relistItems: any[];
   setRelistItems: React.Dispatch<React.SetStateAction<any[]>>;
   initialTab?: 'float' | 'relist';
+  excludeItemId?: string | null;
 }
 
 // Hardcoded fallback (replaced by API data via getDeals())
@@ -64,6 +65,7 @@ export default function MarketplaceView({
   relistItems,
   setRelistItems,
   initialTab = 'float',
+  excludeItemId,
 }: MarketplaceViewProps) {
   // Navigation tabs: 'float' or 'relist'
   const [activeTab, setActiveTab] = useState<'float' | 'relist'>(initialTab);
@@ -95,10 +97,10 @@ export default function MarketplaceView({
   const [apiGradingLoading, setApiGradingLoading] = useState(false);
   const [relistUploadedFiles, setRelistUploadedFiles] = useState<FileList | null>(null);
 
-  // Fetch Float deals from API on mount (filtered by user's pincode)
+  // Fetch Float deals from API on mount (filtered by user's pincode, excluding own returned items)
   useEffect(() => {
     setApiDealsLoading(true);
-    getDeals(undefined, session?.pincode)
+    getDeals(undefined, session?.pincode, excludeItemId || undefined)
       .then((data) => {
         const mapped = data.deals.map((d: DealItem) => ({
           id: d.listing_id,
@@ -119,7 +121,7 @@ export default function MarketplaceView({
       })
       .catch((err) => setApiDealsError(err.message))
       .finally(() => setApiDealsLoading(false));
-  }, [session?.pincode]);
+  }, [session?.pincode, excludeItemId]);
 
   // Interactive Filter tags
   const [selectedCategory, setSelectedCategory] = useState<string>('All');

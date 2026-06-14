@@ -50,10 +50,11 @@ export async function evaluateRoute(payload: RoutePayload): Promise<RoutingResul
 
 // ─── Deals ───────────────────────────────────────────────────────────────────
 
-export async function getDeals(hubId?: string, pincode?: string): Promise<{ count: number; deals: DealItem[] }> {
+export async function getDeals(hubId?: string, pincode?: string, excludeItemId?: string): Promise<{ count: number; deals: DealItem[] }> {
   const params = new URLSearchParams();
   if (hubId) params.set('hub_id', hubId);
   if (pincode) params.set('pincode', pincode);
+  if (excludeItemId) params.set('exclude_item_id', excludeItemId);
   const qs = params.toString();
   const url = qs ? `${BASE_URL}/api/deals?${qs}` : `${BASE_URL}/api/deals`;
   const resp = await fetch(url, { cache: "no-store" });

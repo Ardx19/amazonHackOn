@@ -50,7 +50,8 @@ export default function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(PERSONAS.USER_ISHAAN.walletBalance);
 
-  // Computed Cart Quantities
+  // Track the last item the current user returned — excluded from their Float view
+  const [lastReturnedItemId, setLastReturnedItemId] = useState<string | null>(null);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   // Session-bound placement tracker
@@ -160,6 +161,7 @@ export default function App() {
     setRelistItems(persona.relistItems);
     setWalletBalance(persona.walletBalance);
     setCartItems([]);
+    setLastReturnedItemId(null); // clear exclusion when switching persona
     setCurrentView('landing');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -239,8 +241,14 @@ export default function App() {
           setSelectedCategory={setSelectedCategory}
           onTriggerSearch={handleTriggerSearch}
           onHomeClick={handleHomeClick}
-          onOpenOrders={() => { setCurrentView('orders'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          onOpenAccount={() => { setCurrentView('account'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onOpenOrders={() => {
+            if (!session.isLoggedIn) { setActiveModal('signin'); return; }
+            setCurrentView('orders'); window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenAccount={() => {
+            if (!session.isLoggedIn) { setActiveModal('signin'); return; }
+            setCurrentView('account'); window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           onOpenMarketplace={() => { setCurrentView('marketplace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           onOpenAdmin={() => setCurrentView('admin')}
           onSwitchPersona={handlePersonaSwitch}
@@ -253,8 +261,14 @@ export default function App() {
           onSelectCategory={handleSelectBeltCategory}
           onOpenSignIn={() => setActiveModal('signin')}
           onOpenCart={() => setCartOpen(true)}
-          onOpenOrders={() => { setCurrentView('orders'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          onOpenAccount={() => { setCurrentView('account'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onOpenOrders={() => {
+            if (!session.isLoggedIn) { setActiveModal('signin'); return; }
+            setCurrentView('orders'); window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenAccount={() => {
+            if (!session.isLoggedIn) { setActiveModal('signin'); return; }
+            setCurrentView('account'); window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           onOpenMarketplace={() => { setCurrentView('marketplace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         />
       </div>
@@ -277,6 +291,7 @@ export default function App() {
             onAddToCart={handleAddToCart}
             onGoHome={() => setCurrentView('account')}
             onReturnReplace={handleReturnReplace}
+            onReturnSuccess={(itemId) => setLastReturnedItemId(itemId)}
           />
         ) : currentView === 'account' ? (
           /* Account detailed profile configuration view portal */
@@ -303,6 +318,7 @@ export default function App() {
             relistItems={relistItems}
             setRelistItems={setRelistItems}
             initialTab="float"
+            excludeItemId={lastReturnedItemId}
           />
         ) : currentView === 'marketplace-relist' ? (
           /* Marketplace opened directly on ReList tab — from "List New Item" */
@@ -314,6 +330,7 @@ export default function App() {
             relistItems={relistItems}
             setRelistItems={setRelistItems}
             initialTab="relist"
+            excludeItemId={lastReturnedItemId}
           />
         ) : currentView === 'simulation' ? (
           /* Float Simulation — manual checkpoint advancement for demo */

@@ -8,9 +8,10 @@ interface YourOrdersViewProps {
   onAddToCart: (product: any, color?: string, size?: string) => void;
   onGoHome: () => void;
   onReturnReplace?: (orderId: string, status: 'Returned' | 'Return Requested' | 'Replacement In-Transit', refundAmount?: number) => void;
+  onReturnSuccess?: (returnedItemId: string) => void;
 }
 
-export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturnReplace }: YourOrdersViewProps) {
+export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturnReplace, onReturnSuccess }: YourOrdersViewProps) {
   const [activeTab, setActiveTab] = useState<'orders' | 'notShipped' | 'cancelled'>('orders');
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState('2026');
@@ -91,6 +92,9 @@ export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturn
           refundAmount,
         );
       }
+      // Notify parent of the returned item_id so it can exclude from Float view
+      const returnedItemId = firstItem?.id || selectedReturnOrder.id;
+      if (onReturnSuccess) onReturnSuccess(returnedItemId);
 
       setIsSubmitProcess(false);
       setSelectedReturnOrder(null);
