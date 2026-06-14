@@ -1,289 +1,199 @@
 # ReRoute — Agent Context Handoff
 ### Amazon HackOn '26 · Theme 3: Products Without a Second Chance
-*Last updated: 14 June 2026 — Frontend merged, all API connections live*
+*Last updated: 14 June 2026 — Return→Float→Simulation pipeline complete, location-aware deals, persona logins*
 
 ---
 
 ## 1. Current State Summary
 
-**Backend fully working. Frontend merged (Vite+React Amazon clone). All 3 demo flows wired.**
+**Full Scenario-1 pipeline working end-to-end: Priya returns → AI grades → return path generated → floating discount listing created → nearby buyers see it on Float → simulation advances it through checkpoints (price rises, radius shrinks).**
 
 | Area | Status |
 |---|---|
-| Backend — 6 endpoints | ✅ 100% working, all live-tested |
-| Database — 136 seed rows | ✅ RDS seeded, all FK relationships intact |
-| AWS Bedrock (Nova) | ✅ Live grading + health card prose |
-| AWS Rekognition | ✅ Live CV labels |
-| S3 image storage | ✅ UUID-keyed, delete-before-insert |
-| Frontend — Amazon.in clone UI | ✅ Vite+React 19, Tailwind v4, 15 components |
-| Frontend → Backend wiring | ✅ Float Deals (GET /api/deals), ReList grading (POST /api/grade), ReRoute intercept modal (POST /api/evaluate-route) |
-| Health Card in frontend | ✅ GradingCard + HealthCardView components in Tailwind |
-| Vite proxy | ✅ `/api → localhost:8000` configured |
-| `/card/[uuid]` public page | ❌ No frontend route yet |
-| Compatibility check (S3) | ⚠️ Backend route exists, frontend not wired |
+| Backend — 8 endpoints | ✅ Working, live-tested |
+| Database (RDS PostgreSQL) | ✅ Seeded; new lat/lng columns added |
+| AWS Nova (grading + health card prose) | ✅ Live |
+| AWS Rekognition (CV labels) | ✅ Live |
+| S3 image storage | ✅ UUID-keyed per upload |
+| Frontend (Vite + React 19 + Tailwind v4) | ✅ in `frontend/` |
+| Return flow (Priya) | ✅ Upload photo → grade → path → listing. No discount shown to Priya. |
+| Float page (location-filtered) | ✅ Deals filtered by user pincode/coords |
+| Simulation page (manual advancement) | ✅ Advance checkpoints, price rises, radius shrinks |
+| Persona logins (pincode-based) | ✅ Priya / Arul / Rahul / Ishaan |
+| ReList C2C grading + Health Card | ✅ Live (uses RELIST_SCRATCH anchor item) |
+| `/card/[uuid]` public page | ❌ Backend GET exists, no frontend route |
+| Deployment | ❌ Awaiting Unstop instructions |
 | Demo video | ❌ Not recorded |
 
-**The old Next.js frontend (`ReRoute/frontend/`) has been replaced with the Vite+React Amazon clone.** The Next.js files were deleted. Four key ReRoute components (`GradingCard.tsx`, `HealthCardView.tsx`, `lib/api.ts`, `lib/types.ts`) were ported to Tailwind and placed in `src/`.
+The frontend lives in `frontend/` (Vite + React, runs on port 3000). Old Next.js artifacts may still sit in the folder but are unused — `npm run dev` launches Vite.
 
 ---
 
-## 2. Frontend-Backend Wiring Map
+## 2. The Return → Float → Simulation Pipeline (Scenario 1)
 
-### What's Connected (real API calls, no mocks)
-
-| Frontend Component | Backend Endpoint | Trigger | Status |
-|---|---|---|---|
-| `MarketplaceView` (Float tab) | `GET /api/deals` | Page mount (`useEffect`) | ✅ Live — shows 10 seed deals |
-| `MarketplaceView` (ReList tab) | `POST /api/grade` → `POST /api/health-card` | "Analyze with AI" button | ✅ Live — Nova grades image, generates health card |
-| `YourOrdersView` (Return button) | `POST /api/evaluate-route` | "Confirm Return" button | ✅ Live — shows ReRoute intercept modal if `entered_reroute` |
-| `GradingCard` component | (renders `GradingReport`) | Displays after grade API | ✅ Tailwind-adapted |
-| `HealthCardView` component | (renders `HealthCard`) | Displays after health card API | ✅ Tailwind-adapted, shows QR code |
-
-### What's Still Static/Unwired
-
-| Component | Current State | What It Needs |
-|---|---|---|
-| `Header`, `HeroCarousel`, `BentoContainer` | Static catalog (17 hardcoded products in `products.ts`) | None — homepage UI only |
-| `CartDrawer` | Local state only | Would need `POST /api` checkout in production |
-| `YourAccountView` | Session state, hardcoded wallet | Reads from `session` prop (controlled by `App.tsx`) |
-| `SearchResultsView` | Static product grid | None — catalog UI, not ReRoute-specific |
-| `ProductDetailModal` | Static detail view | None |
-| `MockSignIn` | Mock auth (no real auth) | None — demo only |
-| Float deal images | `CATEGORY_IMAGE_MAP` (dummyjson CDN) | Replace with real Amazon.in m.media-amazon.com CDN URLs |
-| Compatibility check (S3) | Backend built, frontend not wired | `POST /api/grading/check-compat` exists but no UI hook |
-| ReList listing submission | Creates listing in local state only | No backend endpoint to persist C2C listings |
-
-### Loose Connections (field name mismatches resolved)
-
-| API Field | Frontend Mapping | Resolution |
-|---|---|---|
-| `DealItem.current_sale_price_inr` | `price` (card display) | Mapped in `useEffect` transform |
-| `DealItem.original_price_inr` | `originalPrice` | Mapped |
-| `DealItem.discount_pct` | `discount` | Used directly for glow accent color |
-| `DealItem.listing_id` | `id` | Mapped |
-| No `image_url` in DealItem | `CATEGORY_IMAGE_MAP[category]` | Fallback per category |
-| No `rating/reviewCount` in DealItem | Generated random 4-5 stars | Acceptable for demo |
+```
+PRIYA returns an item (Your Orders → Return → upload photo → Confirm)
+   │
+   ▼  POST /api/initiate-return  (multipart: images + item_id + price + pincode)
+   │     1. Ensures item exists in `items` (auto-creates if catalog ID not in RDS)
+   │     2. Grades the photo via Nova (flow="return")  → persists GradingReport
+   │     3. generate_return_path(): 4 dynamic checkpoints from Priya's coords → RC
+   │        (haversine-spaced; stored in hub_checkpoints with lat/lng)
+   │     4. evaluate_route() at ring 0 → creates FloatingDiscount listing
+   │        (stores hub_lat/hub_lng = Priya's coords)
+   │  Re-returning the same item DELETES prior listing/checkpoints first (no dupes)
+   │
+   ▼  Priya gets refund, modal closes. She NEVER sees the floating discount.
+   │
+   ▼  Listing is now live in `floating_discounts` (status=active)
+   │
+ARUL (nearby buyer) opens Marketplace → Float tab
+   │  GET /api/deals?pincode=400057
+   │     → server computes haversine(user, listing.hub_lat/lng)
+   │     → only returns listings where distance ≤ radius_km
+   │  Arul (Vile Parle, ~5km) sees it. Ishaan (Noida, 1160km) does NOT.
+   │
+SIMULATION page (Marketplace → "⚡ Float Simulation")
+   │  Select listing → "Advance to Next Checkpoint"
+   │  POST /api/advance-ring  → advance_to_next_ring()
+   │     D_remaining shrinks → price RISES toward MRP, radius SHRINKS, discount DROPS
+   │  Repeats until Return Center (ring = last checkpoint) → listing expires
+```
 
 ---
 
-## 3. AWS Resources (do not re-provision)
+## 3. API Endpoints
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/` | Health check |
+| POST | `/api/grade` | Multipart. `flow` = "return" or "relist". UUID S3 keys, delete-before-insert. |
+| POST | `/api/evaluate-route` | JSON. Routing decision + creates listing. (Called internally by initiate-return.) |
+| POST | `/api/initiate-return` | **Main return endpoint.** Multipart: `images`, `item_id`, `product_name`, `category`, `original_price_inr`, `pincode`. Grade + path + listing in one call. |
+| POST | `/api/advance-ring` | JSON: `{ item_id, category }`. Moves listing to next checkpoint. |
+| GET | `/api/deals` | Query: `pincode` OR `lat`+`lng` (location filter), `hub_id` (optional). |
+| POST | `/api/health-card` | JSON: `{ item_id, seller_id, seller_name, seller_city, seller_usage_description? }` |
+| GET | `/api/health-card/{uuid}` | QR verification target |
+
+---
+
+## 4. Key Backend Files
+
+| File | Role |
+|---|---|
+| `app/services/return_service.py` | **NEW.** `initiate_return()`, `generate_return_path()` (haversine checkpoints), `persist_checkpoints()`, `get_next_checkpoint()`, `pincode_to_coords()` |
+| `app/services/routing_service.py` | Floating-discount economic model. `evaluate_route`, `compute_radius`, `compute_floating_price`, `advance_to_next_ring` (now stores hub_lat/lng) |
+| `app/services/grade_service.py` | Nova grading. `flow` param; prompt hardened against defect hallucination |
+| `app/services/health_card_service.py` | Nova prose + QR + deterministic fallback |
+| `app/api/routes/returns.py` | **NEW.** `/api/initiate-return`, `/api/advance-ring` |
+| `app/api/routes/routing.py` | `/api/evaluate-route`, `/api/deals` (with haversine location filter) |
+| `app/core/config.py` | Cost ratios, `RETURN_CENTER`, `PINCODE_COORDS`, `HUB_ZONES`, `DELIVERY_COST_PER_KM` |
+
+## 5. Key Frontend Files
+
+| File | Role |
+|---|---|
+| `src/lib/api.ts` | All endpoint wrappers incl. `initiateReturn()`, `advanceRing()`, `getDeals(hubId, pincode)` |
+| `src/components/YourOrdersView.tsx` | Return modal with photo upload → `initiateReturn()`. No intercept modal (Priya never sees float). |
+| `src/components/MarketplaceView.tsx` | Float tab: `getDeals(undefined, session.pincode)`. "⚡ Float Simulation" button. ReList grading. |
+| `src/components/SimulationView.tsx` | **NEW.** Lists active listings, "Advance to Next Checkpoint", live price/radius/discount + history log. |
+| `src/components/MockSignIn.tsx` | Persona quick-logins (each sets pincode + city) |
+| `src/App.tsx` | View router incl. `'simulation'`. Demo order = Skechers shoes (₹999, reroute-friendly). Nav handlers scroll-to-top. |
+
+---
+
+## 6. Demo Personas (login via Sign In → quick-login buttons)
+
+| Persona | Role | Pincode | City | Purpose |
+|---|---|---|---|---|
+| Priya Sharma | Returner | 400069 | Mumbai Andheri | Returns the Skechers → creates float listing |
+| Arul Kumar | Buyer | 400057 | Mumbai Vile Parle | ~5km from Priya → SEES the listing |
+| Rahul Mehta | C2C Seller | 400602 | Mumbai Thane | Sees listing; also ReList demo |
+| Ishaan Raj | Buyer | 110091 | Noida | 1160km away → does NOT see Mumbai listings |
+
+**Demo order:** "Skechers Summits Slip-On Sneakers (Navy)" ₹999, footwear, item_id `DEMO_RETURN_SHOE`. Chosen because it reliably enters reroute (8% return overhead > 7% threshold, below ₹2000 Renewed cutoff). High-value items (e.g. the ₹32990 AC) correctly route to Amazon Renewed and do NOT create float listings.
+
+---
+
+## 7. Demo Script
+
+1. **Sign in as Priya** → Returns & Orders → the Skechers order → "Return or Replace" → upload any photo → Confirm. Refund issued; Priya is done.
+2. **Sign in as Arul** → Marketplace → Float Deals → the Skechers appears at a discount (he's within radius).
+3. **Marketplace → ⚡ Float Simulation** → select the Skechers → "Advance to Next Checkpoint" repeatedly. Watch price climb (₹~480 → ₹999), radius shrink (27km → 0), discount drop (8% → 0%) until it reaches the Return Center.
+4. **(Optional) Sign in as Ishaan (Noida)** → Float Deals → the Mumbai item is correctly absent.
+5. **ReList demo (Rahul):** Marketplace → ReList → List Product → upload photo → "Analyze with AI" → Nova grades + Health Card with QR.
+
+---
+
+## 8. AWS Resources (do not re-provision)
 
 | Resource | Value |
 |---|---|
 | AWS Account ID | 720800607906 |
 | Region | ap-south-1 |
-| IAM User | `reroute-backend` |
-| Credentials | In `.env` file at project root |
-| S3 images bucket | `reroute-item-images-720800607906` |
-| S3 health cards bucket | `reroute-health-cards-720800607906` |
-| Bedrock grading | `apac.amazon.nova-lite-v1:0` |
-| Bedrock health card | `apac.amazon.nova-lite-v1:0` |
-| RDS identifier | `reroute-db` |
-| RDS endpoint | `reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com` |
-| RDS port / DB / User / PW | `5432` / `reroute` / `postgres` / `ReRoute2026!` |
-| RDS security group | `reroute-rds-sg` — port 5432 open 0.0.0.0/0 |
+| Credentials | `~/.aws/credentials` or env vars (not in repo) |
+| S3 images | `reroute-item-images-720800607906` |
+| S3 health cards | `reroute-health-cards-720800607906` |
+| Bedrock grading + health card | `apac.amazon.nova-lite-v1:0` |
+| RDS endpoint | `reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432` |
+| RDS DB / user / pw | `reroute` / `postgres` / `ReRoute2026!` |
 
 ---
 
-## 4. API Endpoints
+## 9. Database Schema Changes (this session)
 
-| Method | Path | Notes |
-|---|---|---|
-| GET | `/` | Health check |
-| POST | `/api/grade` | Multipart: `images` (File[]), `item_id`, `original_price_inr`, `category`, `product_name`, `flow` ("return" or "relist") |
-| POST | `/api/evaluate-route` | JSON: `{ item_id, original_price_inr, category, current_location: { hub_id, distance_to_home_warehouse_km }, ring_index? }` |
-| GET | `/api/deals` | Query: `?hub_id=` (optional filter) |
-| POST | `/api/health-card` | JSON: `{ item_id, seller_id, seller_name, seller_city, seller_usage_description? }` |
-| GET | `/api/health-card/{uuid}` | Path param — returns stored health card |
+Added via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`:
+- `floating_discounts.hub_lat FLOAT`, `floating_discounts.hub_lng FLOAT` — precise location for radius filtering
+- `hub_checkpoints.lat FLOAT`, `hub_checkpoints.lng FLOAT` — checkpoint coords for advancement
+- `health_cards`: `condition_summary`, `usage_estimate`, `care_recommendation`, `seller_usage_description`, `qr_code_base64` (earlier session)
+
+Anchor row: `items.RELIST_SCRATCH` — FK anchor for ReList gradings (do not delete).
 
 ---
 
-## 5. Database State (after `python -m app.db.seed_demo --reset`)
+## 10. How to Run
 
-| Table | Rows |
-|---|---|
-| items | 38 (30 products + 8 personas) |
-| grading_reports | 30 |
-| floating_discounts | 10 |
-| hub_checkpoints | 40 |
-| health_cards | 12 |
-| transactions | 6 |
-| abuse_flags | 0 |
+```powershell
+# Backend (Terminal 1) — use python (Python 3.13 at C:\Python313, all deps installed)
+cd d:\amazonHackOn\backend
+$env:DATABASE_URL="postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute"
+$env:AWS_DEFAULT_REGION="ap-south-1"
+$env:PYTHONPATH="d:\amazonHackOn\backend"
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+# NOTE: --reload is unreliable on Windows for picking up changes. Hard-restart
+# the process after backend edits to be safe.
 
----
+# Frontend (Terminal 2)
+cd d:\amazonHackOn\frontend
+npm run dev   # → http://localhost:3000 (Vite proxy forwards /api → :8000)
 
-## 6. Personas
+# Tests
+cd d:\amazonHackOn\backend
+$env:PYTHONPATH="d:\amazonHackOn\backend"; $env:DATABASE_URL="sqlite:///:memory:"
+python -m pytest tests/ -q   # 89 passing
 
-| ID | Name | Role | Scenario |
-|---|---|---|---|
-| USER_PRIYA | Priya Sharma | Returner | Nike shoes — Return Center → floating discount |
-| USER_RAHUL | Rahul Mehta | C2C Seller | Baby monitor — ReList → health card |
-| USER_ARUL | Arul Kumar | Buyer | Buys Nike shoes + Air fryer via Deals |
-| USER_KAVYA | Kavya Iyer | Buyer | Buys baby monitor via ReList |
-| USER_VIKRAM | Vikram Joshi | Seller | iPhone 15 owner — compatibility prevention (S3) |
-| USER_MEERA | Meera Nair | Returner | High return rate (18%) — borderline, not flagged |
-| USER_KARAN | Karan Malhotra | Buyer | Power buyer — 3 completed transactions |
-| USER_SNEHA | Sneha Deshmukh | Seller | C2C queen — 4 listings (Puma, boAt, PE shirt, blazer) |
-
----
-
-## 7. How to Run (WSL / Linux)
-
-### Prerequisites
-
-```bash
-# One-time: install dependencies
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-pip install -r requirements.txt
-
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/frontend
-npm install
-```
-
-### Seed the Database (first time only)
-
-```bash
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
-export AWS_ACCESS_KEY_ID="AKIA2PUYQN2ROMPXSFPD"
-export AWS_SECRET_ACCESS_KEY="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"
-export AWS_DEFAULT_REGION="ap-south-1"
-export PYTHONPATH="$(pwd)"
+# Full demo reseed (if needed)
 python -m app.db.seed_demo --reset
 ```
 
-### Run Backend (Terminal 1)
+---
 
-```bash
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
-export AWS_ACCESS_KEY_ID="AKIA2PUYQN2ROMPXSFPD"
-export AWS_SECRET_ACCESS_KEY="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"
-export AWS_DEFAULT_REGION="ap-south-1"
-export PYTHONPATH="$(pwd)"
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+## 11. Economic Model (unchanged, reference)
+
 ```
-
-### Run Frontend (Terminal 2)
-
-```bash
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/frontend
-npm run dev
-# → http://localhost:3000
-# Vite proxy auto-forwards /api/* → localhost:8000
+D_remaining = cost_per_km × distance_to_RC_km
+radius      = D_remaining / cost_per_km            (capped at 50km)
+price       = MRP − min(D_remaining, MRP − COGS)
+MRP = original_price × 0.85   (COGS 0.55, margin 0.30, delivery 0.15)
 ```
-
-### Run Tests
-
-```bash
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-export AWS_DEFAULT_REGION="ap-south-1"
-export PYTHONPATH="$(pwd)"
-python -m pytest tests/ -v --tb=short
-```
-
-### Important: Use Single Quotes for DATABASE_URL
-
-The password contains `!` which bash interprets as history expansion. Always use single quotes:
-```bash
-export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
-```
+Price rises and radius shrinks as the item nears the Return Center. Routing pre-filters: Poor→recycle, Like New+≥₹2000→Amazon Renewed, confidence<85%→standard return, overhead<7%→standard return, else→floating discount.
 
 ---
 
-## 8. Frontend File Map (post-merge)
+## 12. Known Gaps / Notes
 
-```
-frontend/
-├── .env                          # VITE_API_URL=http://localhost:8000
-├── index.html                    # Vite entry
-├── package.json                  # Vite + React 19 + Tailwind v4 + Motion
-├── vite.config.ts                # API proxy: /api → localhost:8000
-├── src/
-│   ├── main.tsx                  # React entry
-│   ├── App.tsx                   # View router (landing/search/orders/account/marketplace)
-│   ├── index.css                 # Tailwind v4 @theme — Amazon colors
-│   ├── types.ts                  # Product, CartItem, Order, CarouselBanner
-│   ├── vite-env.d.ts            # Vite client type reference
-│   ├── lib/
-│   │   ├── api.ts               # 5 endpoint wrappers (grade, evaluateRoute, getDeals, generateHealthCard, getHealthCard)
-│   │   └── types.ts             # Pydantic-matched TS interfaces (GradingReport, RoutingResult, DealItem, HealthCard, Defect)
-│   ├── data/
-│   │   └── products.ts          # INITIAL_PRODUCTS (17), CATEGORY_IMAGE_MAP, CAROUSEL_BANNERS
-│   └── components/
-│       ├── Header.tsx            # Amazon nav bar
-│       ├── HeroCarousel.tsx      # Promo banners
-│       ├── BentoContainer.tsx    # Category card grid
-│       ├── NavigationBelt.tsx    # Category ribbon
-│       ├── SearchResultsView.tsx # Product catalog
-│       ├── ProductDetailModal.tsx# Detail view
-│       ├── CartDrawer.tsx        # Cart/checkout
-│       ├── MockSignIn.tsx        # Mock auth
-│       ├── AmazonPayModal.tsx    # Wallet
-│       ├── YourOrdersView.tsx    # Orders + ReRoute intercept modal
-│       ├── YourAccountView.tsx   # Profile + seller
-│       ├── MarketplaceView.tsx   # Float Deals + ReList tabs (API-wired)
-│       ├── GradingCard.tsx       # Tailwind-adapted from ReRoute
-│       └── HealthCardView.tsx    # Tailwind-adapted from ReRoute
-└── node_modules/
-```
-
-### Key files with real API connections
-
-| File | API Calls |
-|---|---|
-| `MarketplaceView.tsx:175-210` | `getDeals()` on mount → populates Float tab |
-| `MarketplaceView.tsx:270-314` | `gradeProduct()` + `generateHealthCard()` → ReList AI evaluation |
-| `YourOrdersView.tsx:37-72` | `evaluateRoute()` on return → ReRoute intercept modal |
-| `HealthCardView.tsx` | Renders `qr_code_base64` as `<img src="data:image/png;base64,...">` |
-
----
-
-## 9. Demo Flow Walkthrough
-
-### Scenario 1 — Priya's Return (Float Deal)
-
-1. Open `http://localhost:3000` → Amazon.in landing
-2. Click **Marketplace** in navigation ribbon → Float Deals tab
-3. Loads 10 deals from `GET /api/deals` (backend seed data)
-4. Each card shows: product name, original price, sale price, discount%, ring number, hub name
-5. Click a deal → detail view with transit timeline, discount breakdown
-6. Click **Capture item into basket** → adds to cart
-
-### Scenario 2 — Rahul's C2C ReList
-
-1. Marketplace → **ReList Peer** tab
-2. Click **List Product** → fill form (name, category, price, condition, description)
-3. Click **Analyze with AI** → `POST /api/grade` (Nova grades image)
-4. Shows real `GradingCard` (condition, confidence, defects, resale band)
-5. Automatically calls `POST /api/health-card` → shows `HealthCardView` with QR code
-6. QR code renders as base64 PNG image
-
-### Scenario 3 — Return Intercept (ReRoute modal)
-
-1. Click **Returns & Orders** in header → Your Orders
-2. Select an order → click **Return or Replace Items**
-3. Choose refund reason → click **Confirm Return**
-4. `POST /api/evaluate-route` is called
-5. If `entered_reroute === true`: ReRoute intercept modal appears showing:
-   - Sale price, discount%, profitable radius, ring number, routing reason
-6. Click **Accept ReRoute** → return processed with ReRoute path
-
-### Scenario 4 — Compatibility Check (backend exists, frontend not wired)
-
-1. `POST /api/grading/check-compat` accepts `item_id` + `account_id`
-2. Checks purchase history for incompatible match (e.g. iPhone 14 case + iPhone 15)
-3. Frontend needs to call this before adding to cart — currently static
-
----
-
-## 10. Known Issues / Quick Fixes
-
-| Issue | Fix |
-|---|---|
-| `DATABASE_URL` with `!` breaks in bash | Always use single quotes: `export DATABASE_URL='...'` |
-| Vite `Bus error` on WSL | `rm -rf node_modules package-lock.json && npm install` |
-| Frontend images not loading for Float deals | `CATEGORY_IMAGE_MAP` uses dummyjson CDN — replace with real Amazon.in CDN URLs |
-| ReList form requires file upload | Must select actual image files; the form doesn't allow text-only grading |
-| Bedrock Nova rate limits | Nova Lite has 5 RPM — slow down consecutive grading requests |
-| CORS errors | Vite proxy handles `/api/*` → no CORS in dev. In production, backend CORS middleware allows all origins |
+- **Backend `--reload` flaky on Windows** — hard-restart the uvicorn process after edits.
+- **Float card images**: deals carry no image URL → frontend uses `CATEGORY_IMAGE_MAP` fallback stock photos. Names/prices/discounts are real.
+- **Seeded vs live listings**: seeded listings (from `seed_demo.json`) have no hub_lat/lng → location filter falls back to `HUB_ZONES` coords or includes by default. Live return listings have precise coords.
+- **`/card/[uuid]`**: backend `GET /api/health-card/{uuid}` exists; no frontend page renders it yet (QR target).
+- **Tests**: 89 passing (`tests/test_routing_service.py`, `test_grade_service.py`, `test_health_card_service.py`, `test_api_routes.py`).
