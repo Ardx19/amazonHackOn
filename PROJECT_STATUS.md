@@ -7,35 +7,6 @@
 
 ## CURRENT RUNNABLE STATE
 
-```bash
-# Terminal 1 — Backend (WSL)
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
-export AWS_ACCESS_KEY_ID="AKIA2PUYQN2ROMPXSFPD"
-export AWS_SECRET_ACCESS_KEY="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"
-export AWS_DEFAULT_REGION="ap-south-1"
-export PYTHONPATH="$(pwd)"
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-# Terminal 2 — Frontend (WSL)
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/frontend
-npm run dev   # → http://localhost:3000
-
-# Run tests
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-export AWS_DEFAULT_REGION="ap-south-1"
-export PYTHONPATH="$(pwd)"
-python -m pytest tests/ -v --tb=short   # 89/89 expected
-
-# Reseed with full demo data (30 products, 10 personas, 10 trajectories, 12 health cards)
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
-export AWS_ACCESS_KEY_ID="AKIA2PUYQN2ROMPXSFPD"
-export AWS_SECRET_ACCESS_KEY="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"
-export AWS_DEFAULT_REGION="ap-south-1"
-export PYTHONPATH="$(pwd)"
-python -m app.db.seed_demo --reset
-```
 
 ---
 
