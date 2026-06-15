@@ -10,7 +10,12 @@ from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from app.core.config import S3_BUCKET_IMAGES, AWS_REGION, PINCODE_COORDS, DEFAULT_USER_COORDS
+from app.core.config import (
+    S3_BUCKET_IMAGES,
+    AWS_REGION,
+    PINCODE_COORDS,
+    DEFAULT_USER_COORDS,
+)
 from app.db.database import get_db
 from app.db.models import FloatingDiscount as FloatingDiscountORM
 from app.services.return_service import (
@@ -44,6 +49,7 @@ async def api_initiate_return(
     category: str = Form(...),
     original_price_inr: float = Form(...),
     pincode: str = Form("400069"),
+    return_reason: str = Form(""),
     db: Session = Depends(get_db),
 ):
     """Priya confirms her return. We grade the product, generate the return path,
@@ -76,6 +82,7 @@ async def api_initiate_return(
             s3_keys=s3_keys,
             user_lat=user_lat,
             user_lng=user_lng,
+            return_reason=return_reason,
         )
 
         return InitiateReturnResponse(
@@ -122,7 +129,9 @@ def api_advance_ring(body: AdvanceRingRequest, db: Session = Depends(get_db)):
             .first()
         )
         if not listing:
-            raise HTTPException(status_code=404, detail=f"No active listing for item {body.item_id}")
+            raise HTTPException(
+                status_code=404, detail=f"No active listing for item {body.item_id}"
+            )
 
         current_ring = listing.ring_index or 0
         next_cp = get_next_checkpoint(db, body.item_id, current_ring)

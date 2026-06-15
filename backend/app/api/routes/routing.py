@@ -7,12 +7,21 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from app.services.routing_service import evaluate_route
-from app.db.models import FloatingDiscount as FloatingDiscountORM, HubCheckpoint as HubCheckpointORM
+from app.db.models import (
+    FloatingDiscount as FloatingDiscountORM,
+    HubCheckpoint as HubCheckpointORM,
+)
 from app.db.database import get_db
 from app.schemas.schemas import RouteRequest, RoutingResponse
-from app.core.config import HUB_ZONES, RETURN_CENTER, PINCODE_COORDS, DEFAULT_USER_COORDS
+from app.core.config import (
+    HUB_ZONES,
+    RETURN_CENTER,
+    PINCODE_COORDS,
+    DEFAULT_USER_COORDS,
+)
 
 router = APIRouter(prefix="/api", tags=["routing"])
 
@@ -99,6 +108,22 @@ def list_deals(
             query = query.filter_by(current_hub_id=hub_id)
         if exclude_item_id:
             query = query.filter(FloatingDiscountORM.item_id != exclude_item_id)
+        # Exclude returns with "not working" reasons
+        bad_keywords = [
+            "defective",
+            "not working",
+            "broken",
+            "damaged",
+            "doesn't work",
+            "ineffective",
+        ]
+        for kw in bad_keywords:
+            query = query.filter(
+                or_(
+                    FloatingDiscountORM.return_reason == None,
+                    ~FloatingDiscountORM.return_reason.ilike(f"%{kw}%"),
+                )
+            )
         results = query.order_by(FloatingDiscountORM.discount_pct.desc()).all()
 
         # Resolve user coords: explicit lat/lng > pincode > no filter
@@ -134,7 +159,9 @@ def list_deals(
                 else:
                     hub_coords = _hub_coords(r.current_hub_id)
                 if hub_coords:
-                    dist = _haversine_km(user_lat, user_lng, hub_coords[0], hub_coords[1])
+                    dist = _haversine_km(
+                        user_lat, user_lng, hub_coords[0], hub_coords[1]
+                    )
                     if dist > r.radius_km:
                         continue  # User is outside the profitable radius
                 # If coords can't be resolved at all, include by default

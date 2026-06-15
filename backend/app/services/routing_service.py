@@ -31,6 +31,7 @@
 #   d'   = new delivery cost to a buyer = cost_per_km x d_buyer_km
 
 import logging
+import sys
 from datetime import datetime, timedelta
 from uuid import uuid4
 
@@ -175,6 +176,7 @@ def create_floating_discount_listing(
     discount_pct: float,
     current_location: dict,
     ring_index: int,
+    return_reason: str = "",
 ) -> FloatingDiscountORM:
     ttl_hours = 24 if ring_index == 0 else 48
 
@@ -197,6 +199,7 @@ def create_floating_discount_listing(
         discount_pct=discount_pct,
         radius_km=radius,
         expires_at=datetime.utcnow() + timedelta(hours=ttl_hours),
+        return_reason=return_reason or None,
         status="active",
     )
 
@@ -223,7 +226,7 @@ def advance_to_next_ring(
         raise ValueError(f"Listing not found: {listing_id}")
 
     next_ring = (listing.ring_index or 0) + 1
-    mrp = listing.original_price_inr          # MRP was stored here at creation
+    mrp = listing.original_price_inr  # MRP was stored here at creation
     original_price = mrp / MRP_RATIO if MRP_RATIO else 0.0
     C = original_price * COGS_RATIO
 
@@ -306,8 +309,21 @@ def evaluate_route(
     category: str,
     current_location: dict,
     ring_index: int = 0,
+    return_reason: str = "",
 ) -> dict:
     grading_report = load_grading_report(db, item_id)
+
+    print(f"\n=== evaluate_route() — {item_id} ===", file=sys.stderr, flush=True)
+    print(
+        f"  item_id={item_id}  category={category}  original_price={original_price}  ring={ring_index}  return_reason={return_reason!r}",
+        file=sys.stderr,
+        flush=True,
+    )
+    print(
+        f"  grading: condition={grading_report.condition_grade!r}  confidence={grading_report.confidence}",
+        file=sys.stderr,
+        flush=True,
+    )
 
     costs = decompose_costs(original_price)
     C, mrp = costs["C"], costs["mrp"]
@@ -319,38 +335,89 @@ def evaluate_route(
     D_remaining = compute_full_return_cost(category, distance_to_rc)
     overhead_ratio = D_remaining / mrp if mrp > 0 else 0.0
 
+    print(
+        f"  costs: C={C:.2f}  mrp={mrp:.2f}  D_remaining={D_remaining:.2f}  overhead_ratio={overhead_ratio:.4f} ({overhead_ratio:.1%})",
+        file=sys.stderr,
+        flush=True,
+    )
+
     # ── Pre-filters that never enter the floating-discount cascade ──
     if grading_report.condition_grade == "Poor":
+        print(
+            f"  GATE 1 FAILED: condition=Poor → recycle (no float deal)",
+            file=sys.stderr,
+            flush=True,
+        )
         return _route_response(
-            item_id, "recycle", 0.0, 0.0, 0, overhead_ratio,
-            "Poor condition — item not resaleable", False,
-            mrp_val=mrp, cogs_val=C,
+            item_id,
+            "recycle",
+            0.0,
+            0.0,
+            0,
+            overhead_ratio,
+            "Poor condition — item not resaleable",
+            False,
+            mrp_val=mrp,
+            cogs_val=C,
         )
 
     if (
         grading_report.condition_grade == "Like New"
         and original_price >= RENEWED_MIN_VALUE
     ):
+        print(
+            f"  GATE 2 FAILED: Like New + price≥{RENEWED_MIN_VALUE} → amazon_renewed (no float deal)",
+            file=sys.stderr,
+            flush=True,
+        )
         return _route_response(
-            item_id, "amazon_renewed", round(mrp, 2), 0.0, 0, overhead_ratio,
-            f"Like New, ₹{original_price:.0f} — Amazon Renewed eligible", False,
-            mrp_val=mrp, cogs_val=C,
+            item_id,
+            "amazon_renewed",
+            round(mrp, 2),
+            0.0,
+            0,
+            overhead_ratio,
+            f"Like New, ₹{original_price:.0f} — Amazon Renewed eligible",
+            False,
+            mrp_val=mrp,
+            cogs_val=C,
         )
 
     enter, reason = should_enter_reroute(mrp, D_remaining, grading_report.confidence)
     if not enter:
+        print(f"  GATE 3 FAILED: {reason} (no float deal)", file=sys.stderr, flush=True)
         return _route_response(
-            item_id, "standard_return", round(mrp, 2), 0.0, 0, overhead_ratio,
-            reason, False, mrp_val=mrp, cogs_val=C,
+            item_id,
+            "standard_return",
+            round(mrp, 2),
+            0.0,
+            0,
+            overhead_ratio,
+            reason,
+            False,
+            mrp_val=mrp,
+            cogs_val=C,
         )
 
     # ── Floating discount: identical formula at every checkpoint ──
     radius = compute_radius(D_remaining, category)
     if radius <= 0:
+        print(
+            f"  GATE 4 FAILED: radius={radius:.1f} — no remaining return cost (no float deal)",
+            file=sys.stderr,
+            flush=True,
+        )
         return _route_response(
-            item_id, "standard_return", round(mrp, 2), 0.0, ring_index, overhead_ratio,
+            item_id,
+            "standard_return",
+            round(mrp, 2),
+            0.0,
+            ring_index,
+            overhead_ratio,
             "No remaining return cost to recover — standard resale at RC",
-            False, mrp_val=mrp, cogs_val=C,
+            False,
+            mrp_val=mrp,
+            cogs_val=C,
         )
 
     sale_price = compute_floating_price(mrp, C, D_remaining, category)
@@ -359,6 +426,12 @@ def evaluate_route(
 
     item = db.query(ItemORM).filter_by(item_id=item_id).first()
     product_name = item.name if item else None
+
+    print(
+        f"  ALL GATES PASSED → creating float deal at ₹{sale_price:.0f} ({discount_pct:.0f}% off), radius={radius:.1f}km",
+        file=sys.stderr,
+        flush=True,
+    )
 
     listing = create_floating_discount_listing(
         db,
@@ -373,6 +446,7 @@ def evaluate_route(
         discount_pct=discount_pct,
         current_location=current_location,
         ring_index=ring_index,
+        return_reason=return_reason,
     )
 
     reason_text = (

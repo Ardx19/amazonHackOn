@@ -212,6 +212,7 @@ class C2CListingRequest(BaseModel):
     video_url: Optional[str] = None
     description: str = ""
     health_card_uuid: Optional[str] = None
+    declaration_checklist: dict = {}
 
 
 class C2CListingResponse(BaseModel):
@@ -229,4 +230,5 @@ class C2CListingResponse(BaseModel):
     video_url: Optional[str] = None
     description: Optional[str] = None
     health_card: Optional[HealthCard] = None
+    declaration_checklist: dict = {}
     created_at: datetime

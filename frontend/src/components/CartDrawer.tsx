@@ -10,6 +10,8 @@ interface CartDrawerProps {
   onRemoveItem: (productId: string) => void;
   onClearCart: () => void;
   onPlaceOrder: (items: CartItem[], amount: number, paymentMethod: string, address: string, orderId: string) => void;
+  session?: any;
+  onRequireSignIn?: () => void;
 }
 
 export default function CartDrawer({
@@ -19,6 +21,8 @@ export default function CartDrawer({
   onRemoveItem,
   onClearCart,
   onPlaceOrder,
+  session,
+  onRequireSignIn,
 }: CartDrawerProps) {
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'loading' | 'success'>('cart');
   const [address, setAddress] = useState('Sector 62, Noida, Uttar Pradesh, 201301');
@@ -30,6 +34,7 @@ export default function CartDrawer({
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleCheckoutInit = () => {
+    if (!session?.isLoggedIn) { onRequireSignIn?.(); return; }
     if (cartItems.length === 0) return;
     const generatedId = `AMZN-IN-${Math.floor(100000 + Math.random() * 900000)}`;
     setOrderId(generatedId);

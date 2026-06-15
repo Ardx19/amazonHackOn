@@ -90,15 +90,17 @@ def generate_return_path(
             name = best_hub_name
             hub_id = best_hub_id
 
-        checkpoints.append({
-            "index": i,
-            "hub_id": hub_id,
-            "hub_name": name,
-            "lat": round(lat, 6),
-            "lng": round(lng, 6),
-            "remaining_distance_km": round(remaining_km, 1),
-            "hours_from_start": i * 18,  # ~18 hours between checkpoints
-        })
+        checkpoints.append(
+            {
+                "index": i,
+                "hub_id": hub_id,
+                "hub_name": name,
+                "lat": round(lat, 6),
+                "lng": round(lng, 6),
+                "remaining_distance_km": round(remaining_km, 1),
+                "hours_from_start": i * 18,  # ~18 hours between checkpoints
+            }
+        )
 
     return checkpoints
 
@@ -113,7 +115,9 @@ def persist_checkpoints(
     """Store the generated checkpoints in the hub_checkpoints table."""
     now = datetime.utcnow()
     for cp in checkpoints:
-        cost_per_km = DELIVERY_COST_PER_KM.get(category, DELIVERY_COST_PER_KM["default"])
+        cost_per_km = DELIVERY_COST_PER_KM.get(
+            category, DELIVERY_COST_PER_KM["default"]
+        )
         c_remaining = cost_per_km * cp["remaining_distance_km"]
 
         row = HubCheckpointORM(
@@ -141,6 +145,7 @@ def initiate_return(
     s3_keys: list[str],
     user_lat: float,
     user_lng: float,
+    return_reason: str = "",
 ) -> dict:
     """Full return initiation pipeline. Called after Priya confirms the return.
     Returns the grading report, route result, and generated path."""
@@ -194,7 +199,9 @@ def initiate_return(
         product_category=grading_report.product_category,
         brand_guess=grading_report.brand_guess,
         condition_grade=grading_report.condition_grade,
-        defects=[d.model_dump() for d in grading_report.defects] if grading_report.defects else [],
+        defects=[d.model_dump() for d in grading_report.defects]
+        if grading_report.defects
+        else [],
         completeness=grading_report.completeness,
         confidence=grading_report.confidence,
         estimated_retail_inr=grading_report.estimated_retail_inr,
@@ -231,6 +238,7 @@ def initiate_return(
         category=category,
         current_location=current_location,
         ring_index=0,
+        return_reason=return_reason,
     )
 
     db.commit()

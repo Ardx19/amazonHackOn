@@ -249,3 +249,14 @@ export async function createC2CListing(payload: C2CListingPayload): Promise<{ st
   }
   return resp.json();
 }
+
+export async function deleteC2CListing(id: string): Promise<{ status: string; id: string }> {
+  const resp = await fetch(`${BASE_URL}/api/listings/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+    throw new Error(err.detail || `Delete listing failed: ${resp.status}`);
+  }
+  return resp.json();
+}

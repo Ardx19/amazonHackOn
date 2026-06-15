@@ -26,7 +26,7 @@ import {
   Search,
 } from 'lucide-react';
 import { Product } from '../types';
-import { getDeals, gradeProduct, generateHealthCard, getC2CListings, createC2CListing } from '../lib/api';
+import { getDeals, gradeProduct, generateHealthCard, getC2CListings, createC2CListing, deleteC2CListing } from '../lib/api';
 import type { DealItem } from '../lib/types';
 import { CATEGORY_IMAGE_MAP } from '../data/products';
 import GradingCard from './GradingCard';
@@ -44,6 +44,7 @@ interface MarketplaceViewProps {
   initialTab?: 'float' | 'relist';
   excludeItemId?: string | null;
   excludePurchaseIds?: string[];
+  onRequireSignIn?: () => void;
 }
 
 // Hardcoded fallback (replaced by API data via getDeals())
@@ -68,6 +69,7 @@ export default function MarketplaceView({
   initialTab = 'float',
   excludeItemId,
   excludePurchaseIds = [],
+  onRequireSignIn,
 }: MarketplaceViewProps) {
   // Navigation tabs: 'float' or 'relist'
   const [activeTab, setActiveTab] = useState<'float' | 'relist'>(initialTab);
@@ -231,7 +233,6 @@ export default function MarketplaceView({
   const allDeclarationChecked = Object.values(declarationChecked).every(Boolean);
 
   const handleDeclarationSubmit = () => {
-    if (!allDeclarationChecked) return;
     setDeclarationSubmitted(true);
     setRelistPage('create-listing');
   };
@@ -324,6 +325,7 @@ export default function MarketplaceView({
   // Relisting submit handler
   const handleAddNewListing = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session?.isLoggedIn) { onRequireSignIn?.(); return; }
     if (!itemName || !itemAskingPrice) return;
 
     setIsSubmitListing(true);
@@ -344,6 +346,7 @@ export default function MarketplaceView({
       video_url: uploadedVideo || null,
       description: itemDescription || 'No description supplied.',
       health_card_uuid: (apiHealthCard as any)?.card_uuid || null,
+      declaration_checklist: declarationChecked,
     };
 
     // Post to backend API
@@ -393,9 +396,12 @@ export default function MarketplaceView({
   const handleDeleteUserListing = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setRelistItems((prev) => prev.filter(item => item.id !== id));
+    setApiC2CListings((prev) => prev.filter(item => item.id !== id));
+    deleteC2CListing(id).catch(() => {});
   };
 
   const handlePurchaseFloatItem = (item: typeof FLOAT_ITEMS[0]) => {
+    if (!session?.isLoggedIn) { onRequireSignIn?.(); return; }
     // Inject the discounted product representation to the global shopping basket
     const discountProductRepresentation: Product = {
       id: item.id,
@@ -533,8 +539,8 @@ export default function MarketplaceView({
             >
               ⚡ Float Simulation
             </button>
-          )}
-        </div>
+                      )}
+                    </div>
       </div>
 
       {/* ==================== ZOMATO / SWIGGY-STYLE TABS SYSTEM (FULL WIDTH) ==================== */}
@@ -886,6 +892,31 @@ export default function MarketplaceView({
                           <p className="text-[10px] leading-relaxed">AI Diagnostics completed: Multi-angle physical verification passed. Fully functional network & connectivity modules. Suggested Price Valuation: ₹{(selectedDetailItem.item.askingPrice * 0.95).toFixed(0)}.</p>
                         </div>
                       )}
+
+                      {/* Seller Declaration Checklist */}
+                      {selectedDetailItem.source === 'relist' && (selectedDetailItem.item.declaration_checklist || selectedDetailItem.item.fullHealthCard?.declaration_all_checked) && (
+                        <div className="bg-white border-2 border-black p-3 text-left">
+                          <h4 className="font-mono text-xs font-black uppercase text-black tracking-wider mb-2">Seller Declaration</h4>
+                          <div className="space-y-1.5">
+                            {[
+                              { key: 'functional', text: 'Fully functional — all features work' },
+                              { key: 'neverRepaired', text: 'Never repaired or serviced by a third party' },
+                              { key: 'noHiddenDefects', text: 'No hidden defects beyond uploaded photos' },
+                              { key: 'allAccessories', text: 'All original accessories present' },
+                              { key: 'misrepresentation', text: 'Acknowledges misrepresentation consequences' },
+                            ].map(item => (
+                              <div key={item.key} className="flex items-center gap-2 text-xs">
+                                <span className={selectedDetailItem.item.declaration_checklist?.[item.key] ? 'text-emerald-600' : 'text-gray-300'}>
+                                  {selectedDetailItem.item.declaration_checklist?.[item.key] ? '✔' : '—'}
+                                </span>
+                                <span className={selectedDetailItem.item.declaration_checklist?.[item.key] ? 'text-gray-800 font-medium' : 'text-gray-400'}>
+                                  {item.text}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     )
                   )}
@@ -1216,10 +1247,8 @@ export default function MarketplaceView({
                                   <SustainabilityBadge />
                                 </div>
                                 <div className="flex items-center gap-1.5 font-bold">
-                                  <span>Condition:</span>
-                                  <span className="font-black bg-[#fffc40] px-1.5 py-0.5 border border-black uppercase text-[9px] text-black">
-                                    {item.condition}
-                                  </span>
+                                  <span>AI Grade:</span>
+                                  {(() => { const grade = item.fullHealthCard?.condition_grade || item.aiHealthCard?.grade; const colors: Record<string, string> = { 'Like New': 'bg-emerald-500 text-white', Good: 'bg-blue-500 text-white', Fair: 'bg-orange-500 text-white', Poor: 'bg-red-600 text-white' }; return grade ? ( <span className={`font-black px-1.5 py-0.5 border border-black uppercase text-[9px] ${colors[grade] || 'bg-[#fffc40] text-black'}`}> {grade} </span> ) : ( <span className="font-black bg-gray-200 px-1.5 py-0.5 border border-black uppercase text-[9px] text-gray-500"> Pending AI Review </span> ); })()}
                                 </div>
                               </div>
 
@@ -1429,8 +1458,7 @@ export default function MarketplaceView({
                         Cancel
                       </button>
                       <button onClick={handleDeclarationSubmit}
-                        disabled={!allDeclarationChecked}
-                        className="flex-1 bg-emerald-500 border-2 border-black text-white text-xs font-bold py-2.5 hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        className="flex-1 bg-emerald-500 border-2 border-black text-white text-xs font-bold py-2.5 hover:bg-emerald-600 transition-colors">
                         I Confirm — Continue to Listing
                       </button>
                     </div>

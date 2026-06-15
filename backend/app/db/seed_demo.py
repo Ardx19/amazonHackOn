@@ -246,6 +246,23 @@ def _load_data():
 
 def create_tables():
     Base.metadata.create_all(bind=engine)
+    # Migrate existing tables that may have been created before new columns
+    # were added — ALTER TABLE IF NOT EXISTS is idempotent.
+    from sqlalchemy import text
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "ALTER TABLE floating_discounts "
+                "ADD COLUMN IF NOT EXISTS return_reason VARCHAR"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE c2c_listings "
+                "ADD COLUMN IF NOT EXISTS declaration_checklist JSON"
+            )
+        )
 
 
 def reset_all(db):

@@ -1,13 +1,13 @@
 # ReRoute — Agent Context Handoff
 ### Amazon HackOn '26 · Theme 3: Products Without a Second Chance
-*Last updated: 15 June 2026 — Persistent C2C listings, S3 presigned URLs, seeded marketplace*
+*Last updated: 15 June 2026 — Return → Float deals verified. Reroute logic working end-to-end. Print diagnostics added to evaluate_route.*
 **Git branch: `main`**
 
 ---
 
 ## 1. Current State Summary
 
-**Backend fully working. Frontend merged (Vite+React Amazon clone). All 3 demo flows wired. C2C listings persisted in DB. S3 images served via presigned URLs. ReList items add to cart.**
+**Backend fully working. Frontend merged (Vite+React Amazon clone). All 3 demo flows wired. Return → Float deal cascade confirmed working (verified with live console trace). C2C listings persisted in DB. S3 images via presigned URLs. ReList items add to cart.**
 
 | Area | Status |
 |---|---|
@@ -421,3 +421,6 @@ Everything runs from WSL — never run `npm install` from PowerShell (installs W
 | Purchased items remain in marketplace | Fixed. Float and ReList items both removed from marketplace view after checkout (excludePurchaseIds prop flows from App.tsx handlePlaceOrder). |
 | ReList listings not persistent | Fixed. New `c2c_listings` table + `GET/POST /api/listings`. 15 seeded rows. Listings survive refresh. SESSION_LISTINGS removed. |
 | User-uploaded images not persistent | Fixed. `POST /api/grade` returns `s3_keys`. Frontend stores raw S3 keys in listing. `GET /api/listings` generates presigned URLs (7-day expiry). |
+| Return → Float deal cascade | Verified working. `evaluate_route()` creates a `FloatingDiscount` row when all 4 gates pass (condition ≠ Poor, not Like New+high value, confidence ≥ 0.85, overhead_ratio ≥ 0.07). Console prints active in `routing_service.py` for debugging. |
+| Default return reason blocking Float deals | Fixed. Default changed from `'Item defective / doesn\'t work'` to `'No longer needed / bought by mistake'` in `YourOrdersView.tsx:28` — avoids matching the `return_reason` filter keywords. |
+| `return_reason` floating_discount column | Added to `floating_discounts` model. `POST /api/initiate-return` accepts + stores it. `GET /api/deals` excludes returns matching "defective/not working/broken/damaged" keywords. |

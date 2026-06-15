@@ -495,3 +495,4 @@ Paste this document and say:
 
 *Document version: Post-strategy-session · 13 June 2026*
 *All decisions locked as of this document. Do not re-open closed decisions.*
+

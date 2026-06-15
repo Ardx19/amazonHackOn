@@ -9,9 +9,11 @@ interface YourOrdersViewProps {
   onGoHome: () => void;
   onReturnReplace?: (orderId: string, status: 'Returned' | 'Return Requested' | 'Replacement In-Transit', refundAmount?: number) => void;
   onReturnSuccess?: (returnedItemId: string) => void;
+  session?: any;
+  onRequireSignIn?: () => void;
 }
 
-export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturnReplace, onReturnSuccess }: YourOrdersViewProps) {
+export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturnReplace, onReturnSuccess, session, onRequireSignIn }: YourOrdersViewProps) {
   const [activeTab, setActiveTab] = useState<'orders' | 'notShipped' | 'cancelled'>('orders');
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState('2026');
@@ -25,7 +27,7 @@ export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturn
 
   // Return and replacement states
   const [selectedReturnOrder, setSelectedReturnOrder] = useState<Order | null>(null);
-  const [returnReason, setReturnReason] = useState('Item defective / doesn\'t work');
+  const [returnReason, setReturnReason] = useState('No longer needed / bought by mistake');
   const [returnActionType, setReturnActionType] = useState<'refund' | 'replace'>('refund');
   const [isSubmitProcess, setIsSubmitProcess] = useState(false);
   const [returnSuccessMessage, setReturnSuccessMessage] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturn
 
   const handleReturnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session?.isLoggedIn) { onRequireSignIn?.(); return; }
     if (!selectedReturnOrder) return;
     if (returnImages.length === 0) {
       setReturnSuccessMessage('Please upload at least one photo of the item.');
@@ -77,6 +80,7 @@ export default function YourOrdersView({ orders, onAddToCart, onGoHome, onReturn
       formData.append('category', catMap[rawCat] || rawCat.toLowerCase());
       formData.append('original_price_inr', String(selectedReturnOrder.subtotal));
       formData.append('pincode', '400069'); // Priya's pincode (Andheri East)
+      formData.append('return_reason', returnReason);
       returnImages.forEach(f => formData.append('images', f));
 
       // This grades the product, generates the return path, and creates

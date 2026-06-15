@@ -91,6 +91,7 @@ class FloatingDiscount(Base):
     hub_lat = Column(Float)
     hub_lng = Column(Float)
     trajectory = Column(JSON)
+    return_reason = Column(String)  # nullable — set when created via return flow
 
     item = relationship("Item", back_populates="floating_discounts")
 
@@ -162,6 +163,7 @@ class C2CListing(Base):
     video_url = Column(String)
     description = Column(Text)
     health_card_uuid = Column(String)  # FK to health_cards.card_uuid — nullable
+    declaration_checklist = Column(JSON, default=dict)
     created_at = Column(DateTime, nullable=False)
 
 

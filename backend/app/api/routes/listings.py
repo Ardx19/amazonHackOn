@@ -1,6 +1,7 @@
 # backend/app/api/routes/listings.py
 # POST /api/listings — Create C2C listing
 # GET  /api/listings — Fetch all C2C listings
+# DELETE /api/listings/{id} — Remove a listing
 
 import boto3
 from datetime import datetime, timezone, timedelta
@@ -55,8 +56,7 @@ def _resolve_image_url(url: str) -> str:
         try:
             return _presigned_url(key)
         except Exception:
-            return url  # fallback — return what we have
-    # Not an S3 URL: return as-is (blob:, unsplash, empty)
+            return url
     return url or ""
 
 
@@ -127,6 +127,7 @@ def list_c2c(db: Session = Depends(get_db)):
                     video_url=r.video_url,
                     description=r.description,
                     health_card=hc,
+                    declaration_checklist=r.declaration_checklist or {},
                     created_at=r.created_at,
                 )
             )
@@ -153,8 +154,6 @@ def create_c2c(body: C2CListingRequest, db: Session = Depends(get_db)):
                 status_code=409, detail=f"Listing already exists: {listing_id}"
             )
 
-        # Extract raw S3 keys from URLs before storing (so presigned URLs
-        # can be generated fresh on every GET).
         stored_image_url = _extract_s3_key(body.image_url) or body.image_url
         stored_uploaded = []
         for u in body.uploaded_images or []:
@@ -175,6 +174,7 @@ def create_c2c(body: C2CListingRequest, db: Session = Depends(get_db)):
             video_url=body.video_url,
             description=body.description or "",
             health_card_uuid=body.health_card_uuid,
+            declaration_checklist=body.declaration_checklist or {},
             created_at=datetime.now(IST),
         )
         db.add(row)
@@ -199,9 +199,26 @@ def create_c2c(body: C2CListingRequest, db: Session = Depends(get_db)):
                 video_url=row.video_url,
                 description=row.description,
                 health_card=hc,
+                declaration_checklist=row.declaration_checklist or {},
                 created_at=row.created_at,
             ),
         }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/listings/{listing_id}")
+def delete_c2c(listing_id: str, db: Session = Depends(get_db)):
+    try:
+        row = db.query(C2CListingORM).filter_by(id=listing_id).first()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        db.delete(row)
+        db.commit()
+        return {"status": "deleted", "id": listing_id}
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

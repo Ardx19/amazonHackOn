@@ -304,6 +304,8 @@ export default function App() {
             onGoHome={() => setCurrentView('account')}
             onReturnReplace={handleReturnReplace}
             onReturnSuccess={(itemId) => setLastReturnedItemId(itemId)}
+            session={session}
+            onRequireSignIn={() => setActiveModal('signin')}
           />
         ) : currentView === 'account' ? (
           /* Account detailed profile configuration view portal */
@@ -332,6 +334,7 @@ export default function App() {
             initialTab="float"
             excludeItemId={lastReturnedItemId}
             excludePurchaseIds={purchasedFloatDealIds}
+            onRequireSignIn={() => setActiveModal('signin')}
           />
         ) : currentView === 'marketplace-relist' ? (
           /* Marketplace opened directly on ReList tab — from "List New Item" */
@@ -345,6 +348,7 @@ export default function App() {
             initialTab="relist"
             excludeItemId={lastReturnedItemId}
             excludePurchaseIds={purchasedFloatDealIds}
+            onRequireSignIn={() => setActiveModal('signin')}
           />
         ) : currentView === 'simulation' ? (
           /* Float Simulation — manual checkpoint advancement for demo */
@@ -509,14 +513,16 @@ export default function App() {
 
       {/* 4. CHECKOUT BASKET SLIDER DRAWER */}
       {cartOpen && (
-        <CartDrawer
-          cartItems={cartItems}
-          onClose={() => setCartOpen(false)}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onClearCart={handleClearCart}
-          onPlaceOrder={handlePlaceOrder}
-        />
+          <CartDrawer
+            cartItems={cartItems}
+            onClose={() => setCartOpen(false)}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onClearCart={handleClearCart}
+            onPlaceOrder={handlePlaceOrder}
+            session={session}
+            onRequireSignIn={() => setActiveModal('signin')}
+          />
       )}
 
     </div>

@@ -41,8 +41,29 @@ async def grade_product(
 
     s3_keys = []
 
+    VIDEO_EXTENSIONS = {
+        ".mp4",
+        ".mov",
+        ".avi",
+        ".webm",
+        ".mkv",
+        ".flv",
+        ".wmv",
+        ".m4v",
+        ".mpg",
+        ".mpeg",
+    }
+
     try:
         for img in images[:3]:
+            # Skip video files silently — Nova Lite cannot process them
+            ct = (img.content_type or "").lower()
+            fn = (img.filename or "").lower()
+            if ct.startswith("video/") or any(
+                fn.endswith(ext) for ext in VIDEO_EXTENSIONS
+            ):
+                continue
+
             content = await img.read()
             # Prefix with a unique token so every upload gets its own S3 object.
             # Without this, uploading the same filename would overwrite the old
@@ -55,6 +76,12 @@ async def grade_product(
                 ContentType=img.content_type,
             )
             s3_keys.append(unique_key)
+
+        if not s3_keys:
+            raise HTTPException(
+                status_code=400,
+                detail="At least one image is required (videos are not supported)",
+            )
 
         report = grade_item(
             item_id=item_id,
