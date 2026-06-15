@@ -89,7 +89,6 @@
 | Bedrock grading | `apac.amazon.nova-lite-v1:0` |
 | Bedrock health card | `apac.amazon.nova-lite-v1:0` |
 | RDS identifier | `reroute-db` |
-| RDS endpoint | `reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com` |
 | RDS port / DB / User / PW | `5432` / `reroute` / `postgres` / `ReRoute2026!` |
 | RDS security group | `reroute-rds-sg` — port 5432 open 0.0.0.0/0 |
 
@@ -162,26 +161,12 @@ npm install
 ### Seed the Database (first time only)
 
 ```bash
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
-export AWS_ACCESS_KEY_ID="AKIA2PUYQN2ROMPXSFPD"
-export AWS_SECRET_ACCESS_KEY="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"
-export AWS_DEFAULT_REGION="ap-south-1"
-export PYTHONPATH="$(pwd)"
-python -m app.db.seed_demo --reset
 ```
 
 ### Run Backend (Terminal 1)
 
-```bash
-cd /mnt/c/Users/Aryan\ Datt/Desktop/Aryan/hackathon/amazonHackOn/ReRoute/backend
-export DATABASE_URL='postgresql://postgres:ReRoute2026!@reroute-db.cbqqm40c6trt.ap-south-1.rds.amazonaws.com:5432/reroute'
-export AWS_ACCESS_KEY_ID="AKIA2PUYQN2ROMPXSFPD"
-export AWS_SECRET_ACCESS_KEY="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"
-export AWS_DEFAULT_REGION="ap-south-1"
-export PYTHONPATH="$(pwd)"
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+
+
 
 ### Run Frontend (Terminal 2)
 
